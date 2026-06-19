@@ -10,8 +10,24 @@
 - `packages/ui` shared Vue 3 component library
 - Dynamic tenant database resolution middleware
 - Laravel Horizon + Redis async report queue
-- Docker Compose full local dev stack
 - PHPStan 2.2 + Larastan at level 8
+
+---
+
+## [0.6.0] — 2026-06-19
+
+### Added
+- **Docker environment** — full local dev stack with Nginx, PHP-FPM 8.5, PostgreSQL 17, and Redis 7
+  - `docker-compose.yml` — four services (`nginx`, `php`, `postgres`, `redis`) on a shared `app` bridge network
+  - `docker/php/Dockerfile` — PHP 8.5-FPM Alpine image with `pdo_pgsql`, `pgsql`, `redis` (PECL), `mbstring`, `zip`, `bcmath`, `intl`, `opcache`; Composer 2 included
+  - `docker/nginx/default.conf` — Nginx server block serving `public/`, proxying PHP to `php:9000` via FastCGI
+  - `.env.docker` — pre-configured environment file (`DB_CONNECTION=pgsql`, `DB_HOST=postgres`, `SESSION_DRIVER=redis`, `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`, `REDIS_HOST=redis`)
+  - `.dockerignore` — excludes `node_modules`, `vendor`, logs, cache, and test artifacts from the image build
+  - PostgreSQL and Redis data persisted in named Docker volumes (`postgres_data`, `redis_data`)
+  - Health checks on `postgres` and `redis` — `php` service waits for both before starting
+
+### Changed
+- **`.env`** — updated to match Docker configuration: `DB_CONNECTION=pgsql`, `DB_HOST=postgres`, `DB_PORT=5432`, `DB_DATABASE=laravel`, `DB_USERNAME=laravel`, `DB_PASSWORD=secret`, `SESSION_DRIVER=redis`, `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`, `REDIS_HOST=redis`
 
 ---
 

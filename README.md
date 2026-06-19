@@ -167,7 +167,8 @@ laravel-multitenant-starter/
 │       └── tenant/                    # domain tables — run per tenant on provision
 │
 ├── docker/
-│   └── php/Dockerfile                 # PHP 8.3 FPM base image (shared)
+│   ├── nginx/default.conf             # Nginx server block — fastcgi_pass to php:9000
+│   └── php/Dockerfile                 # PHP 8.5-FPM with pgsql, redis, opcache
 │
 ├── docker-compose.yml
 ├── phpstan.neon                        # root config — extended per app
@@ -221,12 +222,12 @@ What's built:
 
 ### Requirements
 
-- PHP 8.3+
+- PHP 8.5+
 - Composer
 - Node.js 20+
 - Docker Engine 29+ and Docker Compose (recommended for local dev)
-- MySQL 8.0+ (central DB server)
-- Redis (queue backend for Horizon)
+- PostgreSQL 17+ (central DB server)
+- Redis 7+ (cache, sessions, and queue backend)
 
 ### Installation
 
@@ -296,32 +297,42 @@ php artisan horizon
 
 ## Docker local development
 
-A `docker-compose.yml` is included at the repo root to spin up the full stack locally — all four apps, MySQL, and Redis — with a single command.
+A `docker-compose.yml` is included at the repo root to spin up the full stack locally — Nginx, PHP-FPM, PostgreSQL, and Redis — with a single command.
 
 ```bash
-docker compose up -d
+# Copy the pre-configured Docker environment file and generate an app key
+cp .env.docker .env
+php artisan key:generate
+
+# Build and start all containers
+docker compose up -d --build
+
+# Run migrations
+docker compose exec php php artisan migrate --seed
 ```
 
 Services exposed:
 
 | Service | URL / Port |
 |---|---|
-| login app | http://localhost:8001 |
-| admin app | http://localhost:8002 |
-| client app | http://localhost:8003 |
-| reports app | http://localhost:8004 |
-| MySQL (central) | localhost:3306 |
+| App (via Nginx) | http://localhost:80 |
+| PostgreSQL | localhost:5432 |
 | Redis | localhost:6379 |
-| Horizon dashboard | http://localhost:8004/horizon |
 
-Each app container runs PHP-FPM 8.3 + Nginx. The reports container additionally runs a Horizon worker process via Supervisor.
+The stack:
+- **nginx** — serves static assets and proxies PHP requests to `php:9000`
+- **php** — PHP 8.5-FPM with `pdo_pgsql`, `redis`, `mbstring`, `zip`, `bcmath`, `intl`, `opcache`
+- **postgres** — PostgreSQL 17, data persisted in `postgres_data` volume
+- **redis** — Redis 7, data persisted in `redis_data` volume; used for cache, sessions, and queues
+
+`.env.docker` pre-configures `DB_CONNECTION=pgsql`, `SESSION_DRIVER=redis`, `QUEUE_CONNECTION=redis`, and `CACHE_STORE=redis`.
 
 ```bash
 # Rebuild containers after Dockerfile changes
 docker compose build --no-cache
 
-# Run artisan commands inside a container
-docker compose exec login php artisan migrate
+# Run artisan commands inside the php container
+docker compose exec php php artisan migrate
 
 # Tail logs for all services
 docker compose logs -f
@@ -564,8 +575,8 @@ No code changes required. The login app reads `report_url` and redirects there a
 | Queue | Laravel Horizon + Redis | Planned |
 | Shared PHP | `packages/central` (local Composer) | Planned |
 | Shared Vue | `packages/ui` (local npm) | Planned |
-| DB | MySQL 8 (central + tenant), PostgreSQL compatible | Planned |
-| Containers | Docker Engine 29 + Docker Compose | Planned |
+| DB | PostgreSQL 17 (central + tenant) | ✅ Configured |
+| Containers | Docker Engine 29 + Docker Compose | ✅ Configured |
 | Static analysis | PHPStan 2.2 + Larastan (level 8) | Planned |
 | Commit linting | commitlint 21 + Husky 9 | ✅ Installed |
 | CI | GitHub Actions (build, unit, E2E) | ✅ Active |
@@ -593,14 +604,7 @@ No code changes required. The login app reads `report_url` and redirects there a
 - [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`
 - [ ] `packages/central` shared Composer package
 - [ ] `packages/ui` shared Vue 3 component library
-- [ ] Docker Compose full local dev stack
-- [ ] PHPStan 2.2 + Larastan static analysis
-
-**Phase 3 — Monorepo structure**
-- [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`
-- [ ] `packages/central` shared Composer package
-- [ ] `packages/ui` shared Vue 3 component library
-- [ ] Docker Compose full local dev stack
+- [x] Docker Compose full local dev stack (Nginx + PHP-FPM + PostgreSQL + Redis)
 - [ ] PHPStan 2.2 + Larastan static analysis
 
 **Phase 4 — Frontend & multi-tenancy** *(in progress)*

@@ -6,7 +6,7 @@ test.describe('Admin dashboard', () => {
     });
 
     test('shows the dashboard heading', async ({ page }) => {
-        await expect(page.getByText('Dashboard')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     });
 
     test('shows four stat cards', async ({ page }) => {

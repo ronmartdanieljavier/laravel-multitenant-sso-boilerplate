@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils';
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import LoginPage from './Index.vue';
+
+const postMock = vi.fn();
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<slot />' },
@@ -9,7 +11,7 @@ vi.mock('@inertiajs/vue3', () => ({
         password: '',
         processing: false,
         errors: {},
-        post: vi.fn(),
+        post: postMock,
     }),
 }));
 
@@ -31,5 +33,12 @@ describe('Login/Index', () => {
         const wrapper = mount(LoginPage);
 
         expect(wrapper.text()).toContain('Welcome back');
+    });
+
+    it('submits to the web login route', async () => {
+        const wrapper = mount(LoginPage);
+        await wrapper.find('form').trigger('submit');
+
+        expect(postMock).toHaveBeenCalledWith('/login');
     });
 });

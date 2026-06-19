@@ -7,7 +7,7 @@ const form = useForm({
 });
 
 function submit() {
-    form.post('/api/login');
+    form.post('/login');
 }
 </script>
 

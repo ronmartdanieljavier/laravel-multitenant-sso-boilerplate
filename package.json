@@ -29,7 +29,6 @@
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
-    "@inertiajs/vue3": "^3.4.0",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/vite": "^4.3.1",
     "@vitejs/plugin-vue": "^6.0.7",
@@ -38,7 +37,10 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "laravel-vite-plugin": "^3.1.0",
-    "vitest": "^4.1.9",
+    "vitest": "^4.1.9"
+  },
+  "dependencies": {
+    "@inertiajs/vue3": "^3.4.0",
     "vue": "^3.5.38"
   }
 }

@@ -98,8 +98,9 @@ jobs:
           cp .env.example .env
           php artisan key:generate
           php artisan migrate --force
+          php artisan db:seed --force
           php artisan serve --port=8000 &
-          sleep 3
+          timeout 30 bash -c 'until curl -sf http://localhost:8000/up; do sleep 1; done'
 
       - name: Run Playwright E2E tests
         run: npm run test:e2e

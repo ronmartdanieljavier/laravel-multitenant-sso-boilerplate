@@ -35,7 +35,7 @@ return new class extends Migration
             $table->string('disk')->default('local');
             $table->date('document_date')->nullable();
             $table->date('expiry_date')->nullable();
-            $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('uploaded_by')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->softDeletes();

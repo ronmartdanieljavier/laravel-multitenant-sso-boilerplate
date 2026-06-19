@@ -6,21 +6,21 @@ RUN apk add --no-cache \
     curl \
     libpq-dev \
     libzip-dev \
+    zlib-dev \
     zip \
     unzip \
     oniguruma-dev \
-    icu-dev
+    icu-dev \
+    icu-libs
 
-# PHP extensions
+# PHP extensions (pdo and opcache are bundled in PHP 8.4+)
 RUN docker-php-ext-install \
-    pdo \
     pdo_pgsql \
     pgsql \
     mbstring \
     zip \
     bcmath \
-    intl \
-    opcache
+    intl
 
 # Redis extension
 RUN apk add --no-cache $PHPIZE_DEPS \

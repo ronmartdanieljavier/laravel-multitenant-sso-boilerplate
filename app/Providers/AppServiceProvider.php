@@ -16,7 +16,6 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->callAfterResolving('migrator', function (Migrator $migrator) {
             $migrator->path(database_path('migrations/central'));
-            $migrator->path(database_path('migrations/tenant'));
         });
     }
 }

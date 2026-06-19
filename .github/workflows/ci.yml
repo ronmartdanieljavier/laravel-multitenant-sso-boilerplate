@@ -57,6 +57,8 @@ jobs:
 
       - name: Run Vitest
         run: npm run test:unit
+        env:
+          LARAVEL_BYPASS_ENV_CHECK: 1
 
   frontend-e2e:
     name: Frontend E2E Tests

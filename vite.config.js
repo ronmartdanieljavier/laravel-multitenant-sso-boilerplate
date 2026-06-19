@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import tailwindcss from '@tailwindcss/vite';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     plugins: [
@@ -14,11 +15,30 @@ export default defineConfig({
                 }),
             ],
         }),
+        vue({
+            template: {
+                transformAssetUrls: {
+                    base: null,
+                    includeAbsolute: false,
+                },
+            },
+        }),
         tailwindcss(),
     ],
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],
+        },
+    },
+    test: {
+        environment: 'jsdom',
+        globals: true,
+        include: ['resources/js/**/*.test.{js,ts}'],
+        exclude: ['resources/js/e2e/**'],
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'lcov'],
+            include: ['resources/js/**/*.vue'],
         },
     },
 });

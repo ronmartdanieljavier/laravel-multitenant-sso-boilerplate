@@ -14,7 +14,7 @@ test.describe('Admin dashboard', () => {
     test('shows four stat cards', async ({ page }) => {
         await expect(page.getByText('Total Users')).toBeVisible();
         await expect(page.getByText('Active Apps')).toBeVisible();
-        await expect(page.getByText('Active Clients')).toBeVisible();
+        await expect(page.getByText('Active Tenants')).toBeVisible();
         await expect(page.getByText('SSO Sessions')).toBeVisible();
     });
 

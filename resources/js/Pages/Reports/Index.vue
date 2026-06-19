@@ -17,7 +17,7 @@ const reportRows = [
     { name: 'Monthly Login Summary', generated: '2026-06-01', format: 'PDF', size: '1.2 MB' },
     { name: 'User Activity Report', generated: '2026-05-30', format: 'CSV', size: '430 KB' },
     { name: 'SSO Token Audit', generated: '2026-05-25', format: 'XLSX', size: '890 KB' },
-    { name: 'Client Access Log', generated: '2026-05-20', format: 'PDF', size: '2.1 MB' },
+    { name: 'Tenant Access Log', generated: '2026-05-20', format: 'PDF', size: '2.1 MB' },
 ];
 
 const formatColor = {

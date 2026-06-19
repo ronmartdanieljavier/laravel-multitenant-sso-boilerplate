@@ -76,7 +76,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "login"]
             },
-            "description": "Authenticate with email and password. Returns a Bearer token, user info, and accessible apps with their clients.\n\nThe test script automatically saves the returned token to the `token` collection variable."
+            "description": "Authenticate with email and password. Returns a Bearer token, user info, and accessible apps with their tenants.\n\nThe test script automatically saves the returned token to the `token` collection variable."
           },
           "response": [
             {
@@ -100,7 +100,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"token\": \"1|abc123...\",\n  \"token_type\": \"Bearer\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\"\n  },\n  \"apps\": [\n    {\n      \"app_id\": 1,\n      \"name\": \"My App\",\n      \"slug\": \"my-app\",\n      \"url\": \"https://my-app.example.com\",\n      \"role\": \"admin\",\n      \"clients\": [\n        {\n          \"client_id\": 1,\n          \"name\": \"Client A\",\n          \"slug\": \"client-a\",\n          \"role\": \"manager\",\n          \"is_default\": true\n        }\n      ]\n    }\n  ]\n}"
+              "body": "{\n  \"token\": \"1|abc123...\",\n  \"token_type\": \"Bearer\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\"\n  },\n  \"apps\": [\n    {\n      \"app_id\": 1,\n      \"name\": \"My App\",\n      \"slug\": \"my-app\",\n      \"url\": \"https://my-app.example.com\",\n      \"role\": \"admin\",\n      \"tenants\": [\n        {\n          \"tenant_id\": 1,\n          \"name\": \"Tenant A\",\n          \"slug\": \"tenant-a\",\n          \"role\": \"manager\",\n          \"is_default\": true\n        }\n      ]\n    }\n  ]\n}"
             },
             {
               "name": "401 Unauthorized",
@@ -180,7 +180,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "apps"]
             },
-            "description": "Returns the list of apps and clients the authenticated user has access to, along with their roles."
+            "description": "Returns the list of apps and tenants the authenticated user has access to, along with their roles."
           },
           "response": [
             {
@@ -199,7 +199,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "[\n  {\n    \"app_id\": 1,\n    \"name\": \"My App\",\n    \"slug\": \"my-app\",\n    \"url\": \"https://my-app.example.com\",\n    \"role\": \"admin\",\n    \"clients\": [\n      {\n        \"client_id\": 1,\n        \"name\": \"Client A\",\n        \"slug\": \"client-a\",\n        \"role\": \"manager\",\n        \"is_default\": true\n      }\n    ]\n  }\n]"
+              "body": "[\n  {\n    \"app_id\": 1,\n    \"name\": \"My App\",\n    \"slug\": \"my-app\",\n    \"url\": \"https://my-app.example.com\",\n    \"role\": \"admin\",\n    \"tenants\": [\n      {\n        \"tenant_id\": 1,\n        \"name\": \"Tenant A\",\n        \"slug\": \"tenant-a\",\n        \"role\": \"manager\",\n        \"is_default\": true\n      }\n    ]\n  }\n]"
             }
           ]
         }

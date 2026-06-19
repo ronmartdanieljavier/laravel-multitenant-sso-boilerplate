@@ -4,13 +4,13 @@ import { Head } from '@inertiajs/vue3';
 const stats = [
     { label: 'Total Users', value: '4,291', change: '+12%', up: true },
     { label: 'Active Apps', value: '18', change: '+2', up: true },
-    { label: 'Active Clients', value: '134', change: '-3', up: false },
+    { label: 'Active Tenants', value: '134', change: '-3', up: false },
     { label: 'SSO Sessions', value: '9,820', change: '+8%', up: true },
 ];
 
 const recentUsers = [
     { name: 'Alice Reyes', email: 'alice@acme.com', role: 'Admin', status: 'Active' },
-    { name: 'Bob Santos', email: 'bob@globex.com', role: 'Client', status: 'Active' },
+    { name: 'Bob Santos', email: 'bob@globex.com', role: 'Tenant', status: 'Active' },
     { name: 'Carol Tan', email: 'carol@initech.com', role: 'Reports', status: 'Inactive' },
     { name: 'Dan Cruz', email: 'dan@umbrella.com', role: 'Admin', status: 'Active' },
 ];
@@ -31,7 +31,7 @@ const recentUsers = [
                 <span class="font-semibold text-white">SSO Admin</span>
             </div>
             <nav class="flex-1 px-3 py-4 space-y-1">
-                <a v-for="item in ['Dashboard', 'Users', 'Apps', 'Clients', 'Settings']" :key="item"
+                <a v-for="item in ['Dashboard', 'Users', 'Apps', 'Tenants', 'Settings']" :key="item"
                    href="#"
                    :class="item === 'Dashboard' ? 'bg-violet-600/20 text-violet-300' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition">

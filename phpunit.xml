@@ -11,8 +11,8 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
-        <testsuite name="Login">
-            <directory>app/Login/Tests</directory>
+        <testsuite name="Auth">
+            <directory>app/Auth/Tests</directory>
         </testsuite>
     </testsuites>
     <source>

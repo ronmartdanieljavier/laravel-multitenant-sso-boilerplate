@@ -25,7 +25,7 @@ Route::post('/login', function (Request $request) {
 
     $request->session()->regenerate();
 
-    return redirect()->intended(route('client'));
+    return redirect()->intended(route('tenant'));
 })->name('login.post');
 
 Route::middleware('auth')->group(function () {
@@ -33,9 +33,9 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Admin/Index');
     })->name('admin');
 
-    Route::get('/client', function () {
-        return Inertia::render('Client/Index');
-    })->name('client');
+    Route::get('/tenant', function () {
+        return Inertia::render('Tenant/Index');
+    })->name('tenant');
 
     Route::get('/reports', function () {
         return Inertia::render('Reports/Index');

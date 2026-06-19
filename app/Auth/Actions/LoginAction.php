@@ -6,7 +6,7 @@ use App\Auth\Data\Core\AppAccessCoreData;
 use App\Auth\Data\Core\AuthTokenCoreData;
 use App\Auth\Data\Core\LoginCredentialsCoreData;
 use App\Auth\Data\Core\UserCoreData;
-use App\Auth\Models\User;
+use App\Models\Central\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Hash;
 

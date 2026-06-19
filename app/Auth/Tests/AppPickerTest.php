@@ -3,9 +3,9 @@
 namespace App\Auth\Tests;
 
 use App\Auth\Enums\Role;
-use App\Auth\Models\App;
-use App\Auth\Models\Tenant;
-use App\Auth\Models\User;
+use App\Models\Central\App;
+use App\Models\Central\Tenant;
+use App\Models\Central\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Auth\Models;
+namespace App\Models\Central;
 
 use App\Auth\Enums\Role;
 use Illuminate\Database\Eloquent\Attributes\Fillable;

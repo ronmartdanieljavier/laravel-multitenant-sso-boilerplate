@@ -14,6 +14,22 @@
 
 ---
 
+## [0.8.0] — 2026-06-19
+
+### Added
+- **Separated migration directories** — migrations split into two dedicated paths:
+  - `database/migrations/central/` — all central DB tables (users, tenants, apps, user_apps, user_app_tenants, system_settings, cache, jobs, personal_access_tokens)
+  - `database/migrations/tenant/` — tenant-specific tables run per-tenant database
+- **`php artisan central:migrate`** — runs migrations only against the central database (`database/migrations/central/`); supports `--fresh`, `--seed`, `--rollback`, `--step`, `--force`
+- **`php artisan tenant:migrate`** — reads all active tenant rows from the central DB, dynamically configures a per-tenant database connection using each tenant's stored credentials (`db_host`, `db_port`, `db_name`, `db_username`, `db_password`), and runs `database/migrations/tenant/` against every tenant; supports `--tenant=slug` to target a single tenant, plus `--fresh`, `--seed`, `--rollback`, `--step`, `--force`
+- **`php artisan migrate`** — unchanged command now runs both `central/` and `tenant/` paths on the default connection via `AppServiceProvider`
+
+### Changed
+- **`AppServiceProvider`** — registers both migration paths (`central/` and `tenant/`) with the migrator so the default `migrate` command covers both directories
+- **`app/Console/Commands/`** — new directory created for `CentralMigrateCommand` and `TenantMigrateCommand`
+
+---
+
 ## [0.7.0] — 2026-06-19
 
 ### Added

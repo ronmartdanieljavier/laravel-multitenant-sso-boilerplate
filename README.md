@@ -194,12 +194,17 @@ system_settings     — global config
 
 ## Current state
 
-Laravel 13 is installed at the repo root. The monorepo structure (`apps/`, `packages/`) is planned — this is the foundation phase. See [RELEASE_NOTES.md](RELEASE_NOTES.md) for a full changelog.
+Laravel 13 is installed at the repo root. The monorepo structure (`apps/`, `packages/`) is planned — the SSO backend is now complete. See [RELEASE_NOTES.md](RELEASE_NOTES.md) for a full changelog.
 
-What's installed:
+What's built:
 - **Laravel 13.16.1** — framework skeleton at repo root
 - **Laravel Boost 2.4** — starter kit scaffolding
 - **Laravel Sanctum 4.0** — API token authentication
+- **spatie/laravel-data 4.23** — DTOs with snake_case serialization, classes under `App\Login\Data\Core\` using `*CoreData` suffix
+- **SSO backend** — login, logout, and app-picker API endpoints under `App\Login\`
+- **Central DB schema** — `users`, `apps`, `clients`, `user_apps`, `user_app_clients`, `system_settings` migrations
+- **Modular routing** — each app module owns its routes under `app/*/Routes/api_*.php`
+- **Collocated tests** — PHPUnit tests live inside each app module (e.g. `app/Login/Tests/`)
 - **Tailwind CSS** via `@tailwindcss/vite`
 - **Bunny Fonts** (`Instrument Sans`) via `laravel-vite-plugin`
 - **Vite** build pipeline with hot-reload
@@ -541,6 +546,8 @@ No code changes required. The login app reads `report_url` and redirects there a
 | Framework | Laravel 13.16.1 | ✅ Installed |
 | Starter kits | Laravel Boost 2.4 | ✅ Installed |
 | API auth | Laravel Sanctum 4.0 | ✅ Installed |
+| DTOs | spatie/laravel-data 4.23 | ✅ Installed |
+| SSO backend | Login, logout, app-picker API | ✅ Built |
 | SSO / OAuth2 | Laravel Passport | Planned |
 | Frontend | Vue 3 + Inertia.js | Planned |
 | CSS | Tailwind CSS (`@tailwindcss/vite`) | ✅ Installed |
@@ -559,21 +566,28 @@ No code changes required. The login app reads `report_url` and redirects there a
 
 ## Roadmap
 
-**Phase 1 — Foundation** *(current)*
+**Phase 1 — Foundation** *(done)*
 - [x] Laravel 13 installed at repo root
 - [x] Laravel Boost + Sanctum + Tailwind CSS + Vite
 - [x] commitlint + Husky conventional commits
 - [x] Claude Code CLAUDE.md integration
 
-**Phase 2 — Monorepo structure**
+**Phase 2 — SSO backend** *(done)*
+- [x] Central DB schema — users, apps, clients, user_apps, user_app_clients, system_settings
+- [x] `App\Login\` module — models, DTOs (spatie/laravel-data), actions, controllers
+- [x] SSO API — `POST /api/login`, `POST /api/logout`, `GET /api/apps`
+- [x] Sanctum token with per-app abilities embedded as token scopes
+- [x] Modular routing — each app owns `app/*/Routes/api_*.php`
+- [x] Collocated PHPUnit tests — `app/Login/Tests/` registered as `Login` suite
+
+**Phase 3 — Monorepo structure**
 - [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`
 - [ ] `packages/central` shared Composer package
 - [ ] `packages/ui` shared Vue 3 component library
 - [ ] Docker Compose full local dev stack
 - [ ] PHPStan 2.2 + Larastan static analysis
 
-**Phase 3 — Auth & multi-tenancy**
-- [ ] Laravel Passport (OAuth2 / JWT) SSO
+**Phase 4 — Frontend & multi-tenancy**
 - [ ] Inertia.js + Vue 3 per app with shared props
 - [ ] Dynamic tenant database resolution middleware
 - [ ] Two-dimensional permissions (app + client DB)

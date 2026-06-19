@@ -15,6 +15,20 @@
 
 ---
 
+## [0.5.1] — 2026-06-19
+
+### Fixed
+- **Login form** — `form.post()` was pointing to `/api/login` (API middleware, no session/CSRF); corrected to `POST /login` on the web middleware stack
+- **Protected routes** — `/admin`, `/client`, `/reports` were publicly accessible; wrapped in `auth` middleware so unauthenticated visitors are redirected to `/login`
+- **POST /login handler** — added web route that authenticates via `Auth::attempt`, regenerates the session, and redirects to `/client`
+- **E2E tests** — added shared `login()` helper (`resources/js/e2e/helpers/auth.js`) and wired it into `beforeEach` for all three protected-page specs; CI now runs `php artisan db:seed --force` so the test user exists
+- **CI server readiness** — replaced `sleep 3` with `timeout 30 bash -c 'until curl -sf http://localhost:8000/up; do sleep 1; done'` to eliminate flaky E2E failures on loaded runners
+- **`package.json`** — moved `vue` and `@inertiajs/vue3` from `devDependencies` to `dependencies` (runtime bundles required in production)
+- **Dead import** — removed unused `beforeAll` from `Login/Index.test.js`
+- **`.gitignore`** — added `test-results/` and `playwright-report/` to prevent Playwright artifacts from being committed
+
+---
+
 ## [0.5.0] — 2026-06-19
 
 ### Added

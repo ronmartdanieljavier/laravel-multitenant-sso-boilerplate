@@ -1,0 +1,24 @@
+import { test, expect } from '@playwright/test';
+import { login } from './helpers/auth.js';
+
+test.describe('Tenant portal', () => {
+    test.beforeEach(async ({ page }) => {
+        await login(page);
+        await page.goto('/tenant');
+    });
+
+    test('shows the welcome message', async ({ page }) => {
+        await expect(page.getByText(/good morning/i)).toBeVisible();
+    });
+
+    test('shows app cards', async ({ page }) => {
+        await expect(page.getByText('Admin Portal')).toBeVisible();
+        await expect(page.getByText('Reports Suite')).toBeVisible();
+        await expect(page.getByText('Tenant Hub')).toBeVisible();
+        await expect(page.getByText('Billing')).toBeVisible();
+    });
+
+    test('shows recent activity section', async ({ page }) => {
+        await expect(page.getByText('Recent Activity')).toBeVisible();
+    });
+});

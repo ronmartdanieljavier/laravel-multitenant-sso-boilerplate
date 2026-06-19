@@ -47,6 +47,12 @@ A production-ready Laravel monorepo template for building multi-tenant SaaS plat
 
 ## Key features
 
+**Inertia.js + Vue 3 frontend**
+- Each Laravel app serves its own Vue 3 pages via Inertia.js — no separate frontend server
+- Vue page components live in `resources/js/Pages/` inside each app, built by Vite
+- Active client and user permissions shared to every page automatically via Inertia shared props
+- Optional `packages/ui` local package for shared Vue components across all apps
+
 **Single Sign-On**
 - One login page for all apps via Laravel Passport (OAuth2)
 - JWT carries user identity and per-app client access list
@@ -79,19 +85,96 @@ A production-ready Laravel monorepo template for building multi-tenant SaaS plat
 
 ## Monorepo structure
 
+Each app is a standard Laravel installation. Inertia.js replaces Blade — Vue 3 page components live inside each app under `resources/js/Pages/`, served directly by Laravel via Vite. No separate frontend server or build pipeline needed.
+
 ```
-/
+laravel-multitenant-starter/
+│
 ├── apps/
-│   ├── login/          # login.domain.com
-│   ├── admin/          # admin.domain.com
-│   ├── client/         # client.domain.com
-│   └── reports/        # reports.domain.com
+│   ├── login/                          # login.domain.com
+│   │   ├── app/Http/Controllers/
+│   │   │   └── Auth/
+│   │   │       ├── LoginController.php
+│   │   │       └── AppPickerController.php
+│   │   ├── resources/js/
+│   │   │   ├── Pages/
+│   │   │   │   ├── Auth/Login.vue      # Login form
+│   │   │   │   └── AppPicker.vue       # App switcher after login
+│   │   │   ├── Layouts/AuthLayout.vue
+│   │   │   └── app.js                  # Inertia bootstrap
+│   │   └── vite.config.js
+│   │
+│   ├── admin/                          # admin.domain.com
+│   │   ├── app/Http/Controllers/
+│   │   │   ├── UserController.php
+│   │   │   ├── ClientController.php
+│   │   │   └── SettingsController.php
+│   │   ├── resources/js/
+│   │   │   ├── Pages/
+│   │   │   │   ├── Users/
+│   │   │   │   │   ├── Index.vue       # User list + permission overview
+│   │   │   │   │   └── Edit.vue        # Assign app + client DB access
+│   │   │   │   ├── Clients/
+│   │   │   │   │   ├── Index.vue       # Tenant DB list
+│   │   │   │   │   └── Create.vue      # Provision new tenant
+│   │   │   │   └── Settings/Index.vue
+│   │   │   ├── Layouts/AdminLayout.vue
+│   │   │   └── app.js
+│   │   └── vite.config.js
+│   │
+│   ├── client/                         # client.domain.com
+│   │   ├── app/Http/Controllers/
+│   │   │   ├── DashboardController.php
+│   │   │   └── ClientSwitchController.php
+│   │   ├── resources/js/
+│   │   │   ├── Pages/
+│   │   │   │   ├── Dashboard.vue
+│   │   │   │   └── ...                 # domain-specific pages
+│   │   │   ├── Components/
+│   │   │   │   └── ClientSwitcher.vue  # tenant switcher dropdown
+│   │   │   ├── Layouts/AppLayout.vue
+│   │   │   └── app.js
+│   │   └── vite.config.js
+│   │
+│   └── reports/                        # reports.domain.com
+│       ├── app/Http/Controllers/
+│       │   └── ReportController.php
+│       ├── app/Jobs/
+│       │   └── GenerateReportJob.php
+│       ├── resources/js/
+│       │   ├── Pages/
+│       │   │   ├── Reports/Index.vue   # report list + queue status polling
+│       │   │   └── Reports/View.vue    # rendered report viewer
+│       │   └── app.js
+│       └── vite.config.js
+│
 ├── packages/
-│   └── central/        # shared package — models, middleware, TenantResolver
-└── database/
-    └── migrations/
-        ├── central/    # users, apps, clients, permissions
-        └── tenant/     # orders, products — runs per tenant on provision
+│   ├── central/                        # Shared Laravel Composer package
+│   │   └── src/
+│   │       ├── Models/                 # User, Client, App, UserAppClient
+│   │       ├── Middleware/             # VerifyAppAccess, SetTenantDatabase
+│   │       └── Services/
+│   │           └── TenantResolver.php
+│   │
+│   └── ui/                            # Shared Vue 3 components (optional)
+│       └── src/
+│           ├── components/            # Button, Modal, DataTable, Alert
+│           └── composables/           # useAuth.js, useTenant.js, useClient.js
+│
+├── database/
+│   └── migrations/
+│       ├── central/                   # users, apps, clients, permissions
+│       └── tenant/                    # domain tables — run per tenant on provision
+│
+├── docker/
+│   └── php/Dockerfile                 # PHP 8.3 FPM base image (shared)
+│
+├── docker-compose.yml
+├── phpstan.neon                        # root config — extended per app
+├── commitlint.config.mjs
+├── .husky/
+├── CLAUDE.md
+└── README.md
 ```
 
 ---
@@ -134,8 +217,15 @@ Set up each app:
 cd apps/login
 cp .env.example .env
 composer install
+npm install
 php artisan key:generate
 php artisan passport:install
+
+# Build frontend assets
+npm run build
+
+# Or run Vite dev server during development
+npm run dev
 ```
 
 Repeat for `admin`, `client`, and `reports`.
@@ -214,6 +304,78 @@ docker compose exec login php artisan migrate
 
 # Tail logs for all services
 docker compose logs -f
+```
+
+---
+
+## Inertia.js + Vue 3
+
+Each app uses Inertia.js as the glue between Laravel controllers and Vue 3 page components. Controllers return `Inertia::render()` instead of JSON or Blade views — data is injected directly into the Vue page as props.
+
+```php
+// app/Http/Controllers/DashboardController.php
+public function index(): Response
+{
+    return Inertia::render('Dashboard', [
+        'stats' => DashboardService::stats(),
+    ]);
+}
+```
+
+```vue
+<!-- resources/js/Pages/Dashboard.vue -->
+<script setup>
+defineProps({ stats: Object })
+</script>
+
+<template>
+  <AppLayout>
+    <div>{{ stats.total_orders }}</div>
+  </AppLayout>
+</template>
+```
+
+### Shared props — active client available on every page
+
+The active client and user permissions are shared globally via `HandleInertiaRequests` middleware so every Vue page gets them without an extra API call:
+
+```php
+// app/Http/Middleware/HandleInertiaRequests.php
+public function share(Request $request): array
+{
+    return array_merge(parent::share($request), [
+        'auth' => [
+            'user'          => $request->user(),
+            'active_client' => session('active_client_id'),
+            'my_clients'    => session('app_access'),
+        ],
+    ]);
+}
+```
+
+Any Vue page or component reads it via `usePage()`:
+
+```js
+import { usePage } from '@inertiajs/vue3'
+
+const { auth } = usePage().props
+// auth.active_client, auth.my_clients, auth.user
+```
+
+### Shared UI components — packages/ui
+
+Common Vue components (buttons, modals, tables) used across multiple apps live in `packages/ui` and are imported as a local npm package:
+
+```js
+// In any app's package.json
+{
+  "dependencies": {
+    "@starter/ui": "file:../../packages/ui"
+  }
+}
+
+// In any Vue component
+import { AppButton, DataTable, ClientSwitcher } from '@starter/ui'
 ```
 
 ---
@@ -364,10 +526,11 @@ No code changes required. The login app reads `report_url` and redirects there a
 ## Tech stack
 
 - **Framework** — Laravel 13
+- **Frontend** — Vue 3 + Inertia.js (served per app via Laravel, built by Vite)
 - **Auth** — Laravel Passport (OAuth2 / JWT)
 - **Queue** — Laravel Horizon + Redis
-- **Shared code** — Local Composer package (`packages/central`)
-- **Frontend** — Vue 3 + Inertia.js (per app)
+- **Shared Laravel code** — Local Composer package (`packages/central`)
+- **Shared Vue components** — Local npm package (`packages/ui`) — optional
 - **DB** — MySQL 8 (central + tenant), PostgreSQL compatible
 - **Containers** — Docker Engine 29 + Docker Compose (full local dev stack)
 - **Static analysis** — PHPStan 2.2 + Larastan (level 8 by default)
@@ -382,6 +545,8 @@ No code changes required. The login app reads `report_url` and redirects there a
 - [x] PHPStan 2.2 + Larastan static analysis
 - [x] commitlint + Husky conventional commits
 - [x] Claude Code CLAUDE.md integration
+- [x] Inertia.js + Vue 3 per app with shared props
+- [x] packages/ui shared Vue component library (stub)
 - [ ] Filament admin panel integration
 - [ ] Tenant migration version tracking
 - [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
@@ -392,4 +557,4 @@ No code changes required. The login app reads `report_url` and redirects there a
 
 ## License
 
-MIT
+Ron Mart Daniel Javier

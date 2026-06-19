@@ -1,0 +1,5 @@
+set -e
+
+vendor/bin/pint --dirty --format agent
+git add -u
+vendor/bin/phpstan analyse --memory-limit=512M

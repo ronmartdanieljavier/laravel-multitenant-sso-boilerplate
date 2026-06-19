@@ -9,6 +9,12 @@ class TenantSeeder extends Seeder
 {
     public function run(): void
     {
+        // The migration seeds the Demo Tenant on fresh installs.
+        // This seeder handles environments where the migration seed was skipped.
+        if (Tenant::where('slug', 'demo')->exists()) {
+            return;
+        }
+
         Tenant::factory()->create([
             'name' => 'Demo Tenant',
             'slug' => 'demo',

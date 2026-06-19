@@ -46,13 +46,3 @@ jobs:
       - run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - run: composer analyse
-
-  greptile-review:
-    name: Greptile Code Review
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: greptile-systems/greptile-review@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          greptile-token: ${{ secrets.GREPTILE_TOKEN }}

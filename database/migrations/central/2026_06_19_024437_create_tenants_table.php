@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Central\Tenant;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -27,6 +28,18 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
+
+        Tenant::create([
+            'name' => 'Demo Tenant',
+            'slug' => 'demo',
+            'db_host' => env('DB_HOST', '127.0.0.1'),
+            'db_port' => (int) env('DB_PORT', 5432),
+            'db_name' => 'tenant_demo',
+            'db_username' => env('DB_USERNAME', 'laravel'),
+            'db_password' => env('DB_PASSWORD', 'secret'),
+            'report_server' => 'shared',
+            'is_active' => true,
+        ]);
     }
 
     /**

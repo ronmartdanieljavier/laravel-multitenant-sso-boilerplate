@@ -62,22 +62,49 @@ class TenantMigrateCommand extends Command
 
     private function configureTenantConnection(Tenant $tenant): void
     {
-        Config::set('database.connections.tenant', [
-            'driver' => 'mysql',
+        $config = [
+            'driver' => 'pgsql',
             'host' => $tenant->db_host,
             'port' => $tenant->db_port,
             'database' => $tenant->db_name,
             'username' => $tenant->db_username,
             'password' => $tenant->db_password,
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
+            'charset' => 'utf8',
             'prefix' => '',
-            'strict' => true,
-            'engine' => null,
-        ]);
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ];
 
+        Config::set('database.connections.tenant', $config);
         DB::purge('tenant');
+
+        $this->ensureDatabaseExists($tenant, $config);
+
         DB::reconnect('tenant');
+    }
+
+    private function ensureDatabaseExists(Tenant $tenant, array $config): void
+    {
+        // Connect to the default maintenance DB to create the tenant DB if needed
+        Config::set('database.connections.tenant_admin', array_merge($config, [
+            'database' => 'postgres',
+        ]));
+
+        DB::purge('tenant_admin');
+
+        $dbName = $tenant->db_name;
+        $exists = DB::connection('tenant_admin')
+            ->selectOne('SELECT 1 FROM pg_database WHERE datname = ?', [$dbName]);
+
+        if (! $exists) {
+            DB::connection('tenant_admin')
+                ->statement("CREATE DATABASE \"{$dbName}\"");
+
+            $this->line("  Created database: {$dbName}");
+        }
+
+        DB::purge('tenant_admin');
+        Config::set('database.connections.tenant_admin', null);
     }
 
     private function runMigration(): void

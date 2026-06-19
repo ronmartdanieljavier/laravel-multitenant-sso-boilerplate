@@ -116,6 +116,7 @@ system_settings     — global config
 - PHP 8.3+
 - Composer
 - Node.js 20+
+- Docker Engine 29+ and Docker Compose (recommended for local dev)
 - MySQL 8.0+ (central DB server)
 - Redis (queue backend for Horizon)
 
@@ -182,6 +183,136 @@ php artisan horizon
 
 ---
 
+## Docker local development
+
+A `docker-compose.yml` is included at the repo root to spin up the full stack locally — all four apps, MySQL, and Redis — with a single command.
+
+```bash
+docker compose up -d
+```
+
+Services exposed:
+
+| Service | URL / Port |
+|---|---|
+| login app | http://localhost:8001 |
+| admin app | http://localhost:8002 |
+| client app | http://localhost:8003 |
+| reports app | http://localhost:8004 |
+| MySQL (central) | localhost:3306 |
+| Redis | localhost:6379 |
+| Horizon dashboard | http://localhost:8004/horizon |
+
+Each app container runs PHP-FPM 8.3 + Nginx. The reports container additionally runs a Horizon worker process via Supervisor.
+
+```bash
+# Rebuild containers after Dockerfile changes
+docker compose build --no-cache
+
+# Run artisan commands inside a container
+docker compose exec login php artisan migrate
+
+# Tail logs for all services
+docker compose logs -f
+```
+
+---
+
+## Static analysis — PHPStan
+
+PHPStan 2.2 with Larastan is configured at **level 8** across all apps. Run from any app directory:
+
+```bash
+composer analyse
+# or directly:
+./vendor/bin/phpstan analyse --level=8
+```
+
+A shared `phpstan.neon` lives at the repo root and is extended per app:
+
+```neon
+# phpstan.neon (root)
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - app
+    excludePaths:
+        - app/Http/Middleware/TrustProxies.php
+
+# apps/login/phpstan.neon
+includes:
+    - ../../phpstan.neon
+```
+
+PHPStan also runs in CI on every pull request via GitHub Actions.
+
+---
+
+## Commit linting — commitlint
+
+commitlint 21 with Husky enforces conventional commits on every commit across the monorepo.
+
+```bash
+# Install from repo root
+npm install
+
+# Husky is set up automatically via prepare script
+# Test a commit message manually
+echo "feat(auth): add passkey login support" | npx commitlint
+```
+
+Config at repo root (`commitlint.config.mjs`):
+
+```js
+export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'type-enum': [2, 'always', [
+      'feat', 'fix', 'docs', 'style', 'refactor',
+      'perf', 'test', 'chore', 'revert', 'ci', 'build',
+    ]],
+    'scope-case': [2, 'always', 'kebab-case'],
+    'subject-max-length': [2, 'always', 100],
+  },
+};
+```
+
+Valid commit examples:
+
+```bash
+git commit -m "feat(auth): add SSO token refresh flow"
+git commit -m "fix(tenant): resolve DB connection leak on client switch"
+git commit -m "docs: update provisioning guide in README"
+git commit -m "chore(docker): add redis healthcheck to compose file"
+```
+
+---
+
+## Claude Code
+
+This project is built with [Claude Code](https://claude.ai/code) — Anthropic's agentic coding tool — as part of the development workflow.
+
+A `CLAUDE.md` file at the repo root gives Claude Code context about the monorepo structure, conventions, and per-app responsibilities so it can assist across all four apps effectively.
+
+```bash
+# Install Claude Code globally
+npm install -g @anthropic-ai/claude-code
+
+# Run from the repo root
+claude
+```
+
+Claude Code is used for:
+- Scaffolding new tenant migrations and models
+- Generating boilerplate for new apps added to the monorepo
+- Reviewing PHPStan errors and suggesting type-safe fixes
+- Writing and refactoring report queries against tenant DB connections
+
+---
+
 ## Provisioning a new tenant
 
 From the admin panel UI, or via artisan:
@@ -238,15 +369,22 @@ No code changes required. The login app reads `report_url` and redirects there a
 - **Shared code** — Local Composer package (`packages/central`)
 - **Frontend** — Vue 3 + Inertia.js (per app)
 - **DB** — MySQL 8 (central + tenant), PostgreSQL compatible
+- **Containers** — Docker Engine 29 + Docker Compose (full local dev stack)
+- **Static analysis** — PHPStan 2.2 + Larastan (level 8 by default)
+- **Commit linting** — commitlint 21 with `@commitlint/config-conventional` + Husky
+- **AI coding** — Claude Code (Anthropic) for agentic development workflows
 
 ---
 
 ## Roadmap
 
+- [x] Docker Compose local development setup
+- [x] PHPStan 2.2 + Larastan static analysis
+- [x] commitlint + Husky conventional commits
+- [x] Claude Code CLAUDE.md integration
 - [ ] Filament admin panel integration
 - [ ] Tenant migration version tracking
 - [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
-- [ ] Docker Compose local development setup
 - [ ] GitHub Actions CI/CD pipeline
 - [ ] Tenant health dashboard in admin
 
@@ -254,4 +392,4 @@ No code changes required. The login app reads `report_url` and redirects there a
 
 ## License
 
-Ron Mart Daniel Javier
+MIT

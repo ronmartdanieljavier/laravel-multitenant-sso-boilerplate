@@ -113,7 +113,7 @@ system_settings     — global config
 
 ### Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - Composer
 - Node.js 20+
 - MySQL 8.0+ (central DB server)
@@ -232,7 +232,7 @@ No code changes required. The login app reads `report_url` and redirects there a
 
 ## Tech stack
 
-- **Framework** — Laravel 11
+- **Framework** — Laravel 13
 - **Auth** — Laravel Passport (OAuth2 / JWT)
 - **Queue** — Laravel Horizon + Redis
 - **Shared code** — Local Composer package (`packages/central`)

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Auth\Models;
+namespace App\Models\Central;
 
 use Database\Factories\Auth\AppFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;

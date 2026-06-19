@@ -1,0 +1,27 @@
+{
+  "name": "laravel-multitenant-sso-boilerplate",
+  "version": "1.0.0",
+  "description": "A production-ready Laravel monorepo template for building multi-tenant SaaS platforms with Single Sign-On, granular per-user permissions, dynamic tenant database resolution across any server, and a scalable async reporting engine.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ronmartdanieljavier/laravel-multitenant-sso-boilerplate.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ronmartdanieljavier/laravel-multitenant-sso-boilerplate/issues"
+  },
+  "homepage": "https://github.com/ronmartdanieljavier/laravel-multitenant-sso-boilerplate#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "husky": "^9.1.7"
+  }
+}

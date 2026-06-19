@@ -1,0 +1,98 @@
+# Laravel
+/vendor/
+/node_modules/
+/public/hot
+/public/storage
+/storage/*.key
+/storage/app/public/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/testing/.gitkeep
+!storage/framework/views/.gitkeep
+!storage/logs/.gitkeep
+/bootstrap/cache/*
+!bootstrap/cache/.gitkeep
+.env
+.env.*
+!.env.example
+.phpunit.result.cache
+.phpunit.cache/
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+
+# PHP / Composer
+/vendor/
+composer.phar
+.phpunit.result.cache
+.phpstan/
+phpstan.neon.dist
+
+# Node / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+package-lock.json.bak
+
+# Vite / Build artifacts
+/public/build/
+/public/js/
+/public/css/
+dist/
+.vite/
+
+# Docker
+.docker/data/
+docker-compose.override.yml
+
+# IDE & editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+.fleet/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Testing
+/coverage/
+.nyc_output/
+/tests/Browser/screenshots/*
+/tests/Browser/console/*
+!tests/Browser/screenshots/.gitkeep
+!tests/Browser/console/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Misc
+*.bak
+*.tmp
+*.temp
+.cache/

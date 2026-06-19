@@ -86,6 +86,8 @@ desktop.ini
 /tests/Browser/console/*
 !tests/Browser/screenshots/.gitkeep
 !tests/Browser/console/.gitkeep
+/test-results/
+/playwright-report/
 
 # Logs
 *.log

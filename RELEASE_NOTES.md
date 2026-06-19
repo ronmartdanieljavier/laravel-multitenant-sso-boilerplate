@@ -5,7 +5,6 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Inertia.js + Vue 3 frontend per app
 - Multi-app monorepo structure (`apps/login`, `apps/admin`, `apps/client`, `apps/reports`)
 - `packages/central` shared Composer package (models, middleware, TenantResolver)
 - `packages/ui` shared Vue 3 component library
@@ -13,7 +12,54 @@
 - Laravel Horizon + Redis async report queue
 - Docker Compose full local dev stack
 - PHPStan 2.2 + Larastan at level 8
-- GitHub Actions CI/CD pipeline
+
+---
+
+## [0.5.1] — 2026-06-19
+
+### Fixed
+- **Login form** — `form.post()` was pointing to `/api/login` (API middleware, no session/CSRF); corrected to `POST /login` on the web middleware stack
+- **Protected routes** — `/admin`, `/client`, `/reports` were publicly accessible; wrapped in `auth` middleware so unauthenticated visitors are redirected to `/login`
+- **POST /login handler** — added web route that authenticates via `Auth::attempt`, regenerates the session, and redirects to `/client`
+- **E2E tests** — added shared `login()` helper (`resources/js/e2e/helpers/auth.js`) and wired it into `beforeEach` for all three protected-page specs; CI now runs `php artisan db:seed --force` so the test user exists
+- **CI server readiness** — replaced `sleep 3` with `timeout 30 bash -c 'until curl -sf http://localhost:8000/up; do sleep 1; done'` to eliminate flaky E2E failures on loaded runners
+- **`package.json`** — moved `vue` and `@inertiajs/vue3` from `devDependencies` to `dependencies` (runtime bundles required in production)
+- **Dead import** — removed unused `beforeAll` from `Login/Index.test.js`
+- **`.gitignore`** — added `test-results/` and `playwright-report/` to prevent Playwright artifacts from being committed
+
+---
+
+## [0.5.0] — 2026-06-19
+
+### Added
+- **Frontend testing** — Vitest 4 + Vue Test Utils 2 for component unit tests; Playwright 1.61 for E2E browser tests
+  - 16 Vitest unit tests across all four page components (`Login`, `Admin`, `Client`, `Reports`) — render assertions, slot/prop checks, tab interaction
+  - 4 Playwright E2E spec files (`login.spec.js`, `admin.spec.js`, `client.spec.js`, `reports.spec.js`) — full page visibility checks running against a live Laravel server
+  - E2E specs live under `resources/js/e2e/`; unit tests co-located with each page as `*.test.js`
+  - `playwright.config.js` at repo root — Chromium project, configurable `APP_URL`, CI retry support, Playwright report artifact upload on failure
+- **npm test scripts** — `test:unit`, `test:unit:watch`, `test:unit:coverage`, `test:e2e`, `test:e2e:ui`, `test` (runs both)
+- **CI jobs** — two new GitHub Actions jobs added to `ci.yml`:
+  - `Frontend Unit Tests` — runs `npm run test:unit` via Vitest on every push/PR
+  - `Frontend E2E Tests` — boots Laravel (`php artisan serve`), installs Playwright Chromium, runs `npm run test:e2e`; uploads `playwright-report/` artifact on failure
+
+---
+
+## [0.4.0] — 2026-06-19
+
+### Added
+- **Inertia.js + Vue 3 frontend** — server-side rendering bridge installed and configured across all four apps
+  - `inertiajs/inertia-laravel` (composer) + `@inertiajs/vue3`, `vue 3`, `@vitejs/plugin-vue` (npm)
+  - `HandleInertiaRequests` middleware registered in `bootstrap/app.php`
+  - `resources/views/app.blade.php` root Inertia template
+  - `resources/js/app.js` bootstraps Vue 3 + Inertia with dynamic page resolution via `import.meta.glob`
+- **Landing pages** — dark-themed Vue 3 SFCs with Tailwind CSS for each app module:
+  - `Login/Index.vue` — SSO login form with email/password fields, remember me, forgot password link
+  - `Admin/Index.vue` — sidebar dashboard with stats cards and recent users table
+  - `Client/Index.vue` — app-picker portal with four app cards and recent activity feed
+  - `Reports/Index.vue` — reports suite with summary stats, tabbed interface, and downloadable report rows
+- **Web routes** — `routes/web.php` updated with named Inertia routes for `/login`, `/admin`, `/client`, `/reports`
+- **CI** — `Frontend Build` job added to `ci.yml` running `npm run build` on every push and PR
+- **npm scripts** — `dev` and `build` scripts added to `package.json`; `laravel-vite-plugin` and `@tailwindcss/vite` installed
 
 ---
 

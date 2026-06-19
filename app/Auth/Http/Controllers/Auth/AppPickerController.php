@@ -3,8 +3,8 @@
 namespace App\Auth\Http\Controllers\Auth;
 
 use App\Auth\Actions\LoadUserAppsAction;
-use App\Auth\Models\User;
 use App\Http\Controllers\Controller;
+use App\Models\Central\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Auth;
 
-use App\Auth\Models\App;
+use App\Models\Central\App;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 

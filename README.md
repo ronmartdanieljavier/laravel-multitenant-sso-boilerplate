@@ -104,18 +104,20 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   └── LoginController.php
 │   │   ├── Http/Requests/
 │   │   │   └── LoginRequest.php
-│   │   ├── Models/
-│   │   │   ├── App.php
-│   │   │   ├── SystemSetting.php
-│   │   │   ├── Tenant.php
-│   │   │   ├── User.php
-│   │   │   ├── UserApp.php
-│   │   │   └── UserAppTenant.php
 │   │   ├── Routes/
 │   │   │   └── api_login.php               # SSO API routes
 │   │   └── Tests/
 │   │       ├── LoginTest.php
 │   │       └── AppPickerTest.php
+│   │
+│   ├── Models/
+│   │   └── Central/                        # Central DB models (App\Models\Central)
+│   │       ├── App.php
+│   │       ├── SystemSetting.php
+│   │       ├── Tenant.php
+│   │       ├── User.php
+│   │       ├── UserApp.php
+│   │       └── UserAppTenant.php
 │   │
 │   ├── Console/Commands/
 │   │   ├── CentralMigrateCommand.php       # php artisan central:migrate
@@ -220,6 +222,7 @@ What's built:
 - **Laravel Sanctum 4.0** — API token authentication
 - **spatie/laravel-data 4.23** — DTOs under `App\Auth\Data\Core\` using `*CoreData` suffix
 - **SSO backend** — login, logout, and app-picker API under `App\Auth\`
+- **Central models** — `App`, `Tenant`, `User`, `UserApp`, `UserAppTenant`, `SystemSetting` under `App\Models\Central\`
 - **Central DB schema** — `users`, `apps`, `tenants`, `user_apps`, `user_app_tenants`, `system_settings` in `database/migrations/central/`
 - **Separated migrations** — `database/migrations/central/` and `database/migrations/tenant/` with custom `php artisan central:migrate` and `php artisan tenant:migrate` commands
 - **Modular routing** — each module owns its routes under `app/*/Routes/api_*.php`

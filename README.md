@@ -205,6 +205,11 @@ What's built:
 - **Central DB schema** — `users`, `apps`, `clients`, `user_apps`, `user_app_clients`, `system_settings` migrations
 - **Modular routing** — each app module owns its routes under `app/*/Routes/api_*.php`
 - **Collocated tests** — PHPUnit tests live inside each app module (e.g. `app/Login/Tests/`)
+- **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware and dynamic page resolution
+- **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Client, and Reports at `/login`, `/admin`, `/client`, `/reports`
+- **Vitest unit tests** — 16 component tests across all four pages
+- **Playwright E2E tests** — browser tests for all four pages against a live Laravel server
+- **GitHub Actions CI** — build, unit test, and E2E test jobs on every push and PR
 - **Tailwind CSS** via `@tailwindcss/vite`
 - **Bunny Fonts** (`Instrument Sans`) via `laravel-vite-plugin`
 - **Vite** build pipeline with hot-reload
@@ -549,10 +554,13 @@ No code changes required. The login app reads `report_url` and redirects there a
 | DTOs | spatie/laravel-data 4.23 | ✅ Installed |
 | SSO backend | Login, logout, app-picker API | ✅ Built |
 | SSO / OAuth2 | Laravel Passport | Planned |
-| Frontend | Vue 3 + Inertia.js | Planned |
+| Frontend | Vue 3 + Inertia.js | ✅ Installed |
+| Frontend pages | Login, Admin, Client, Reports landing pages | ✅ Built |
 | CSS | Tailwind CSS (`@tailwindcss/vite`) | ✅ Installed |
 | Fonts | Bunny Fonts — Instrument Sans | ✅ Installed |
 | Build | Vite + `laravel-vite-plugin` | ✅ Installed |
+| Unit tests | Vitest 4 + Vue Test Utils 2 | ✅ Installed |
+| E2E tests | Playwright 1.61 (Chromium) | ✅ Installed |
 | Queue | Laravel Horizon + Redis | Planned |
 | Shared PHP | `packages/central` (local Composer) | Planned |
 | Shared Vue | `packages/ui` (local npm) | Planned |
@@ -560,6 +568,7 @@ No code changes required. The login app reads `report_url` and redirects there a
 | Containers | Docker Engine 29 + Docker Compose | Planned |
 | Static analysis | PHPStan 2.2 + Larastan (level 8) | Planned |
 | Commit linting | commitlint 21 + Husky 9 | ✅ Installed |
+| CI | GitHub Actions (build, unit, E2E) | ✅ Active |
 | AI coding | Claude Code (Anthropic) | ✅ Active |
 
 ---
@@ -587,16 +596,27 @@ No code changes required. The login app reads `report_url` and redirects there a
 - [ ] Docker Compose full local dev stack
 - [ ] PHPStan 2.2 + Larastan static analysis
 
-**Phase 4 — Frontend & multi-tenancy**
-- [ ] Inertia.js + Vue 3 per app with shared props
+**Phase 3 — Monorepo structure**
+- [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`
+- [ ] `packages/central` shared Composer package
+- [ ] `packages/ui` shared Vue 3 component library
+- [ ] Docker Compose full local dev stack
+- [ ] PHPStan 2.2 + Larastan static analysis
+
+**Phase 4 — Frontend & multi-tenancy** *(in progress)*
+- [x] Inertia.js + Vue 3 installed and configured
+- [x] Landing pages for Login, Admin, Client, and Reports apps
+- [x] Vitest unit tests for all four page components
+- [x] Playwright E2E tests for all four pages
+- [x] GitHub Actions CI — frontend build, unit, and E2E jobs
 - [ ] Dynamic tenant database resolution middleware
 - [ ] Two-dimensional permissions (app + client DB)
+- [ ] Inertia shared props — active client + permissions on every page
 
-**Phase 4 — Reporting & ops**
+**Phase 5 — Reporting & ops**
 - [ ] Laravel Horizon + Redis async report queue
 - [ ] Per-tenant read replica support
 - [ ] Tenant migration version tracking
-- [ ] GitHub Actions CI/CD pipeline
 - [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [ ] Tenant health dashboard in admin
 

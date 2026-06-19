@@ -14,6 +14,13 @@
 
 ---
 
+## [0.9.0] — 2026-06-19
+
+### Changed
+- **Central models moved to `app/Models/Central/`** — `App`, `Tenant`, `User`, `UserApp`, `UserAppTenant`, and `SystemSetting` relocated from `app/Auth/Models/` to `app/Models/Central/`; namespace updated from `App\Auth\Models` to `App\Models\Central` across all files that reference these models
+
+---
+
 ## [0.8.0] — 2026-06-19
 
 ### Added

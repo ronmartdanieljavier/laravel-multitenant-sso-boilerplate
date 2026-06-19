@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Auth;
 
-use App\Auth\Models\Tenant;
+use App\Models\Central\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 

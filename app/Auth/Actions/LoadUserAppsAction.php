@@ -4,9 +4,9 @@ namespace App\Auth\Actions;
 
 use App\Auth\Data\Core\AppAccessCoreData;
 use App\Auth\Data\Core\TenantAccessCoreData;
-use App\Auth\Models\User;
-use App\Auth\Models\UserApp;
-use App\Auth\Models\UserAppTenant;
+use App\Models\Central\User;
+use App\Models\Central\UserApp;
+use App\Models\Central\UserAppTenant;
 use Spatie\LaravelData\DataCollection;
 
 class LoadUserAppsAction

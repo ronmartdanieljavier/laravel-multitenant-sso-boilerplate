@@ -192,6 +192,21 @@ system_settings     — global config
 
 ---
 
+## Current state
+
+Laravel 13 is installed at the repo root. The monorepo structure (`apps/`, `packages/`) is planned — this is the foundation phase. See [RELEASE_NOTES.md](RELEASE_NOTES.md) for a full changelog.
+
+What's installed:
+- **Laravel 13.16.1** — framework skeleton at repo root
+- **Laravel Boost 2.4** — starter kit scaffolding
+- **Laravel Sanctum 4.0** — API token authentication
+- **Tailwind CSS** via `@tailwindcss/vite`
+- **Bunny Fonts** (`Instrument Sans`) via `laravel-vite-plugin`
+- **Vite** build pipeline with hot-reload
+- **commitlint 21 + Husky 9** — conventional commit enforcement
+
+---
+
 ## Getting started
 
 ### Requirements
@@ -206,20 +221,18 @@ system_settings     — global config
 ### Installation
 
 ```bash
-git clone https://github.com/your-username/laravel-multitenant-starter.git
-cd laravel-multitenant-starter
-```
+git clone https://github.com/ronmartdanieljavier/laravel-multitenant-sso-boilerplate.git
+cd laravel-multitenant-sso-boilerplate
 
-Set up each app:
-
-```bash
-# Example for the login app
-cd apps/login
-cp .env.example .env
+# Install PHP dependencies
 composer install
+
+# Install Node dependencies (commitlint + Husky)
 npm install
+
+# Copy environment file and generate app key
+cp .env.example .env
 php artisan key:generate
-php artisan passport:install
 
 # Build frontend assets
 npm run build
@@ -227,8 +240,6 @@ npm run build
 # Or run Vite dev server during development
 npm run dev
 ```
-
-Repeat for `admin`, `client`, and `reports`.
 
 ### Environment variables
 
@@ -525,36 +536,58 @@ No code changes required. The login app reads `report_url` and redirects there a
 
 ## Tech stack
 
-- **Framework** — Laravel 13
-- **Frontend** — Vue 3 + Inertia.js (served per app via Laravel, built by Vite)
-- **Auth** — Laravel Passport (OAuth2 / JWT)
-- **Queue** — Laravel Horizon + Redis
-- **Shared Laravel code** — Local Composer package (`packages/central`)
-- **Shared Vue components** — Local npm package (`packages/ui`) — optional
-- **DB** — MySQL 8 (central + tenant), PostgreSQL compatible
-- **Containers** — Docker Engine 29 + Docker Compose (full local dev stack)
-- **Static analysis** — PHPStan 2.2 + Larastan (level 8 by default)
-- **Commit linting** — commitlint 21 with `@commitlint/config-conventional` + Husky
-- **AI coding** — Claude Code (Anthropic) for agentic development workflows
+| Layer | Package | Status |
+|---|---|---|
+| Framework | Laravel 13.16.1 | ✅ Installed |
+| Starter kits | Laravel Boost 2.4 | ✅ Installed |
+| API auth | Laravel Sanctum 4.0 | ✅ Installed |
+| SSO / OAuth2 | Laravel Passport | Planned |
+| Frontend | Vue 3 + Inertia.js | Planned |
+| CSS | Tailwind CSS (`@tailwindcss/vite`) | ✅ Installed |
+| Fonts | Bunny Fonts — Instrument Sans | ✅ Installed |
+| Build | Vite + `laravel-vite-plugin` | ✅ Installed |
+| Queue | Laravel Horizon + Redis | Planned |
+| Shared PHP | `packages/central` (local Composer) | Planned |
+| Shared Vue | `packages/ui` (local npm) | Planned |
+| DB | MySQL 8 (central + tenant), PostgreSQL compatible | Planned |
+| Containers | Docker Engine 29 + Docker Compose | Planned |
+| Static analysis | PHPStan 2.2 + Larastan (level 8) | Planned |
+| Commit linting | commitlint 21 + Husky 9 | ✅ Installed |
+| AI coding | Claude Code (Anthropic) | ✅ Active |
 
 ---
 
 ## Roadmap
 
-- [x] Docker Compose local development setup
-- [x] PHPStan 2.2 + Larastan static analysis
+**Phase 1 — Foundation** *(current)*
+- [x] Laravel 13 installed at repo root
+- [x] Laravel Boost + Sanctum + Tailwind CSS + Vite
 - [x] commitlint + Husky conventional commits
 - [x] Claude Code CLAUDE.md integration
-- [x] Inertia.js + Vue 3 per app with shared props
-- [x] packages/ui shared Vue component library (stub)
-- [ ] Filament admin panel integration
+
+**Phase 2 — Monorepo structure**
+- [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`
+- [ ] `packages/central` shared Composer package
+- [ ] `packages/ui` shared Vue 3 component library
+- [ ] Docker Compose full local dev stack
+- [ ] PHPStan 2.2 + Larastan static analysis
+
+**Phase 3 — Auth & multi-tenancy**
+- [ ] Laravel Passport (OAuth2 / JWT) SSO
+- [ ] Inertia.js + Vue 3 per app with shared props
+- [ ] Dynamic tenant database resolution middleware
+- [ ] Two-dimensional permissions (app + client DB)
+
+**Phase 4 — Reporting & ops**
+- [ ] Laravel Horizon + Redis async report queue
+- [ ] Per-tenant read replica support
 - [ ] Tenant migration version tracking
-- [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [ ] GitHub Actions CI/CD pipeline
+- [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [ ] Tenant health dashboard in admin
 
 ---
 
 ## License
 
-Ron Mart Daniel Javier
+MIT — Ron Mart Daniel Javier

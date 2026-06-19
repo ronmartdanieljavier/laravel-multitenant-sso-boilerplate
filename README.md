@@ -210,6 +210,17 @@ system_settings     — global config
 
 ---
 
+## Tenant DB schema
+
+Each tenant database is provisioned with the following tables. They reference the central `users.id` but contain no user identity data — that lives in central.
+
+```
+audit_logs          — tenant-scoped activity trail (user_id, action, subject_type, subject_id, metadata, ip_address)
+posts               — tenant content (user_id, title, body, status, published_at)
+```
+
+---
+
 ## Current state
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for a full changelog.
@@ -488,6 +499,15 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Postman collection — `postman/laravel-multitenant-sso.postman_collection.json`
 - [x] Separated migrations — `database/migrations/central/` and `database/migrations/tenant/`
 - [x] `php artisan central:migrate` and `php artisan tenant:migrate` custom commands
+- [x] Migration structure — `database/migrations/central/` and `database/migrations/tenant/` separated
+- [x] `php artisan central:migrate` — runs central DB migrations only
+- [x] `php artisan tenant:migrate` — runs tenant migrations across all tenant databases (dynamic connection per tenant row)
+- [x] Tenant DB schema — `audit_logs` and `posts` tables as baseline tenant data
+
+**Phase 3 — Monorepo structure**
+- [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`
+- [ ] `packages/central` shared Composer package
+- [ ] `packages/ui` shared Vue 3 component library
 - [x] Docker Compose full local dev stack (Nginx + PHP-FPM + PostgreSQL + Redis)
 
 **Phase 3 — Frontend & multi-tenancy** *(in progress)*

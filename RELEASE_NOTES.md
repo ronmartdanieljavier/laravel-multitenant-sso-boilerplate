@@ -14,6 +14,15 @@
 
 ---
 
+## [0.9.0] — 2026-06-19
+
+### Added
+- **Tenant DB schema** — first baseline tables for tenant databases under `database/migrations/tenant/`:
+  - `audit_logs` — tenant-scoped activity trail with `user_id` (references central), `action`, polymorphic `subject_type`/`subject_id`, `metadata` (JSON), and `ip_address`; provides tenant-private history of who did what and when
+  - `posts` — tenant content table with `user_id` (references central), `title`, `body`, `status` (default `draft`), and `published_at`; demonstrates real domain data isolated per tenant
+
+---
+
 ## [0.8.0] — 2026-06-19
 
 ### Added

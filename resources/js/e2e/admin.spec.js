@@ -1,0 +1,27 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('Admin dashboard', () => {
+    test.beforeEach(async ({ page }) => {
+        await page.goto('/admin');
+    });
+
+    test('shows the dashboard heading', async ({ page }) => {
+        await expect(page.getByText('Dashboard')).toBeVisible();
+    });
+
+    test('shows four stat cards', async ({ page }) => {
+        await expect(page.getByText('Total Users')).toBeVisible();
+        await expect(page.getByText('Active Apps')).toBeVisible();
+        await expect(page.getByText('Active Clients')).toBeVisible();
+        await expect(page.getByText('SSO Sessions')).toBeVisible();
+    });
+
+    test('shows the recent users table', async ({ page }) => {
+        await expect(page.getByText('Recent Users')).toBeVisible();
+        await expect(page.locator('tbody tr')).toHaveCount(4);
+    });
+
+    test('shows the invite user button', async ({ page }) => {
+        await expect(page.getByRole('button', { name: /invite user/i })).toBeVisible();
+    });
+});

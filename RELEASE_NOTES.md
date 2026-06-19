@@ -14,6 +14,17 @@
 
 ---
 
+## [0.7.0] — 2026-06-19
+
+### Added
+- **Postman collection** — `postman/laravel-multitenant-sso.postman_collection.json` covering all three SSO endpoints
+  - `POST /api/login` — with example request body (email + password) and example responses (200 with token payload, 401 invalid credentials)
+  - `POST /api/logout` — requires `Authorization: Bearer {{token}}`
+  - `GET /api/apps` — returns accessible apps and tenant clients for the authenticated user
+  - `base_url` and `token` collection variables; Login request includes a test script that auto-saves the token to `{{token}}`
+
+---
+
 ## [0.6.0] — 2026-06-19
 
 ### Added

@@ -201,13 +201,13 @@ What's built:
 - **Laravel 13.16.1** — framework skeleton at repo root
 - **Laravel Boost 2.4** — starter kit scaffolding
 - **Laravel Sanctum 4.0** — API token authentication
-- **spatie/laravel-data 4.23** — DTOs with snake_case serialization, classes under `App\Login\Data\Core\` using `*CoreData` suffix
-- **SSO backend** — login, logout, and app-picker API endpoints under `App\Login\`
-- **Central DB schema** — `users`, `apps`, `clients`, `user_apps`, `user_app_clients`, `system_settings` migrations
-- **Modular routing** — each app module owns its routes under `app/*/Routes/api_*.php`
-- **Collocated tests** — PHPUnit tests live inside each app module (e.g. `app/Login/Tests/`)
+- **spatie/laravel-data 4.23** — DTOs with snake_case serialization, classes under `App\Auth\Data\Core\` using `*CoreData` suffix
+- **SSO backend** — login, logout, and app-picker API endpoints under `App\Auth\`
+- **Central DB schema** — `users`, `apps`, `clients`, `user_apps`, `user_app_clients`, `system_settings` migrations under `database/migrations/central/`
+- **Modular routing** — each app module owns its routes under `app/*/Routes/api_*.php` and `app/*/Routes/web_*.php`
+- **Collocated tests** — PHPUnit tests live inside each app module (e.g. `app/Auth/Tests/`)
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware and dynamic page resolution
-- **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Client, and Reports at `/login`, `/admin`, `/client`, `/reports`
+- **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — 16 component tests across all four pages
 - **Playwright E2E tests** — browser tests for all four pages against a live Laravel server
 - **GitHub Actions CI** — build, unit test, and E2E test jobs on every push and PR
@@ -611,12 +611,14 @@ No code changes required. The login app reads `report_url` and redirects there a
 
 **Phase 2 — SSO backend** *(done)*
 - [x] Central DB schema — users, apps, clients, user_apps, user_app_clients, system_settings
-- [x] `App\Login\` module — models, DTOs (spatie/laravel-data), actions, controllers
+- [x] `App\Auth\` module — models, DTOs (spatie/laravel-data), actions, controllers
+- [x] Central models extracted to `App\Models\Central\` — shared across all modules
 - [x] SSO API — `POST /api/login`, `POST /api/logout`, `GET /api/apps`
 - [x] Sanctum token with per-app abilities embedded as token scopes
-- [x] Modular routing — each app owns `app/*/Routes/api_*.php`
-- [x] Collocated PHPUnit tests — `app/Login/Tests/` registered as `Login` suite
+- [x] Modular routing — each app owns `app/*/Routes/api_*.php` and `app/*/Routes/web_*.php`
+- [x] Collocated PHPUnit tests — `app/Auth/Tests/` registered as `Auth` suite
 - [x] Postman collection — `postman/laravel-multitenant-sso.postman_collection.json`
+- [x] Migrations separated into `database/migrations/central/` and `database/migrations/tenant/`
 
 **Phase 3 — Monorepo structure**
 - [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`
@@ -627,7 +629,7 @@ No code changes required. The login app reads `report_url` and redirects there a
 
 **Phase 4 — Frontend & multi-tenancy** *(in progress)*
 - [x] Inertia.js + Vue 3 installed and configured
-- [x] Landing pages for Login, Admin, Client, and Reports apps
+- [x] Landing pages for Login, Admin, Tenant, and Reports apps
 - [x] Vitest unit tests for all four page components
 - [x] Playwright E2E tests for all four pages
 - [x] GitHub Actions CI — frontend build, unit, and E2E jobs

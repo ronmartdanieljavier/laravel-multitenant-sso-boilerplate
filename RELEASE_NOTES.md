@@ -14,6 +14,26 @@
 
 ---
 
+## [0.8.0] — 2026-06-19
+
+### Changed
+- **Module renamed `Login` → `Auth`** — `app/Login/` moved to `app/Auth/`; all namespaces updated from `App\Login\*` to `App\Auth\*`
+  - `database/factories/Login/` moved to `database/factories/Auth/`; factory namespaces updated from `Database\Factories\Login\*` to `Database\Factories\Auth\*`
+  - PHPUnit suite renamed from `Login` to `Auth`; `phpunit.xml` test directory updated to `app/Auth/Tests/`
+- **Central models extracted** — `app/Login/Models/` moved to `app/Models/Central/`; namespace changed from `App\Login\Models\*` to `App\Models\Central\*`
+- **Web routes modularised** — `routes/web.php` now uses the same glob auto-loader as `api.php` (`app/*/Routes/web_*.php`); routes distributed to:
+  - `app/Auth/Routes/web_auth.php` — `/`, `GET /login`, `POST /login`
+  - `app/Admin/Routes/web_admin.php` — `GET /admin`
+  - `app/Reports/Routes/web_reports.php` — `GET /reports`
+  - `app/Tenant/Routes/web_tenant.php` — `GET /tenant`
+- **`/client` route renamed to `/tenant`** — aligns with multitenant terminology used throughout the codebase
+- **Migrations separated** — all migrations moved from `database/migrations/` into `database/migrations/central/`; `database/migrations/tenant/` created for future per-tenant migrations; both paths registered in `AppServiceProvider::boot()` via `loadMigrationsFrom()`
+
+### Fixed
+- **`ExampleTest`** — updated assertion from `assertStatus(200)` to `assertRedirect('/api/login')` to match the actual root route redirect behaviour
+
+---
+
 ## [0.7.0] — 2026-06-19
 
 ### Added

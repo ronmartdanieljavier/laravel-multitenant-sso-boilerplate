@@ -218,6 +218,22 @@ What's built:
 
 ---
 
+## API — Postman collection
+
+A Postman collection is included at [`postman/laravel-multitenant-sso.postman_collection.json`](postman/laravel-multitenant-sso.postman_collection.json).
+
+Import it via **Postman → Import → File**. The collection has two variables — `base_url` (default `http://localhost`) and `token` — and covers all three SSO endpoints:
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/login` | — | Authenticate and receive a Bearer token + app list |
+| `POST` | `/api/logout` | Bearer | Revoke the current token |
+| `GET` | `/api/apps` | Bearer | List accessible apps and tenant clients |
+
+The Login request includes a test script that automatically saves the returned token to `{{token}}` so subsequent requests work without manual copy-paste.
+
+---
+
 ## Getting started
 
 ### Requirements
@@ -580,6 +596,7 @@ No code changes required. The login app reads `report_url` and redirects there a
 | Static analysis | PHPStan 2.2 + Larastan (level 8) | Planned |
 | Commit linting | commitlint 21 + Husky 9 | ✅ Installed |
 | CI | GitHub Actions (build, unit, E2E) | ✅ Active |
+| API client | Postman collection | ✅ Included |
 | AI coding | Claude Code (Anthropic) | ✅ Active |
 
 ---
@@ -599,6 +616,7 @@ No code changes required. The login app reads `report_url` and redirects there a
 - [x] Sanctum token with per-app abilities embedded as token scopes
 - [x] Modular routing — each app owns `app/*/Routes/api_*.php`
 - [x] Collocated PHPUnit tests — `app/Login/Tests/` registered as `Login` suite
+- [x] Postman collection — `postman/laravel-multitenant-sso.postman_collection.json`
 
 **Phase 3 — Monorepo structure**
 - [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`

@@ -31,7 +31,7 @@ A production-ready Laravel monorepo template for building multi-tenant SaaS plat
              │                   │
      ┌───────▼───────────────────▼─────────┐
      │              Central DB             │
-     │  users, apps, clients, permissions  │
+     │  users, apps, tenants, permissions  │
      └─────────────────────────────────────┘
                          │
           ┌──────────────┼──────────────┐
@@ -185,9 +185,9 @@ laravel-multitenant-starter/
 ```
 users               — authentication, core identity
 apps                — registered apps (login, admin, client, reports)
-clients             — tenant DB credentials (host, port, name, user, pass)
+tenants             — tenant DB credentials (host, port, name, user, pass)
 user_apps           — which apps a user can access + role
-user_app_clients    — which client DBs a user can access per app + role + default
+user_app_tenants    — which tenant DBs a user can access per app + role + default
 system_settings     — global config
 ```
 
@@ -201,9 +201,10 @@ What's built:
 - **Laravel 13.16.1** — framework skeleton at repo root
 - **Laravel Boost 2.4** — starter kit scaffolding
 - **Laravel Sanctum 4.0** — API token authentication
-- **spatie/laravel-data 4.23** — DTOs with snake_case serialization, classes under `App\Login\Data\Core\` using `*CoreData` suffix
-- **SSO backend** — login, logout, and app-picker API endpoints under `App\Login\`
-- **Central DB schema** — `users`, `apps`, `clients`, `user_apps`, `user_app_clients`, `system_settings` migrations
+- **spatie/laravel-data 4.23** — DTOs with snake_case serialization, classes under `App\Auth\Data\Core\` using `*CoreData` suffix
+- **SSO backend** — login, logout, and app-picker API endpoints under `App\Auth\`
+- **Central DB schema** — `users`, `apps`, `tenants`, `user_apps`, `user_app_tenants`, `system_settings` migrations in `database/migrations/central/`
+- **Separated migrations** — `database/migrations/central/` for the central DB, `database/migrations/tenant/` for per-tenant tables; `php artisan central:migrate` and `php artisan tenant:migrate` custom commands
 - **Modular routing** — each app module owns its routes under `app/*/Routes/api_*.php`
 - **Collocated tests** — PHPUnit tests live inside each app module (e.g. `app/Login/Tests/`)
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware and dynamic page resolution
@@ -295,12 +296,20 @@ QUEUE_CONNECTION=redis
 ### Run migrations
 
 ```bash
-# Central DB migrations
-php artisan migrate --path=database/migrations/central
+# Central DB only
+php artisan central:migrate
 
-# Provision a new tenant (creates DB + runs tenant migrations)
-php artisan tenant:provision "Acme Corp" --host=db1.internal --user=acme --password=secret
+# All tenant DBs (reads credentials from the tenants table)
+php artisan tenant:migrate
+
+# Single tenant
+php artisan tenant:migrate --tenant=acme
+
+# Both central and tenant (default migrate)
+php artisan migrate
 ```
+
+Additional flags available on all three commands: `--fresh`, `--seed`, `--rollback`, `--step`, `--force`.
 
 ### Run queue workers
 
@@ -610,13 +619,16 @@ No code changes required. The login app reads `report_url` and redirects there a
 - [x] Claude Code CLAUDE.md integration
 
 **Phase 2 — SSO backend** *(done)*
-- [x] Central DB schema — users, apps, clients, user_apps, user_app_clients, system_settings
-- [x] `App\Login\` module — models, DTOs (spatie/laravel-data), actions, controllers
+- [x] Central DB schema — users, apps, tenants, user_apps, user_app_tenants, system_settings
+- [x] `App\Auth\` module — models, DTOs (spatie/laravel-data), actions, controllers
 - [x] SSO API — `POST /api/login`, `POST /api/logout`, `GET /api/apps`
 - [x] Sanctum token with per-app abilities embedded as token scopes
 - [x] Modular routing — each app owns `app/*/Routes/api_*.php`
-- [x] Collocated PHPUnit tests — `app/Login/Tests/` registered as `Login` suite
+- [x] Collocated PHPUnit tests — `app/Auth/Tests/` registered as `Auth` suite
 - [x] Postman collection — `postman/laravel-multitenant-sso.postman_collection.json`
+- [x] Migration structure — `database/migrations/central/` and `database/migrations/tenant/` separated
+- [x] `php artisan central:migrate` — runs central DB migrations only
+- [x] `php artisan tenant:migrate` — runs tenant migrations across all tenant databases (dynamic connection per tenant row)
 
 **Phase 3 — Monorepo structure**
 - [ ] Split into `apps/login`, `apps/admin`, `apps/client`, `apps/reports`

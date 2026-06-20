@@ -14,6 +14,7 @@ use App\Reports\Jobs\GenerateReportJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -52,19 +53,21 @@ class ReportController extends Controller
         $batchId = Str::uuid()->toString();
         $user = $request->user();
 
-        $reports = collect($request->input('reports'))->map(
-            fn (array $item) => Report::create([
-                'user_id' => $user->id,
-                'type' => $item['type'],
-                'format' => ReportFormat::from($item['format']),
-                'delivery' => ReportDelivery::from($item['delivery']),
-                'status' => ReportStatus::Pending,
-                'parameters' => $item['parameters'] ?? null,
-                'batch_id' => $batchId,
-            ])
-        );
+        [$reports, $batch] = DB::transaction(function () use ($request, $user, $batchId, $batchJob) {
+            $reports = collect($request->input('reports'))->map(
+                fn (array $item) => Report::create([
+                    'user_id' => $user->id,
+                    'type' => $item['type'],
+                    'format' => ReportFormat::from($item['format']),
+                    'delivery' => ReportDelivery::from($item['delivery']),
+                    'status' => ReportStatus::Pending,
+                    'parameters' => $item['parameters'] ?? null,
+                    'batch_id' => $batchId,
+                ])
+            );
 
-        $batch = $batchJob->dispatch($reports, $batchId);
+            return [$reports, $batchJob->dispatch($reports, $batchId)];
+        });
 
         return response()->json([
             'batch_id' => $batchId,

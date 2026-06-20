@@ -120,13 +120,15 @@ laravel-multitenant-sso-boilerplate/
 │   │       ├── App.php
 │   │       ├── SystemSetting.php
 │   │       ├── Tenant.php
+│   │       ├── TenantMigrationVersion.php
 │   │       ├── User.php
 │   │       ├── UserApp.php
 │   │       └── UserAppTenant.php
 │   │
 │   ├── Console/Commands/
 │   │   ├── CentralMigrateCommand.php       # php artisan central:migrate
-│   │   └── TenantMigrateCommand.php        # php artisan tenant:migrate
+│   │   ├── TenantMigrateCommand.php        # php artisan tenant:migrate
+│   │   └── TenantMigrateStatusCommand.php  # php artisan tenant:migrate:status
 │   │
 │   ├── Http/
 │   │   ├── Controllers/Controller.php
@@ -243,13 +245,14 @@ laravel-multitenant-sso-boilerplate/
 ## Central DB schema
 
 ```
-users               — authentication, core identity
-apps                — registered apps (login, admin, tenant, reports)
-tenants             — tenant DB credentials (host, port, name, user, pass) + optional read replica (host, port, user, pass)
-user_apps           — which apps a user can access + role
-user_app_tenants    — which tenant DBs a user can access per app + role + default
-system_settings     — global config
-reports             — async report jobs (status, format, delivery, file path, error)
+users                      — authentication, core identity
+apps                       — registered apps (login, admin, tenant, reports)
+tenants                    — tenant DB credentials (host, port, name, user, pass) + optional read replica (host, port, user, pass)
+user_apps                  — which apps a user can access + role
+user_app_tenants           — which tenant DBs a user can access per app + role + default
+system_settings            — global config
+reports                    — async report jobs (status, format, delivery, file path, error)
+tenant_migration_versions  — per-tenant migration history synced from each tenant's migrations table
 ```
 
 ---
@@ -274,6 +277,7 @@ What's built:
 - **Laravel Horizon 5** — async report queue with dedicated `report-worker` supervisor; Horizon dashboard at `/horizon` gated via `HorizonServiceProvider`; `horizon` Docker service added
 - **Async report engine** — `GenerateReportJob` + `GenerateReportBatchJob` dispatched to the `reports` Redis queue; status tracked through `pending → processing → success / failed`; cancelled batches mark all pending reports `Failed`; `Storage::put` failures surface as `Failed` with an error message; screen format fully working; PDF and Excel are stubs awaiting package installation
 - **Batch homogeneity enforced** — all reports in a batch must share the same `format` and `delivery`; validated at the API boundary; ZIP archive path persisted on the first report for retrieval via the download endpoint
+- **Tenant migration version tracking** — after each `tenant:migrate` run, the applied migrations are synced from the tenant's `migrations` table to the central `tenant_migration_versions` table; `tenant:migrate:status` command shows applied/total count, up-to-date status, and latest migration for each tenant
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -365,6 +369,14 @@ php artisan tenant:migrate --tenant=demo
 ```
 
 Additional flags available on `tenant:migrate`: `--fresh`, `--seed`, `--rollback`, `--step`, `--force`.
+
+```bash
+# Check which tenants are up to date and how many migrations have been applied
+php artisan tenant:migrate:status
+
+# Check a single tenant
+php artisan tenant:migrate:status --tenant=demo
+```
 
 ### Environment variables
 
@@ -573,7 +585,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 **Phase 4 — Reporting & ops** *(in progress)*
 - [x] Laravel Horizon + Redis async report queue
 - [x] Per-tenant read replica support
-- [ ] Tenant migration version tracking
+- [x] Tenant migration version tracking
 - [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [ ] Tenant health dashboard in admin
 

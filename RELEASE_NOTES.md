@@ -5,9 +5,48 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Per-tenant scheduled report subscriptions (email/S3 delivery)
 - Tenant health dashboard in admin
 - PHPStan level raised beyond 5
+
+---
+
+## [1.7.0] — 2026-06-20
+
+### Added
+- **Per-tenant scheduled report subscriptions (email/S3 delivery)** — tenants can subscribe to recurring reports that are generated and delivered automatically on a configurable schedule:
+  - `report_subscriptions` tenant table — columns: `type`, `format`, `frequency` (`daily` / `weekly` / `monthly`), `delivery` (`email` / `s3` / `email_and_s3`), `recipients` (JSON array of email addresses), `s3_path` (nullable S3 key prefix), `is_active`, `last_dispatched_at`; composite index on `(is_active, frequency, last_dispatched_at)` for efficient due-subscription queries
+  - `ReportSubscription` model (`app/Models/Tenant/ReportSubscription.php`) — `$connection = 'tenant'`, enum casts for `ReportFormat`, `ReportFrequency`, `ReportDelivery`, `isDue()` helper compares `last_dispatched_at` against the start of the current day / week / month
+  - `ReportFrequency` enum (`app/Reports/Enums/ReportFrequency.php`) — `Daily`, `Weekly`, `Monthly`; each case carries its own `isDue(?Carbon)` logic
+  - `ReportDelivery` enum extended — new `S3` and `EmailAndS3` cases added alongside the existing `Download`, `Email`, and `None`
+  - `DispatchScheduledReportsCommand` (`php artisan reports:dispatch-subscriptions`) — iterates all active tenants, connects to each tenant DB, loads due subscriptions, creates a central `Report` record per subscription (with `subscription_id`, `recipients`, and `s3_path` stored in `parameters`), dispatches `GenerateReportJob`, and stamps `last_dispatched_at`; supports `--tenant=slug` to scope to a single tenant
+  - Scheduled at `everyMinute()->withoutOverlapping()->onOneServer()->runInBackground()` in `bootstrap/app.php` via `withSchedule()`
+  - `GenerateReportJob` extended — post-generation delivery now routes on `ReportDelivery`: subscription email reports go to `parameters.recipients` via `ReportDeliveryService::sendToRecipients()`; S3 reports upload via `ReportDeliveryService::uploadToS3()`; `email_and_s3` does both; on-demand user reports (`Download` / `Email` with no subscription context) behave as before
+  - `ReportDeliveryService` (`app/Reports/Services/ReportDeliveryService.php`) — `sendToRecipients(Report, string[])` queues `ScheduledReportMail`; `uploadToS3(Report, ?string)` streams the generated file to `s3://{s3_path}/{Y/m/d}/{filename}`
+  - `ScheduledReportMail` (`app/Reports/Mail/ScheduledReportMail.php`) — implements `ShouldQueue`; attaches the generated file via `Attachment::fromStorage()`; subject includes the report type
+  - `ReportSubscriptionController` — CRUD: `index` (paginated), `store`, `show`, `update` (partial — all fields optional, use `is_active: false` to pause), `destroy`
+  - `StoreReportSubscriptionRequest` / `UpdateReportSubscriptionRequest` — validate `type`, `format`, `frequency`, `delivery`, `recipients` (array of valid email addresses), `s3_path`, `is_active`
+  - `ReportSubscriptionPolicy` registered in `AppServiceProvider`
+  - Routes registered under `/api/reports/subscriptions` (auth:sanctum); placed before `/{report}` in the route group to prevent the wildcard binding from intercepting subscription paths
+  - `config/database.php` — static `tenant` connection entry driven by `DB_TENANT_DRIVER` / `DB_TENANT_DATABASE` env vars; `phpunit.xml` sets these to `sqlite` / `:memory:` for isolated tenant DB testing
+  - `ReportSubscriptionFactory` with `inactive()`, `daily()`, `weekly()`, `monthly()`, `emailDelivery()`, `s3Delivery()` states
+  - **14 PHPUnit feature tests** in `tests/Feature/Reports/ReportSubscriptionTest.php`:
+    - `test_authenticated_user_can_list_subscriptions` — asserts 200 with paginated structure
+    - `test_unauthenticated_user_cannot_list_subscriptions` — asserts 401
+    - `test_authenticated_user_can_create_subscription` — asserts 201 with correct payload
+    - `test_subscription_creation_validates_required_fields` — asserts 422 with field errors
+    - `test_subscription_creation_validates_recipient_emails` — asserts 422 when `recipients.*` is not a valid email
+    - `test_authenticated_user_can_update_subscription` — asserts `is_active` and `frequency` update correctly
+    - `test_authenticated_user_can_delete_subscription` — asserts 204 and record removed from tenant DB
+    - `test_daily_subscription_is_due_when_never_dispatched` — asserts `null` `last_dispatched_at` means due
+    - `test_daily_subscription_is_due_after_yesterday` — asserts yesterday's dispatch is stale
+    - `test_daily_subscription_is_not_due_when_dispatched_today` — asserts same-day dispatch blocks re-dispatch
+    - `test_weekly_subscription_is_due_after_last_week` — asserts previous week triggers dispatch
+    - `test_monthly_subscription_is_due_after_last_month` — asserts previous month triggers dispatch
+    - `test_dispatch_command_skips_inactive_tenants` — asserts no jobs pushed when all tenants inactive
+    - `test_dispatch_command_reports_no_active_tenants` — asserts command exits successfully with no tenants
+
+### Updated
+- **Postman collection** — new "Report Subscriptions" folder with 5 requests (List, Create, Get, Update, Delete); `subscription_id` collection variable auto-saved by the Create request's test script; delivery field descriptions updated to include `s3` and `email_and_s3`
 
 ---
 

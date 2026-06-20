@@ -126,6 +126,7 @@ laravel-multitenant-sso-boilerplate/
 │   ├── Http/
 │   │   ├── Controllers/Controller.php
 │   │   ├── Middleware/HandleInertiaRequests.php
+│   │   ├── Middleware/RequireRole.php
 │   │   └── Middleware/ResolveTenantDatabase.php
 │   │
 │   ├── Providers/AppServiceProvider.php
@@ -231,6 +232,7 @@ What's built:
 - **Modular routing** — each module owns its routes under `app/*/Routes/api_*.php`
 - **Collocated tests** — PHPUnit tests live inside each module (e.g. `app/Auth/Tests/`)
 - **Dynamic tenant database resolution** — `ResolveTenantDatabase` middleware reads `X-Tenant` header, verifies user access, and wires up a per-request `tenant` DB connection from credentials stored in the central DB
+- **Two-dimensional permissions enforcement** — `ResolveTenantDatabase` enforces both the app dimension (`X-App` header, Sanctum token ability `app:{slug}`, `user_apps` record) and the tenant dimension (`user_app_tenants` scoped to the resolved app); `RequireRole` middleware available for per-route role enforcement (`admin`, `user`, `readonly`)
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -475,8 +477,8 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 | AI coding | Claude Code (Anthropic) | ✅ Active |
 | Queue | Laravel Horizon + Redis | Planned |
 | Static analysis | PHPStan + Larastan (level 5) | ✅ Active |
-| Tenant middleware | Dynamic DB resolution | ✅ Built |
-| Two-dimensional permissions | App + tenant DB | Planned |
+| Tenant middleware | Dynamic DB resolution + two-dimensional enforcement | ✅ Built |
+| Two-dimensional permissions | App + tenant DB | ✅ Built |
 
 ---
 
@@ -510,7 +512,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] GitHub Actions CI — frontend build, unit, and E2E jobs
 - [x] Dynamic tenant database resolution middleware (`ResolveTenantDatabase` — `X-Tenant` header, user access check, per-request `tenant` DB connection)
 - [x] PHPStan + Larastan static analysis at level 5 (zero errors)
-- [ ] Two-dimensional permissions enforcement (app + tenant DB)
+- [x] Two-dimensional permissions enforcement — `X-App` + `X-Tenant` headers, token ability check, `user_apps`/`user_app_tenants` enforcement, `RequireRole` middleware
 - [ ] Inertia shared props — active tenant + permissions on every page
 
 **Phase 4 — Reporting & ops**

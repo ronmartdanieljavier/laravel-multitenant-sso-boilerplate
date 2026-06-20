@@ -10,6 +10,26 @@
 
 ---
 
+## [1.8.0] — 2026-06-20
+
+### Added
+- **Default apps and admin account seeded via migration** — a fresh `php artisan migrate` now produces a fully working install with no manual setup:
+  - Migration `2026_06_20_050340_seed_default_admin_user` seeds two apps and one superuser after the schema is in place; all inserts use `insertOrIgnore` so the migration is safe to re-run
+  - **Two default apps** created when `apps` table is empty:
+    - `admin` (`APP_URL/admin`) — central administration; manages users, apps, tenants, and system settings via the central DB
+    - `tenant` (`APP_URL/tenant`) — tenant portal; connects to a tenant database per request
+  - **Default admin user** — credentials from `.env` (`ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`); falls back to `Admin` / `admin@example.com` / `password`
+  - Admin user is assigned `role = admin` on both the `admin` and `tenant` apps via `user_apps`
+  - Admin user is linked to the Demo Tenant (`slug = demo`) under the `tenant` app as the default tenant with `role = admin` via `user_app_tenants`; the `admin` app intentionally has no tenant DB rows
+  - `down()` removes the user, all `user_apps`/`user_app_tenants` records, and the two seeded apps on rollback
+- **Two-dimensional permission model clarified** — users can hold access to apps and tenant databases independently:
+  - **Admin only** — `user_apps` row for `admin`; manages tenants through the central DB with no tenant DB connection
+  - **Tenant only** — `user_apps` row for `tenant` + one `user_app_tenants` row per accessible tenant database
+  - **Both** — rows in both apps; full access to the admin panel and one or more tenant databases
+- **Postman collection updated** — `admin_email` and `admin_password` collection variables added; Login request body uses `{{admin_email}}` / `{{admin_password}}`
+
+---
+
 ## [1.7.0] — 2026-06-20
 
 ### Added

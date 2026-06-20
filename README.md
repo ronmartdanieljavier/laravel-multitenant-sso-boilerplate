@@ -384,10 +384,35 @@ npm run build
 npm run dev
 ```
 
+### Default admin account
+
+A superuser and two default apps are automatically created during `php artisan migrate`. Credentials are read from `.env`:
+
+| Variable | Default |
+|---|---|
+| `ADMIN_NAME` | `Admin` |
+| `ADMIN_EMAIL` | `admin@example.com` |
+| `ADMIN_PASSWORD` | `password` |
+
+Two apps are seeded on a fresh install:
+
+| App | Slug | Access |
+|---|---|---|
+| **Admin** | `admin` | Central administration — users, apps, tenants, settings |
+| **Tenant** | `tenant` | Tenant portal — connects to a tenant database |
+
+The default admin account is granted the `admin` role on both apps and linked to the Demo Tenant database under the `tenant` app.
+
+**Permission model** — access is two-dimensional:
+- A user can have **Admin only** — manages tenants through the central DB, no tenant DB connection
+- A user can have **Tenant only** — accesses one or more tenant databases, no admin panel
+- A user can have **both** — full access to admin panel and tenant databases
+
 ### Run migrations
 
 ```bash
 # Central DB only (users, apps, tenants, permissions, cache, jobs)
+# Also creates the default admin account from .env
 php artisan migrate
 
 # All tenant DBs — reads credentials from the tenants table, creates each DB if needed
@@ -420,6 +445,11 @@ CENTRAL_DB_DATABASE=central_db
 CENTRAL_DB_USERNAME=central_user
 CENTRAL_DB_PASSWORD=secret
 
+# Default admin account (seeded automatically on migrate)
+ADMIN_NAME="Admin"
+ADMIN_EMAIL=admin@example.com    # login email for the default superuser
+ADMIN_PASSWORD=password          # change before deploying to production
+
 # Reports / queue
 REDIS_HOST=127.0.0.1
 QUEUE_CONNECTION=redis
@@ -439,7 +469,7 @@ php artisan key:generate
 # Build and start all containers
 docker compose up -d --build
 
-# Run central migrations (creates the tenants table and seeds a Demo Tenant)
+# Run central migrations (creates the tenants table, seeds a Demo Tenant, and creates the default admin account)
 docker compose exec php php artisan migrate
 
 # Run tenant migrations (creates tenant_demo database and migrates it)

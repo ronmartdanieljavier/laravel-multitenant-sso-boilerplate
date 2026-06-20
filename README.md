@@ -409,13 +409,13 @@ The active tenant and user permissions are shared globally via `HandleInertiaReq
 // app/Http/Middleware/HandleInertiaRequests.php
 public function share(Request $request): array
 {
-    return array_merge(parent::share($request), [
-        'auth' => [
-            'user'           => $request->user(),
-            'active_tenant'  => session('active_tenant_id'),
-            'my_tenants'     => session('app_access'),
-        ],
-    ]);
+    return [
+        ...parent::share($request),
+        'auth'   => ['user' => $request->user()],
+        'tenant' => fn () => $request->attributes->get('current_tenant'),
+        'app'    => fn () => $request->attributes->get('current_app'),
+        'role'   => fn () => $request->attributes->get('current_role'),
+    ];
 }
 ```
 
@@ -513,7 +513,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Dynamic tenant database resolution middleware (`ResolveTenantDatabase` — `X-Tenant` header, user access check, per-request `tenant` DB connection)
 - [x] PHPStan + Larastan static analysis at level 5 (zero errors)
 - [x] Two-dimensional permissions enforcement — `X-App` + `X-Tenant` headers, token ability check, `user_apps`/`user_app_tenants` enforcement, `RequireRole` middleware
-- [ ] Inertia shared props — active tenant + permissions on every page
+- [x] Inertia shared props — active tenant + permissions on every page
 
 **Phase 4 — Reporting & ops**
 - [ ] Laravel Horizon + Redis async report queue

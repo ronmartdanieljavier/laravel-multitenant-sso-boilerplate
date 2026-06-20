@@ -5,10 +5,22 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Inertia shared props — active tenant + permissions on every page
 - Laravel Horizon + Redis async report queue
 - Per-tenant read replica support
 - PHPStan level raised beyond 5
+
+---
+
+## [1.3.0] — 2026-06-20
+
+### Added
+- **Inertia shared props — active tenant + permissions on every page** — `HandleInertiaRequests::share()` now exposes four props automatically on every Inertia response:
+  - `auth.user` — the authenticated `User` model
+  - `tenant` — the resolved `Tenant` model (lazy closure; `null` on non-tenant routes)
+  - `app` — the resolved `App` model (lazy closure; `null` on non-tenant routes)
+  - `role` — the user's `Role` enum value for the current app + tenant context (lazy closure; `null` on non-tenant routes)
+  - Props are populated from `$request->attributes` set by `ResolveTenantDatabase` middleware, so no extra DB queries are issued
+  - Lazy closures ensure the props evaluate to `null` on unauthenticated or non-tenant pages without errors
 
 ---
 

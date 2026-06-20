@@ -28,9 +28,8 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewHorizon', function ($user = null) {
-            return in_array(optional($user)->email, [
-                //
-            ]);
+            // TODO: restrict to admin users once an is_admin flag or role is added to the users table.
+            return app()->environment('local');
         });
     }
 }

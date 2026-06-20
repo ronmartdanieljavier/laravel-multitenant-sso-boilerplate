@@ -34,6 +34,12 @@ class GenerateReportJob implements ShouldQueue
     public function handle(ReportGeneratorFactory $factory): void
     {
         if ($this->batch()?->cancelled()) {
+            $this->report->update([
+                'status' => ReportStatus::Failed,
+                'error_message' => 'Batch was cancelled.',
+                'completed_at' => now(),
+            ]);
+
             return;
         }
 

@@ -271,8 +271,9 @@ What's built:
 - **Collocated tests** — PHPUnit tests live inside each module (e.g. `app/Auth/Tests/`)
 - **Dynamic tenant database resolution** — `ResolveTenantDatabase` middleware reads `X-Tenant` header, verifies user access, and wires up a per-request `tenant` DB connection from credentials stored in the central DB
 - **Two-dimensional permissions enforcement** — `ResolveTenantDatabase` enforces both the app dimension (`X-App` header, Sanctum token ability `app:{slug}`, `user_apps` record) and the tenant dimension (`user_app_tenants` scoped to the resolved app); `RequireRole` middleware available for per-route role enforcement (`admin`, `user`, `readonly`)
-- **Laravel Horizon 5** — async report queue with dedicated `report-worker` supervisor; Horizon dashboard at `/horizon`; `horizon` Docker service added
-- **Async report engine** — `GenerateReportJob` + `GenerateReportBatchJob` dispatched to the `reports` Redis queue; status tracked in the `reports` table through `pending → processing → success / failed`; screen format fully working; PDF and Excel are stubs awaiting package installation
+- **Laravel Horizon 5** — async report queue with dedicated `report-worker` supervisor; Horizon dashboard at `/horizon` gated via `HorizonServiceProvider`; `horizon` Docker service added
+- **Async report engine** — `GenerateReportJob` + `GenerateReportBatchJob` dispatched to the `reports` Redis queue; status tracked through `pending → processing → success / failed`; cancelled batches mark all pending reports `Failed`; `Storage::put` failures surface as `Failed` with an error message; screen format fully working; PDF and Excel are stubs awaiting package installation
+- **Batch homogeneity enforced** — all reports in a batch must share the same `format` and `delivery`; validated at the API boundary; ZIP archive path persisted on the first report for retrieval via the download endpoint
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -293,13 +294,26 @@ A Postman collection is included at [`postman/laravel-multitenant-sso.postman_co
 
 Import via **Postman → Import → File**. The collection uses two variables — `base_url` (default `http://localhost`) and `token` — and covers all SSO endpoints:
 
+**Auth**
+
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
 | `POST` | `/api/login` | — | Authenticate and receive a Bearer token + app list |
 | `POST` | `/api/logout` | Bearer | Revoke the current token |
 | `GET` | `/api/apps` | Bearer | List accessible apps and tenant clients |
 
-The Login request includes a test script that automatically saves the returned token to `{{token}}` so subsequent requests work without manual copy-paste.
+**Reports**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/reports` | Bearer | List the authenticated user's reports (paginated) |
+| `POST` | `/api/reports` | Bearer | Dispatch a single report job |
+| `POST` | `/api/reports/batch` | Bearer | Dispatch up to 50 report jobs as a batch (same format + delivery required) |
+| `GET` | `/api/reports/{id}` | Bearer | Poll status and result for a report |
+| `GET` | `/api/reports/{id}/download` | Bearer | Stream the generated file (success only) |
+| `DELETE` | `/api/reports/{id}` | Bearer | Delete a report and its stored file |
+
+The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}` so status, download, and delete requests work without manual copy-paste.
 
 ---
 

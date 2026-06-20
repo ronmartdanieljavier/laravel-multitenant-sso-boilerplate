@@ -11,7 +11,10 @@ class ReportFileService
     public function storeFile(string $content, string $filename, int $userId): string
     {
         $path = "reports/{$userId}/{$filename}";
-        Storage::put($path, $content);
+
+        if (Storage::put($path, $content) === false) {
+            throw new RuntimeException("Failed to write report file at {$path}.");
+        }
 
         return $path;
     }

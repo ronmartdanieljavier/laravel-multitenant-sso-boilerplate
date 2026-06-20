@@ -40,7 +40,6 @@ class ReportController extends Controller
             'delivery' => ReportDelivery::from($request->input('delivery')),
             'status' => ReportStatus::Pending,
             'parameters' => $request->input('parameters'),
-            'batch_id' => $request->input('batch_id'),
         ]);
 
         GenerateReportJob::dispatch($report);

@@ -30,6 +30,11 @@
       "key": "report_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "subscription_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -517,6 +522,240 @@
                   "raw": "{{base_url}}/api/reports/{{report_id}}",
                   "host": ["{{base_url}}"],
                   "path": ["api", "reports", "{{report_id}}"]
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Report Subscriptions",
+      "description": "Per-tenant scheduled report subscriptions. Tenants subscribe to recurring reports (daily / weekly / monthly) delivered via email, S3, or both. All requests require a Bearer token.",
+      "item": [
+        {
+          "name": "List Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/subscriptions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "subscriptions"]
+            },
+            "description": "Returns a paginated list of report subscriptions for the current tenant."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/subscriptions",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "subscriptions"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"type\": \"user_activity\",\n      \"format\": \"screen\",\n      \"frequency\": \"daily\",\n      \"delivery\": \"email\",\n      \"recipients\": [\"admin@acme.com\"],\n      \"s3_path\": null,\n      \"is_active\": true,\n      \"last_dispatched_at\": null,\n      \"created_at\": \"2026-06-20T04:00:00.000000Z\",\n      \"updated_at\": \"2026-06-20T04:00:00.000000Z\"\n    }\n  ],\n  \"per_page\": 20,\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Subscription",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('subscription_id', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"frequency\": \"daily\",\n  \"delivery\": \"email\",\n  \"recipients\": [\"admin@acme.com\", \"reports@acme.com\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reports/subscriptions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "subscriptions"]
+            },
+            "description": "Creates a new report subscription for the current tenant.\n\nValid `frequency` values: `daily`, `weekly`, `monthly`.\nValid `delivery` values: `email`, `s3`, `email_and_s3`.\n\n`recipients` is required when delivery is `email` or `email_and_s3`.\n`s3_path` is the S3 key prefix (e.g. `tenant-reports/`) used when delivery is `s3` or `email_and_s3`.\n\nThe test script auto-saves the returned ID to the `subscription_id` collection variable."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"frequency\": \"daily\",\n  \"delivery\": \"email\",\n  \"recipients\": [\"admin@acme.com\"]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/reports/subscriptions",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "subscriptions"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": 1,\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"frequency\": \"daily\",\n  \"delivery\": \"email\",\n  \"recipients\": [\"admin@acme.com\"],\n  \"s3_path\": null,\n  \"is_active\": true,\n  \"last_dispatched_at\": null,\n  \"created_at\": \"2026-06-20T04:00:00.000000Z\",\n  \"updated_at\": \"2026-06-20T04:00:00.000000Z\"\n}"
+            },
+            {
+              "name": "422 Unprocessable",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"user_activity\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/reports/subscriptions",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "subscriptions"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The format field is required. (and 2 more errors)\",\n  \"errors\": {\n    \"format\": [\"The format field is required.\"],\n    \"frequency\": [\"The frequency field is required.\"],\n    \"delivery\": [\"The delivery field is required.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Subscription",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/subscriptions/{{subscription_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "subscriptions", "{{subscription_id}}"]
+            },
+            "description": "Returns a single report subscription by ID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/subscriptions/{{subscription_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "subscriptions", "{{subscription_id}}"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": 1,\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"frequency\": \"daily\",\n  \"delivery\": \"email\",\n  \"recipients\": [\"admin@acme.com\"],\n  \"s3_path\": null,\n  \"is_active\": true,\n  \"last_dispatched_at\": \"2026-06-20T04:00:00.000000Z\",\n  \"created_at\": \"2026-06-20T04:00:00.000000Z\",\n  \"updated_at\": \"2026-06-20T04:00:00.000000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Subscription",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"frequency\": \"weekly\",\n  \"is_active\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reports/subscriptions/{{subscription_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "subscriptions", "{{subscription_id}}"]
+            },
+            "description": "Partially updates a subscription. All fields are optional — only send the ones you want to change.\n\nUse `is_active: false` to pause a subscription without deleting it."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"frequency\": \"weekly\",\n  \"is_active\": false\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/reports/subscriptions/{{subscription_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "subscriptions", "{{subscription_id}}"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": 1,\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"frequency\": \"weekly\",\n  \"delivery\": \"email\",\n  \"recipients\": [\"admin@acme.com\"],\n  \"s3_path\": null,\n  \"is_active\": false,\n  \"last_dispatched_at\": \"2026-06-20T04:00:00.000000Z\",\n  \"created_at\": \"2026-06-20T04:00:00.000000Z\",\n  \"updated_at\": \"2026-06-20T05:00:00.000000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Subscription",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/subscriptions/{{subscription_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "subscriptions", "{{subscription_id}}"]
+            },
+            "description": "Permanently deletes a subscription. Use `is_active: false` via the update endpoint to pause without deleting."
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/subscriptions/{{subscription_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "subscriptions", "{{subscription_id}}"]
                 }
               },
               "status": "No Content",

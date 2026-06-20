@@ -152,8 +152,10 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── create_user_apps_table.php
 │   │   │   ├── create_user_app_tenants_table.php
 │   │   │   └── create_system_settings_table.php
-│   │   └── tenant/                         # Per-tenant migrations (empty — add domain tables here)
-│   └── seeders/DatabaseSeeder.php
+│   │   └── tenant/                         # Per-tenant migrations (companies, properties, floors, units, leases, lease_documents, lease_renewals)
+│   └── seeders/
+│       ├── DatabaseSeeder.php
+│       └── TenantSeeder.php
 │
 ├── resources/
 │   ├── js/
@@ -224,7 +226,7 @@ What's built:
 - **SSO backend** — login, logout, and app-picker API under `App\Auth\`
 - **Central models** — `App`, `Tenant`, `User`, `UserApp`, `UserAppTenant`, `SystemSetting` under `App\Models\Central\`
 - **Central DB schema** — `users`, `apps`, `tenants`, `user_apps`, `user_app_tenants`, `system_settings` in `database/migrations/central/`
-- **Separated migrations** — `database/migrations/central/` and `database/migrations/tenant/` with custom `php artisan central:migrate` and `php artisan tenant:migrate` commands
+- **Separated migrations** — `database/migrations/central/` (runs via `php artisan migrate`) and `database/migrations/tenant/` (runs via `php artisan tenant:migrate` against each tenant's own database)
 - **Modular routing** — each module owns its routes under `app/*/Routes/api_*.php`
 - **Collocated tests** — PHPUnit tests live inside each module (e.g. `app/Auth/Tests/`)
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
@@ -236,7 +238,7 @@ What's built:
 - **Bunny Fonts** (`Instrument Sans`) via `laravel-vite-plugin`
 - **commitlint 21 + Husky 9** — conventional commit enforcement
 - **Postman collection** — all SSO endpoints documented and ready to import
-- **Docker Compose** — full local dev stack (Nginx + PHP-FPM + PostgreSQL + Redis)
+- **Docker Compose** — full local dev stack (Nginx + PHP-FPM 8.5 + PostgreSQL 17 + Redis 7); PHP image tuned for PHP 8.5 Alpine (bundled `pdo`/`opcache`, added `zlib-dev`/`icu-libs`)
 
 ---
 
@@ -293,20 +295,17 @@ npm run dev
 ### Run migrations
 
 ```bash
-# Central DB only
-php artisan central:migrate
+# Central DB only (users, apps, tenants, permissions, cache, jobs)
+php artisan migrate
 
-# All tenant DBs (reads credentials from the tenants table)
+# All tenant DBs — reads credentials from the tenants table, creates each DB if needed
 php artisan tenant:migrate
 
 # Single tenant
-php artisan tenant:migrate --tenant=acme
-
-# Both central and tenant (default migrate)
-php artisan migrate
+php artisan tenant:migrate --tenant=demo
 ```
 
-Additional flags available on all three commands: `--fresh`, `--seed`, `--rollback`, `--step`, `--force`.
+Additional flags available on `tenant:migrate`: `--fresh`, `--seed`, `--rollback`, `--step`, `--force`.
 
 ### Environment variables
 
@@ -340,8 +339,11 @@ php artisan key:generate
 # Build and start all containers
 docker compose up -d --build
 
-# Run migrations
-docker compose exec php php artisan migrate --seed
+# Run central migrations (creates the tenants table and seeds a Demo Tenant)
+docker compose exec php php artisan migrate
+
+# Run tenant migrations (creates tenant_demo database and migrates it)
+docker compose exec php php artisan tenant:migrate
 ```
 
 Services exposed:
@@ -461,7 +463,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 | Unit tests | Vitest 4 + Vue Test Utils 2 | ✅ Installed |
 | E2E tests | Playwright 1.61 (Chromium) | ✅ Installed |
 | DB | PostgreSQL 17 (central + tenant) | ✅ Configured |
-| Containers | Docker Engine 29 + Docker Compose | ✅ Configured |
+| Containers | Docker Engine 29 + Docker Compose | ✅ Working |
 | Commit linting | commitlint 21 + Husky 9 | ✅ Installed |
 | CI | GitHub Actions (build, unit, E2E) | ✅ Active |
 | API client | Postman collection | ✅ Included |
@@ -490,8 +492,10 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Collocated PHPUnit tests — `app/Auth/Tests/` registered as `Auth` suite
 - [x] Postman collection — `postman/laravel-multitenant-sso.postman_collection.json`
 - [x] Separated migrations — `database/migrations/central/` and `database/migrations/tenant/`
-- [x] `php artisan central:migrate` and `php artisan tenant:migrate` custom commands
-- [x] Docker Compose full local dev stack (Nginx + PHP-FPM + PostgreSQL + Redis)
+- [x] `php artisan tenant:migrate` custom command — auto-creates tenant database, runs tenant migrations per tenant
+- [x] Docker Compose full local dev stack (Nginx + PHP-FPM 8.5 + PostgreSQL 17 + Redis 7)
+- [x] Demo Tenant seeded automatically in central migration with encrypted credentials
+- [x] Tenant migrations run against isolated `tenant_demo` database (not central)
 
 **Phase 3 — Frontend & multi-tenancy** *(in progress)*
 - [x] Inertia.js + Vue 3 installed and configured

@@ -114,6 +114,13 @@ laravel-multitenant-sso-boilerplate/
 │   │   ├── Http/Controllers/Auth/
 │   │   │   ├── AppPickerController.php
 │   │   │   └── LoginController.php
+│   │
+│   ├── Http/Controllers/
+│   │   ├── Admin/
+│   │   │   └── TenantHealthController.php      # GET /admin/tenants — aggregates per-tenant health metrics
+│   │   └── Auth/
+│   │       ├── WebLoginController.php          # Web login + post-auth app routing
+│   │       └── WebAppPickerController.php      # App picker page + selection handler
 │   │   ├── Http/Requests/
 │   │   │   └── LoginRequest.php
 │   │   ├── Routes/
@@ -221,7 +228,9 @@ laravel-multitenant-sso-boilerplate/
 │   │   ├── Pages/
 │   │   │   ├── Admin/Index.vue             # Admin landing page
 │   │   │   ├── Admin/Index.test.js
-│   │   │   ├── Login/Index.vue             # Login landing page
+│   │   │   ├── Admin/Tenants/Index.vue     # Tenant health dashboard
+│   │   │   ├── Auth/AppPicker.vue          # Multi-app picker shown after login
+│   │   │   ├── Login/Index.vue             # Login page with error banner
 │   │   │   ├── Login/Index.test.js
 │   │   │   ├── Reports/Index.vue           # Reports landing page
 │   │   │   ├── Reports/Index.test.js
@@ -297,6 +306,8 @@ What's built:
 - **Batch homogeneity enforced** — all reports in a batch must share the same `format` and `delivery`; validated at the API boundary; ZIP archive path persisted on the first report for retrieval via the download endpoint
 - **Tenant migration version tracking** — after each `tenant:migrate` run, the applied migrations are synced from the tenant's `migrations` table to the central `tenant_migration_versions` table; `tenant:migrate:status` command shows applied/total count, up-to-date status, and latest migration for each tenant
 - **Per-tenant scheduled report subscriptions** — tenants subscribe to recurring reports (`daily` / `weekly` / `monthly`) with `email`, `s3`, or `email_and_s3` delivery; `php artisan reports:dispatch-subscriptions` runs every minute via the scheduler, iterates active tenants, finds due subscriptions, creates central `Report` records, and dispatches `GenerateReportJob`; `ScheduledReportMail` attaches the generated file; `ReportDeliveryService` uploads to S3; full CRUD API at `/api/reports/subscriptions`
+- **Tenant health dashboard** — admin page at `/admin/tenants` aggregates per-tenant health metrics (migration compliance, user count, report failures, read-replica status) and computes a `healthy` / `warning` / `critical` status per tenant; summary bar shows totals across all tenants
+- **Web login flow with app picker** — after successful login, users with one app are redirected directly; users with multiple apps see an app picker page (`/apps`); login errors display as a prominent red banner
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components

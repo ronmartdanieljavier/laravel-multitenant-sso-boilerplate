@@ -59,7 +59,7 @@ class GenerateReportJob implements ShouldQueue
 
         if ($this->report->delivery === ReportDelivery::Email) {
             $this->report->loadMissing('user');
-            Mail::to($this->report->user)->send(new ReportReadyMail($this->report));
+            Mail::to($this->report->user)->queue(new ReportReadyMail($this->report));
         }
     }
 

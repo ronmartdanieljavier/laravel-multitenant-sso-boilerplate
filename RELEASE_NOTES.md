@@ -5,8 +5,34 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Tenant health dashboard in admin
 - PHPStan level raised beyond 5
+
+---
+
+## [1.9.0] — 2026-06-20
+
+### Added
+- **Tenant health dashboard** — new admin page at `/admin/tenants` that gives a live overview of every tenant's operational state:
+  - Per-tenant health status computed as `healthy` / `warning` / `critical`:
+    - `critical` — tenant is inactive **or** has failed reports
+    - `warning` — no users provisioned, or last migration is more than 30 days old
+    - `healthy` — everything else
+  - Metrics surfaced per tenant: active status, user count, migration count + last migration timestamp, pending/failed report counts, last successful report, and read-replica configuration
+  - Summary bar at the top shows totals for Healthy, Warning, and Critical across all tenants
+  - Sidebar "Tenants" link in the Admin layout now navigates to this dashboard
+- **Web login flow with app picker** — browser-based login now routes users intelligently after authentication:
+  - Users with **one app** are redirected directly to that app (`/admin` or `/tenant`)
+  - Users with **multiple apps** are shown an app picker page (`/apps`) to choose which app to open
+  - Choosing an app from the picker navigates to that app's root route
+- **Improved login error display** — failed login attempts now show a prominent red banner at the top of the form instead of only an inline field error; invalid field borders are highlighted red
+
+### Fixed
+- **API login route name collision** — `POST /api/login` was named `login`, shadowing the web `GET /login` route; Sanctum middleware was redirecting unauthenticated API requests to the POST-only endpoint causing `MethodNotAllowedHttpException`; renamed to `api.login`
+
+### Infrastructure
+- **Docker: `ext-gd` added** — `phpoffice/phpspreadsheet` requires the GD extension; added `libpng-dev`, `libjpeg-turbo-dev`, `freetype-dev` to `apk` and `gd` to `docker-php-ext-install` in `docker/php/Dockerfile`
+- **Docker: composer layer optimised** — `composer.json` and `composer.lock` are now copied before the rest of the app so the `composer install` layer is cached independently of code changes; `--no-scripts` prevents `package:discover` from running before `artisan` exists; scripts run explicitly after `COPY . .`
+- **Docker: `COMPOSER_MEMORY_LIMIT=-1`** — removes the default 1.5 GB cap to prevent OOM failures during `--optimize-autoloader` in Alpine containers
 
 ---
 

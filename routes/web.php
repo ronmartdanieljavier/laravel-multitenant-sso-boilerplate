@@ -1,7 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Admin\TenantHealthController;
+use App\Http\Controllers\Auth\WebAppPickerController;
+use App\Http\Controllers\Auth\WebLoginController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -9,29 +10,18 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/login', function () {
-    return Inertia::render('Login/Index');
-})->name('login');
-
-Route::post('/login', function (Request $request) {
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
-
-    if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-        return back()->withErrors(['email' => 'These credentials do not match our records.']);
-    }
-
-    $request->session()->regenerate();
-
-    return redirect()->intended(route('tenant'));
-})->name('login.post');
+Route::get('/login', [WebLoginController::class, 'show'])->name('login');
+Route::post('/login', [WebLoginController::class, 'login'])->name('login.post');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/apps', [WebAppPickerController::class, 'index'])->name('apps');
+    Route::post('/apps/select', [WebAppPickerController::class, 'select'])->name('apps.select');
+
     Route::get('/admin', function () {
         return Inertia::render('Admin/Index');
     })->name('admin');
+
+    Route::get('/admin/tenants', [TenantHealthController::class, 'index'])->name('admin.tenants');
 
     Route::get('/tenant', function () {
         return Inertia::render('Tenant/Index');

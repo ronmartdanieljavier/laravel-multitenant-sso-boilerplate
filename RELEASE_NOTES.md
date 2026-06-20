@@ -5,12 +5,27 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Multi-app monorepo structure (`apps/login`, `apps/admin`, `apps/client`, `apps/reports`)
-- `packages/central` shared Composer package (models, middleware, TenantResolver)
-- `packages/ui` shared Vue 3 component library
-- Dynamic tenant database resolution middleware
+- Two-dimensional permissions enforcement (app + tenant DB)
+- Inertia shared props — active tenant + permissions on every page
 - Laravel Horizon + Redis async report queue
-- PHPStan 2.2 + Larastan at level 8
+- Per-tenant read replica support
+- PHPStan level raised beyond 5
+
+---
+
+## [1.1.0] — 2026-06-20
+
+### Added
+- **`ResolveTenantDatabase` middleware** — `app/Http/Middleware/ResolveTenantDatabase.php` resolves the active tenant database connection per request:
+  - Reads the `X-Tenant` request header for the tenant slug
+  - Returns `400 Bad Request` if the header is absent
+  - Returns `403 Forbidden` if the tenant is inactive, not found, or the authenticated user has no access to it
+  - Dynamically registers a `tenant` MySQL connection in `database.connections.tenant` using the tenant's stored `db_host`, `db_port`, `db_name`, `db_username`, and `db_password`
+  - Calls `DB::purge('tenant')` to flush any stale connection so the new config takes effect immediately
+  - Merges `current_tenant` onto the request for use by downstream controllers
+- **Middleware applied to tenant API routes** — `app/Tenant/Routes/api_tenant.php` now applies `['auth:sanctum', ResolveTenantDatabase::class]` so all tenant endpoints require both authentication and a valid `X-Tenant` header
+- **PHPStan config** — added `phpVersion: 80500` to `phpstan.neon` so static analysis targets PHP 8.5; PHPStan passes at level 5 with zero errors (`--memory-limit=512M` required due to default 128M PHP CLI limit)
+- **Middleware tests** — `tests/Feature/Tenant/ResolveTenantDatabaseMiddlewareTest.php` with 5 PHPUnit feature tests covering: missing header (400), tenant not found (403), user has no access (403), tenant inactive (403), and successful connection configuration (200 + correct `database.connections.tenant` values set)
 
 ---
 

@@ -61,9 +61,14 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 - Tenant connection resolved at runtime per request via middleware
 - Supports any DB server — AWS RDS, DigitalOcean, GCP, on-premise, or any MySQL/PostgreSQL host
 
-**Scalable reporting**
-- Separate `Reports` module — async report generation via Laravel queues
-- Per-tenant read replica support — point heavy queries away from the primary
+**Scalable async reporting**
+- Separate `Reports` module — reports are dispatched as queued jobs and tracked through `pending → processing → success / failed` states
+- Supports multiple output formats: on-screen (JSON), PDF, and Excel
+- Multiple delivery modes: download, email, or none
+- Individual and batch report generation — batch jobs use `Bus::batch()` with automatic ZIP packaging on completion
+- Error messages surfaced to users on failure
+- Laravel Horizon 5 dashboard at `/horizon` for queue monitoring
+- Per-tenant read replica support — point heavy queries away from the primary *(planned)*
 
 **Admin panel**
 - Manage users and assign app + tenant DB access
@@ -132,6 +137,35 @@ laravel-multitenant-sso-boilerplate/
 │   ├── Providers/AppServiceProvider.php
 │   │
 │   ├── Reports/
+│   │   ├── Contracts/
+│   │   │   └── ReportGenerator.php         # Generator interface
+│   │   ├── Data/
+│   │   │   ├── ReportRequestData.php       # Input DTO
+│   │   │   └── ReportResultData.php        # Output DTO
+│   │   ├── Enums/
+│   │   │   ├── ReportDelivery.php          # Download | Email | None
+│   │   │   ├── ReportFormat.php            # Screen | Pdf | Excel
+│   │   │   └── ReportStatus.php           # Pending | Processing | Success | Failed
+│   │   ├── Generators/
+│   │   │   ├── ReportGeneratorFactory.php  # Resolves generator by format
+│   │   │   ├── ScreenReportGenerator.php   # JSON data output (working)
+│   │   │   ├── PdfReportGenerator.php      # Stub — needs barryvdh/laravel-dompdf
+│   │   │   └── ExcelReportGenerator.php    # Stub — needs maatwebsite/excel
+│   │   ├── Http/
+│   │   │   ├── Controllers/
+│   │   │   │   └── ReportController.php    # index, store, batch, show, download, destroy
+│   │   │   └── Requests/
+│   │   │       ├── StoreReportRequest.php
+│   │   │       └── StoreBatchReportRequest.php
+│   │   ├── Jobs/
+│   │   │   ├── GenerateReportJob.php       # ShouldQueue, Batchable — reports queue
+│   │   │   └── GenerateReportBatchJob.php  # Bus::batch() dispatcher
+│   │   ├── Mail/
+│   │   │   └── ReportReadyMail.php
+│   │   ├── Policies/
+│   │   │   └── ReportPolicy.php
+│   │   ├── Services/
+│   │   │   └── ReportFileService.php       # store, zip, merge (stub)
 │   │   └── Routes/
 │   │       └── api_reports.php             # Reports API routes
 │   │
@@ -142,6 +176,8 @@ laravel-multitenant-sso-boilerplate/
 ├── database/
 │   ├── factories/
 │   │   ├── Auth/                           # Auth model factories
+│   │   ├── Reports/
+│   │   │   └── ReportFactory.php           # States: pending, processing, success, failed, screen, pdf, excel
 │   │   └── UserFactory.php
 │   ├── migrations/
 │   │   ├── central/                        # Central DB migrations
@@ -153,7 +189,8 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── create_tenants_table.php
 │   │   │   ├── create_user_apps_table.php
 │   │   │   ├── create_user_app_tenants_table.php
-│   │   │   └── create_system_settings_table.php
+│   │   │   ├── create_system_settings_table.php
+│   │   │   └── create_reports_table.php
 │   │   └── tenant/                         # Per-tenant migrations (companies, properties, floors, units, leases, lease_documents, lease_renewals)
 │   └── seeders/
 │       ├── DatabaseSeeder.php
@@ -212,6 +249,7 @@ tenants             — tenant DB credentials (host, port, name, user, pass)
 user_apps           — which apps a user can access + role
 user_app_tenants    — which tenant DBs a user can access per app + role + default
 system_settings     — global config
+reports             — async report jobs (status, format, delivery, file path, error)
 ```
 
 ---
@@ -233,6 +271,8 @@ What's built:
 - **Collocated tests** — PHPUnit tests live inside each module (e.g. `app/Auth/Tests/`)
 - **Dynamic tenant database resolution** — `ResolveTenantDatabase` middleware reads `X-Tenant` header, verifies user access, and wires up a per-request `tenant` DB connection from credentials stored in the central DB
 - **Two-dimensional permissions enforcement** — `ResolveTenantDatabase` enforces both the app dimension (`X-App` header, Sanctum token ability `app:{slug}`, `user_apps` record) and the tenant dimension (`user_app_tenants` scoped to the resolved app); `RequireRole` middleware available for per-route role enforcement (`admin`, `user`, `readonly`)
+- **Laravel Horizon 5** — async report queue with dedicated `report-worker` supervisor; Horizon dashboard at `/horizon`; `horizon` Docker service added
+- **Async report engine** — `GenerateReportJob` + `GenerateReportBatchJob` dispatched to the `reports` Redis queue; status tracked in the `reports` table through `pending → processing → success / failed`; screen format fully working; PDF and Excel are stubs awaiting package installation
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -362,6 +402,7 @@ Services exposed:
 The stack:
 - **nginx** — serves static assets and proxies PHP requests to `php:9000`
 - **php** — PHP 8.5-FPM with `pdo_pgsql`, `redis`, `mbstring`, `zip`, `bcmath`, `intl`, `opcache`
+- **horizon** — dedicated container running `php artisan horizon`; processes the `default` and `reports` queues; restarts automatically
 - **postgres** — PostgreSQL 17, data persisted in `postgres_data` volume
 - **redis** — Redis 7, data persisted in `redis_data` volume; used for cache, sessions, and queues
 
@@ -475,7 +516,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 | CI | GitHub Actions (build, unit, E2E) | ✅ Active |
 | API client | Postman collection | ✅ Included |
 | AI coding | Claude Code (Anthropic) | ✅ Active |
-| Queue | Laravel Horizon + Redis | Planned |
+| Queue | Laravel Horizon 5 + Redis 7 | ✅ Installed |
 | Static analysis | PHPStan + Larastan (level 5) | ✅ Active |
 | Tenant middleware | Dynamic DB resolution + two-dimensional enforcement | ✅ Built |
 | Two-dimensional permissions | App + tenant DB | ✅ Built |
@@ -515,13 +556,12 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Two-dimensional permissions enforcement — `X-App` + `X-Tenant` headers, token ability check, `user_apps`/`user_app_tenants` enforcement, `RequireRole` middleware
 - [x] Inertia shared props — active tenant + permissions on every page
 
-**Phase 4 — Reporting & ops**
-- [ ] Laravel Horizon + Redis async report queue
+**Phase 4 — Reporting & ops** *(in progress)*
+- [x] Laravel Horizon + Redis async report queue
 - [ ] Per-tenant read replica support
 - [ ] Tenant migration version tracking
 - [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [ ] Tenant health dashboard in admin
-- [ ] PHPStan + Larastan static analysis
 
 ---
 

@@ -233,6 +233,142 @@ class ResolveTenantDatabaseMiddlewareTest extends TestCase
         $this->assertEquals($tenant->slug, $request->attributes->get('current_tenant')->slug);
     }
 
+    public function test_configures_read_write_split_when_read_replica_present(): void
+    {
+        $user = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create([
+            'db_host' => '10.0.0.1',
+            'db_port' => 3307,
+            'db_name' => 'tenant_db',
+            'db_username' => 'tenant_user',
+            'db_password' => 'secret',
+            'read_replica_host' => '10.0.0.2',
+            'read_replica_port' => 3308,
+        ]);
+
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::Admin]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $tenant->id,
+            'role' => Role::Admin,
+            'is_default' => true,
+        ]);
+
+        $request = $this->makeRequest($user, $app->slug, $tenant->slug, ["app:{$app->slug}"]);
+
+        DB::shouldReceive('purge')->once()->with('tenant');
+
+        $middleware = new ResolveTenantDatabase;
+        $response = $middleware->handle($request, fn () => new Response('ok'));
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('10.0.0.1', Config::get('database.connections.tenant.write.host'));
+        $this->assertEquals(3307, Config::get('database.connections.tenant.write.port'));
+        $this->assertEquals('10.0.0.2', Config::get('database.connections.tenant.read.host'));
+        $this->assertEquals(3308, Config::get('database.connections.tenant.read.port'));
+        $this->assertTrue(Config::get('database.connections.tenant.sticky'));
+        $this->assertNull(Config::get('database.connections.tenant.host'));
+    }
+
+    public function test_read_replica_inherits_primary_port_when_replica_port_not_set(): void
+    {
+        $user = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create([
+            'db_host' => '10.0.0.1',
+            'db_port' => 3307,
+            'db_name' => 'tenant_db',
+            'db_username' => 'tenant_user',
+            'db_password' => 'secret',
+            'read_replica_host' => '10.0.0.2',
+            'read_replica_port' => null,
+        ]);
+
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::Admin]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $tenant->id,
+            'role' => Role::Admin,
+            'is_default' => true,
+        ]);
+
+        $request = $this->makeRequest($user, $app->slug, $tenant->slug, ["app:{$app->slug}"]);
+
+        DB::shouldReceive('purge')->once()->with('tenant');
+
+        $middleware = new ResolveTenantDatabase;
+        $middleware->handle($request, fn () => new Response('ok'));
+
+        $this->assertEquals(3307, Config::get('database.connections.tenant.read.port'));
+    }
+
+    public function test_read_replica_supports_separate_credentials(): void
+    {
+        $user = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create([
+            'db_host' => '10.0.0.1',
+            'db_port' => 3306,
+            'db_name' => 'tenant_db',
+            'db_username' => 'write_user',
+            'db_password' => 'write_pass',
+            'read_replica_host' => '10.0.0.2',
+            'read_replica_port' => null,
+            'read_replica_username' => 'read_user',
+            'read_replica_password' => 'read_pass',
+        ]);
+
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::Admin]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $tenant->id,
+            'role' => Role::Admin,
+            'is_default' => true,
+        ]);
+
+        $request = $this->makeRequest($user, $app->slug, $tenant->slug, ["app:{$app->slug}"]);
+
+        DB::shouldReceive('purge')->once()->with('tenant');
+
+        $middleware = new ResolveTenantDatabase;
+        $middleware->handle($request, fn () => new Response('ok'));
+
+        $this->assertEquals('read_user', Config::get('database.connections.tenant.read.username'));
+        $this->assertEquals('read_pass', Config::get('database.connections.tenant.read.password'));
+    }
+
+    public function test_no_read_write_split_when_no_replica(): void
+    {
+        $user = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create([
+            'db_host' => '10.0.0.1',
+            'db_port' => 3306,
+            'read_replica_host' => null,
+        ]);
+
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::Admin]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $tenant->id,
+            'role' => Role::Admin,
+            'is_default' => true,
+        ]);
+
+        $request = $this->makeRequest($user, $app->slug, $tenant->slug, ["app:{$app->slug}"]);
+
+        DB::shouldReceive('purge')->once()->with('tenant');
+
+        $middleware = new ResolveTenantDatabase;
+        $middleware->handle($request, fn () => new Response('ok'));
+
+        $this->assertEquals('10.0.0.1', Config::get('database.connections.tenant.host'));
+        $this->assertNull(Config::get('database.connections.tenant.read'));
+        $this->assertNull(Config::get('database.connections.tenant.write'));
+        $this->assertNull(Config::get('database.connections.tenant.sticky'));
+    }
+
     public function test_stores_current_app_and_role_on_request(): void
     {
         $user = User::factory()->create();

@@ -68,7 +68,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 - Individual and batch report generation — batch jobs use `Bus::batch()` with automatic ZIP packaging on completion
 - Error messages surfaced to users on failure
 - Laravel Horizon 5 dashboard at `/horizon` for queue monitoring
-- Per-tenant read replica support — point heavy queries away from the primary *(planned)*
+- Per-tenant read replica support — each tenant can optionally use a dedicated read replica; SELECT queries route to the replica automatically via Laravel's `read`/`write` connection split with `sticky: true`
 
 **Admin panel**
 - Manage users and assign app + tenant DB access
@@ -245,7 +245,7 @@ laravel-multitenant-sso-boilerplate/
 ```
 users               — authentication, core identity
 apps                — registered apps (login, admin, tenant, reports)
-tenants             — tenant DB credentials (host, port, name, user, pass)
+tenants             — tenant DB credentials (host, port, name, user, pass) + optional read replica (host, port, user, pass)
 user_apps           — which apps a user can access + role
 user_app_tenants    — which tenant DBs a user can access per app + role + default
 system_settings     — global config
@@ -572,7 +572,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 
 **Phase 4 — Reporting & ops** *(in progress)*
 - [x] Laravel Horizon + Redis async report queue
-- [ ] Per-tenant read replica support
+- [x] Per-tenant read replica support
 - [ ] Tenant migration version tracking
 - [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [ ] Tenant health dashboard in admin

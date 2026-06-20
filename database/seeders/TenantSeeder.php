@@ -20,7 +20,7 @@ class TenantSeeder extends Seeder
             'slug' => 'demo',
             'db_host' => env('DB_HOST', '127.0.0.1'),
             'db_port' => (int) env('DB_PORT', 5432),
-            'db_name' => env('DB_DATABASE', 'laravel'),
+            'db_name' => 'tenant_demo',
             'db_username' => env('DB_USERNAME', 'laravel'),
             'db_password' => env('DB_PASSWORD', 'secret'),
             'is_active' => true,

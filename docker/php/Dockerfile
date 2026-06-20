@@ -13,14 +13,15 @@ RUN apk add --no-cache \
     icu-dev \
     icu-libs
 
-# PHP extensions (pdo and opcache are bundled in PHP 8.4+)
+# pdo is bundled in PHP 8.4+; opcache is compiled in but must be explicitly enabled
 RUN docker-php-ext-install \
     pdo_pgsql \
     pgsql \
     mbstring \
     zip \
     bcmath \
-    intl
+    intl \
+    && docker-php-ext-enable opcache
 
 # Redis extension
 RUN apk add --no-cache $PHPIZE_DEPS \

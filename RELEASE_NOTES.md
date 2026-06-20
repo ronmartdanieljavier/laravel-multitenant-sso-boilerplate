@@ -5,11 +5,39 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Two-dimensional permissions enforcement (app + tenant DB)
 - Inertia shared props — active tenant + permissions on every page
 - Laravel Horizon + Redis async report queue
 - Per-tenant read replica support
 - PHPStan level raised beyond 5
+
+---
+
+## [1.2.0] — 2026-06-20
+
+### Added
+- **Two-dimensional permission enforcement** — `ResolveTenantDatabase` middleware now enforces both permission dimensions on every tenant request:
+  - **Dimension 1 (App)** — reads `X-App` header, verifies the app is active, checks the Sanctum token carries the `app:{slug}` ability, and confirms the user has a `user_apps` record for that app; returns `400` if the header is missing, `403` on any access failure
+  - **Dimension 2 (Tenant)** — tenant lookup is now scoped to the resolved app via `user_app_tenants.app_id`, preventing cross-app tenant access; returns `403` if the tenant is inactive, not found, or the user's access is for a different app
+  - Stores `current_app` (App model), `current_tenant` (Tenant model), and `current_role` (Role enum) on `$request->attributes` for use by downstream controllers and middleware
+- **`RequireRole` middleware** — `app/Http/Middleware/RequireRole.php` enforces role-level access on individual routes:
+  - Accepts one or more role parameters (e.g. `RequireRole::class.':admin'` or `RequireRole::class.':admin,user'`)
+  - Applies role hierarchy: `Admin > User > Readonly` — a user passes if their tenant-level role meets or exceeds any of the specified roles
+  - Returns `403` if no role is set on the request (middleware run out of order) or if the user's role is insufficient
+  - Usage: `Route::middleware(['auth:sanctum', ResolveTenantDatabase::class, RequireRole::class.':admin'])->group(...)`
+- **`ResolveTenantDatabase` middleware tests** — updated and extended `tests/Feature/Tenant/ResolveTenantDatabaseMiddlewareTest.php`:
+  - Updated existing tests to supply `X-App` header and Sanctum token abilities
+  - Added `test_returns_bad_request_when_no_app_header` — 400 when `X-App` is absent
+  - Added `test_returns_forbidden_when_app_not_found` — 403 when slug does not match any active app
+  - Added `test_returns_forbidden_when_token_lacks_app_ability` — 403 when token was not issued with the `app:{slug}` ability
+  - Added `test_returns_forbidden_when_user_has_no_user_app_record` — 403 when `user_apps` record is missing despite having a `user_app_tenants` entry
+  - Added `test_returns_forbidden_when_tenant_belongs_to_different_app` — 403 when user has tenant access via app A but the request is for app B
+  - Added `test_stores_current_app_and_role_on_request` — asserts `current_app`, `current_tenant`, and `current_role` are all set correctly on success
+- **`RequireRole` middleware tests** — `tests/Feature/Tenant/RequireRoleMiddlewareTest.php` with 11 PHPUnit tests:
+  - Admin passes admin, user, and readonly checks
+  - User passes user and readonly checks; fails admin check
+  - Readonly passes readonly check; fails user and admin checks
+  - Returns 403 when no `current_role` is set on the request
+  - Passes when the user's role matches any of multiple accepted roles
 
 ---
 

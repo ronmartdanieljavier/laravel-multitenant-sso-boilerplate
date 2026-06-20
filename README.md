@@ -667,6 +667,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 
 *User self-service*
 - [ ] User can update their display name
+- [ ] User can upload and update their profile picture
 - [ ] User can reset their own password
 
 *App management*

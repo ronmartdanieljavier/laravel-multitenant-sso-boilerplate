@@ -1,5 +1,5 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 
 const stats = [
     { label: 'Total Users', value: '4,291', change: '+12%', up: true },
@@ -31,12 +31,19 @@ const recentUsers = [
                 <span class="font-semibold text-white">SSO Admin</span>
             </div>
             <nav class="flex-1 px-3 py-4 space-y-1">
-                <a v-for="item in ['Dashboard', 'Users', 'Apps', 'Tenants', 'Settings']" :key="item"
-                   href="#"
-                   :class="item === 'Dashboard' ? 'bg-violet-600/20 text-violet-300' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'"
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition">
-                    {{ item }}
-                </a>
+                <template v-for="item in ['Dashboard', 'Users', 'Apps', 'Tenants', 'Settings']" :key="item">
+                    <Link v-if="item === 'Tenants'"
+                          href="/admin/tenants"
+                          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
+                        {{ item }}
+                    </Link>
+                    <a v-else
+                       href="#"
+                       :class="item === 'Dashboard' ? 'bg-violet-600/20 text-violet-300' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition">
+                        {{ item }}
+                    </a>
+                </template>
             </nav>
             <div class="p-4 border-t border-white/5">
                 <div class="flex items-center gap-3">

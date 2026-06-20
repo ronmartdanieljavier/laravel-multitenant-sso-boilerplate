@@ -29,6 +29,14 @@ function submit() {
 
             <!-- Card -->
             <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8 shadow-2xl">
+                <!-- Error Banner -->
+                <div v-if="form.errors.email && !form.isDirty" class="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 mb-5">
+                    <svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="text-red-400 text-sm">{{ form.errors.email }}</p>
+                </div>
+
                 <form @submit.prevent="submit" class="space-y-5">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1.5">Email address</label>
@@ -37,9 +45,9 @@ function submit() {
                             type="email"
                             autocomplete="email"
                             placeholder="you@example.com"
-                            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="form.errors.email ? 'border-red-500/50 focus:ring-red-500' : 'border-white/10 focus:ring-blue-500'"
+                            class="w-full bg-white/5 border rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent transition"
                         />
-                        <p v-if="form.errors.email" class="text-red-400 text-xs mt-1">{{ form.errors.email }}</p>
                     </div>
 
                     <div>
@@ -49,7 +57,8 @@ function submit() {
                             type="password"
                             autocomplete="current-password"
                             placeholder="••••••••"
-                            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="form.errors.password ? 'border-red-500/50 focus:ring-red-500' : 'border-white/10 focus:ring-blue-500'"
+                            class="w-full bg-white/5 border rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent transition"
                         />
                         <p v-if="form.errors.password" class="text-red-400 text-xs mt-1">{{ form.errors.password }}</p>
                     </div>

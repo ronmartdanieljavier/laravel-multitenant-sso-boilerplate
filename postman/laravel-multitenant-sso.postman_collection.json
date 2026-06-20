@@ -25,6 +25,11 @@
       "key": "token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "report_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -53,23 +58,13 @@
             },
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{base_url}}/api/login",
@@ -132,10 +127,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" }
             ],
             "url": {
               "raw": "{{base_url}}/api/logout",
@@ -149,9 +141,7 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "POST",
-                "header": [
-                  { "key": "Accept", "value": "application/json" }
-                ],
+                "header": [{ "key": "Accept", "value": "application/json" }],
                 "url": {
                   "raw": "{{base_url}}/api/logout",
                   "host": ["{{base_url}}"],
@@ -170,10 +160,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Accept", "value": "application/json" }
             ],
             "url": {
               "raw": "{{base_url}}/api/apps",
@@ -187,9 +174,7 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
-                "header": [
-                  { "key": "Accept", "value": "application/json" }
-                ],
+                "header": [{ "key": "Accept", "value": "application/json" }],
                 "url": {
                   "raw": "{{base_url}}/api/apps",
                   "host": ["{{base_url}}"],
@@ -200,6 +185,344 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "body": "[\n  {\n    \"app_id\": 1,\n    \"name\": \"My App\",\n    \"slug\": \"my-app\",\n    \"url\": \"https://my-app.example.com\",\n    \"role\": \"admin\",\n    \"tenants\": [\n      {\n        \"tenant_id\": 1,\n        \"name\": \"Tenant A\",\n        \"slug\": \"tenant-a\",\n        \"role\": \"manager\",\n        \"is_default\": true\n      }\n    ]\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "description": "Async report generation endpoints. All requests require a Bearer token. The `report_id` collection variable is auto-saved by the 'Dispatch Single Report' test script.",
+      "item": [
+        {
+          "name": "List Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports"]
+            },
+            "description": "Returns a paginated list of reports belonging to the authenticated user, ordered by most recent."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"user_id\": 1,\n      \"type\": \"user_activity\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\",\n      \"status\": \"success\",\n      \"parameters\": null,\n      \"file_path\": null,\n      \"error_message\": null,\n      \"batch_id\": null,\n      \"started_at\": \"2026-06-20T03:00:00.000000Z\",\n      \"completed_at\": \"2026-06-20T03:00:01.000000Z\",\n      \"created_at\": \"2026-06-20T03:00:00.000000Z\",\n      \"updated_at\": \"2026-06-20T03:00:01.000000Z\"\n    }\n  ],\n  \"per_page\": 20,\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Dispatch Single Report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('report_id', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"delivery\": \"none\",\n  \"parameters\": {\n    \"from\": \"2026-01-01\",\n    \"to\": \"2026-06-20\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reports",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports"]
+            },
+            "description": "Dispatches a single report job to the `reports` Redis queue. Status transitions: `pending → processing → success | failed`.\n\nValid `format` values: `screen`, `pdf`, `excel`.\nValid `delivery` values: `download`, `email`, `none`.\n\nThe test script auto-saves the returned report UUID to the `report_id` collection variable."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"delivery\": \"none\",\n  \"parameters\": {\n    \"from\": \"2026-01-01\",\n    \"to\": \"2026-06-20\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/reports",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"user_id\": 1,\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"delivery\": \"none\",\n  \"status\": \"pending\",\n  \"parameters\": {\n    \"from\": \"2026-01-01\",\n    \"to\": \"2026-06-20\"\n  },\n  \"file_path\": null,\n  \"error_message\": null,\n  \"batch_id\": null,\n  \"started_at\": null,\n  \"completed_at\": null,\n  \"created_at\": \"2026-06-20T03:00:00.000000Z\",\n  \"updated_at\": \"2026-06-20T03:00:00.000000Z\"\n}"
+            },
+            {
+              "name": "422 Unprocessable",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"format\": \"invalid\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/reports",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The type field is required. (and 2 more errors)\",\n  \"errors\": {\n    \"type\": [\"The type field is required.\"],\n    \"format\": [\"The selected format is invalid.\"],\n    \"delivery\": [\"The delivery field is required.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Dispatch Batch Reports",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reports\": [\n    {\n      \"type\": \"user_activity\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\",\n      \"parameters\": { \"from\": \"2026-01-01\", \"to\": \"2026-06-20\" }\n    },\n    {\n      \"type\": \"app_access\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reports/batch",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "batch"]
+            },
+            "description": "Dispatches up to 50 report jobs as a single Laravel Bus batch. All reports in the batch must share the same `format` and `delivery` values.\n\nOn completion, if `delivery` is `download` and multiple reports succeed, a ZIP archive is created and its path stored on the first report record (retrievable via `GET /api/reports/{reports[0].id}/download`)."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reports\": [\n    { \"type\": \"user_activity\", \"format\": \"screen\", \"delivery\": \"none\" },\n    { \"type\": \"app_access\", \"format\": \"screen\", \"delivery\": \"none\" }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/reports/batch",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "batch"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"batch_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"horizon_batch_id\": \"horizon-abc123\",\n  \"report_count\": 2,\n  \"reports\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n      \"type\": \"user_activity\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\",\n      \"status\": \"pending\",\n      \"batch_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n    },\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440002\",\n      \"type\": \"app_access\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\",\n      \"status\": \"pending\",\n      \"batch_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "422 Mixed formats",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reports\": [\n    { \"type\": \"user_activity\", \"format\": \"screen\", \"delivery\": \"none\" },\n    { \"type\": \"app_access\", \"format\": \"pdf\", \"delivery\": \"none\" }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/reports/batch",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "batch"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"All reports in a batch must use the same format.\",\n  \"errors\": {\n    \"reports\": [\"All reports in a batch must use the same format.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Report Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/{{report_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "{{report_id}}"]
+            },
+            "description": "Returns the current status and result of a report. Poll this endpoint after dispatching until `status` is `success` or `failed`."
+          },
+          "response": [
+            {
+              "name": "200 OK — success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/{{report_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "{{report_id}}"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"user_id\": 1,\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"delivery\": \"none\",\n  \"status\": \"success\",\n  \"parameters\": { \"from\": \"2026-01-01\", \"to\": \"2026-06-20\" },\n  \"file_path\": null,\n  \"error_message\": null,\n  \"batch_id\": null,\n  \"started_at\": \"2026-06-20T03:00:00.000000Z\",\n  \"completed_at\": \"2026-06-20T03:00:01.000000Z\",\n  \"created_at\": \"2026-06-20T03:00:00.000000Z\",\n  \"updated_at\": \"2026-06-20T03:00:01.000000Z\"\n}"
+            },
+            {
+              "name": "200 OK — failed",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/{{report_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "{{report_id}}"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"status\": \"failed\",\n  \"error_message\": \"Failed to write report file at reports/1/user_activity.json.\",\n  \"completed_at\": \"2026-06-20T03:00:05.000000Z\"\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/{{report_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "{{report_id}}"]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"This action is unauthorized.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download Report File",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/octet-stream" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/{{report_id}}/download",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "{{report_id}}", "download"]
+            },
+            "description": "Streams the generated report file. Only available when `status` is `success` and a `file_path` is set.\n\nFor download-delivery batches the ZIP archive is stored on the first report record — use that report's ID here."
+          },
+          "response": [
+            {
+              "name": "200 OK — file stream",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/octet-stream" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/{{report_id}}/download",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "{{report_id}}", "download"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "body": "<binary file stream>"
+            },
+            {
+              "name": "422 Not Ready",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/octet-stream" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/{{report_id}}/download",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "{{report_id}}", "download"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Report is not ready for download.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Report",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/{{report_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "{{report_id}}"]
+            },
+            "description": "Deletes a report record and its associated file from storage. Owner-only — returns 403 for reports belonging to other users."
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/api/reports/{{report_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "reports", "{{report_id}}"]
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "body": ""
             }
           ]
         }

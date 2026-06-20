@@ -13,6 +13,21 @@
 
 ---
 
+## [1.4.1] — 2026-06-20
+
+### Fixed
+- **`batch_id` spoofing removed** — `StoreReportRequest` no longer accepts `batch_id` from user input; standalone reports always have `batch_id = null`. Batch IDs are server-generated exclusively in `ReportController::batch()` via `Str::uuid()`.
+- **Batch format/delivery homogeneity enforced** — `StoreBatchReportRequest` now validates (via `after()`) that all items in a batch share the same `format` and `delivery`; mixed batches return `422`. This makes the post-completion ZIP and PDF-merge logic safe to apply uniformly.
+- **ZIP path persisted after batch completion** — `GenerateReportBatchJob::handleBatchCompletion()` now captures the return value of `ReportFileService::zipFiles()` and writes the ZIP's storage path to the first report's `file_path`, making the batch archive retrievable via `GET /api/reports/{id}/download`.
+- **Cancelled batch reports marked Failed** — when a Laravel Bus batch is cancelled, each job's report is now updated to `status = failed`, `error_message = 'Batch was cancelled.'`, and `completed_at` stamped, rather than remaining stuck in `Pending` or `Processing`.
+- **`Storage::put` failure throws** — `ReportFileService::storeFile()` now throws a `RuntimeException` when `Storage::put()` returns `false`, propagating the error into `GenerateReportJob::failed()` so the report is marked `Failed` instead of recording a path to a file that was never written.
+- **Duplicate `viewHorizon` gate resolved** — `AppServiceProvider` was defining `viewHorizon` first, then `HorizonServiceProvider::gate()` overwrote it with an empty allowlist, blocking access everywhere. The gate is now defined only in `HorizonServiceProvider::gate()` (its intended home); `AppServiceProvider` retains only the `Horizon::auth()` callback that delegates to it.
+
+### Updated
+- **Postman collection** — added a full `Reports` folder covering all 6 endpoints (`List`, `Dispatch Single`, `Dispatch Batch`, `Get Status`, `Download`, `Delete`) with example request bodies, example responses (including 422 error cases), and a `report_id` collection variable auto-saved by the dispatch request's test script.
+
+---
+
 ## [1.4.0] — 2026-06-20
 
 ### Added

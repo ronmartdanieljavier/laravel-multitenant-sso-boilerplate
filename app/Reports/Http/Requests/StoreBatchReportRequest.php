@@ -6,6 +6,7 @@ use App\Reports\Enums\ReportDelivery;
 use App\Reports\Enums\ReportFormat;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Validator;
 
 class StoreBatchReportRequest extends FormRequest
 {
@@ -22,6 +23,23 @@ class StoreBatchReportRequest extends FormRequest
             'reports.*.format' => ['required', new Enum(ReportFormat::class)],
             'reports.*.delivery' => ['required', new Enum(ReportDelivery::class)],
             'reports.*.parameters' => ['nullable', 'array'],
+        ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                $reports = $this->input('reports', []);
+
+                if (count(array_unique(array_column($reports, 'format'))) > 1) {
+                    $validator->errors()->add('reports', 'All reports in a batch must use the same format.');
+                }
+
+                if (count(array_unique(array_column($reports, 'delivery'))) > 1) {
+                    $validator->errors()->add('reports', 'All reports in a batch must use the same delivery mode.');
+                }
+            },
         ];
     }
 }

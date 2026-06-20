@@ -63,6 +63,40 @@ class ReportBatchTest extends TestCase
         );
     }
 
+    public function test_batch_rejects_mixed_formats(): void
+    {
+        Bus::fake();
+
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/reports/batch', [
+            'reports' => [
+                ['type' => 'user_activity', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::None->value],
+                ['type' => 'app_access', 'format' => ReportFormat::Pdf->value, 'delivery' => ReportDelivery::None->value],
+            ],
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['reports']);
+    }
+
+    public function test_batch_rejects_mixed_delivery_modes(): void
+    {
+        Bus::fake();
+
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/reports/batch', [
+            'reports' => [
+                ['type' => 'user_activity', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::None->value],
+                ['type' => 'app_access', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::Download->value],
+            ],
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['reports']);
+    }
+
     public function test_batch_validates_max_50_reports(): void
     {
         Bus::fake();

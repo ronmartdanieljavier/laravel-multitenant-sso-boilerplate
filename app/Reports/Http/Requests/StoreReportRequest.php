@@ -21,7 +21,6 @@ class StoreReportRequest extends FormRequest
             'format' => ['required', new Enum(ReportFormat::class)],
             'delivery' => ['required', new Enum(ReportDelivery::class)],
             'parameters' => ['nullable', 'array'],
-            'batch_id' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

@@ -35,10 +35,5 @@ class AppServiceProvider extends ServiceProvider
 
             return Gate::allows('viewHorizon', $user);
         });
-
-        Gate::define('viewHorizon', function (User $user) {
-            // TODO: restrict to admin users once an is_admin flag or role is added to the users table.
-            return app()->environment('local');
-        });
     }
 }

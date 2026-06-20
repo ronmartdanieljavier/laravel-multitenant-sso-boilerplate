@@ -44,6 +44,19 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        'tenant' => [
+            'driver' => env('DB_TENANT_DRIVER', 'pgsql'),
+            'host' => env('DB_TENANT_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('DB_TENANT_PORT', env('DB_PORT', '5432')),
+            'database' => env('DB_TENANT_DATABASE', env('DB_DATABASE', '')),
+            'username' => env('DB_TENANT_USERNAME', env('DB_USERNAME', '')),
+            'password' => env('DB_TENANT_PASSWORD', env('DB_PASSWORD', '')),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

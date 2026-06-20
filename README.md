@@ -64,11 +64,18 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 **Scalable async reporting**
 - Separate `Reports` module — reports are dispatched as queued jobs and tracked through `pending → processing → success / failed` states
 - Supports multiple output formats: on-screen (JSON), PDF, and Excel
-- Multiple delivery modes: download, email, or none
+- Multiple delivery modes: download, email, S3, or email + S3
 - Individual and batch report generation — batch jobs use `Bus::batch()` with automatic ZIP packaging on completion
 - Error messages surfaced to users on failure
 - Laravel Horizon 5 dashboard at `/horizon` for queue monitoring
 - Per-tenant read replica support — each tenant can optionally use a dedicated read replica; SELECT queries route to the replica automatically via Laravel's `read`/`write` connection split with `sticky: true`
+
+**Per-tenant scheduled report subscriptions**
+- Tenants subscribe to recurring reports with a configurable frequency (`daily`, `weekly`, `monthly`)
+- Delivery options: `email` (file attached), `s3` (uploaded to configurable S3 path), or `email_and_s3`
+- `php artisan reports:dispatch-subscriptions` checks due subscriptions across all tenants every minute and dispatches `GenerateReportJob` per subscription
+- Subscriptions can be paused (`is_active: false`) or deleted individually without affecting other tenants
+- Full CRUD REST API under `/api/reports/subscriptions`
 
 **Admin panel**
 - Manage users and assign app + tenant DB access
@@ -116,19 +123,23 @@ laravel-multitenant-sso-boilerplate/
 │   │       └── AppPickerTest.php
 │   │
 │   ├── Models/
-│   │   └── Central/                        # Central DB models (App\Models\Central)
-│   │       ├── App.php
-│   │       ├── SystemSetting.php
-│   │       ├── Tenant.php
-│   │       ├── TenantMigrationVersion.php
-│   │       ├── User.php
-│   │       ├── UserApp.php
-│   │       └── UserAppTenant.php
+│   │   ├── Central/                        # Central DB models (App\Models\Central)
+│   │   │   ├── App.php
+│   │   │   ├── Report.php
+│   │   │   ├── SystemSetting.php
+│   │   │   ├── Tenant.php
+│   │   │   ├── TenantMigrationVersion.php
+│   │   │   ├── User.php
+│   │   │   ├── UserApp.php
+│   │   │   └── UserAppTenant.php
+│   │   └── Tenant/                         # Tenant DB models (App\Models\Tenant)
+│   │       └── ReportSubscription.php
 │   │
 │   ├── Console/Commands/
-│   │   ├── CentralMigrateCommand.php       # php artisan central:migrate
-│   │   ├── TenantMigrateCommand.php        # php artisan tenant:migrate
-│   │   └── TenantMigrateStatusCommand.php  # php artisan tenant:migrate:status
+│   │   ├── CentralMigrateCommand.php           # php artisan central:migrate
+│   │   ├── DispatchScheduledReportsCommand.php  # php artisan reports:dispatch-subscriptions
+│   │   ├── TenantMigrateCommand.php             # php artisan tenant:migrate
+│   │   └── TenantMigrateStatusCommand.php       # php artisan tenant:migrate:status
 │   │
 │   ├── Http/
 │   │   ├── Controllers/Controller.php
@@ -145,9 +156,10 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── ReportRequestData.php       # Input DTO
 │   │   │   └── ReportResultData.php        # Output DTO
 │   │   ├── Enums/
-│   │   │   ├── ReportDelivery.php          # Download | Email | None
+│   │   │   ├── ReportDelivery.php          # Download | Email | S3 | EmailAndS3 | None
 │   │   │   ├── ReportFormat.php            # Screen | Pdf | Excel
-│   │   │   └── ReportStatus.php           # Pending | Processing | Success | Failed
+│   │   │   ├── ReportFrequency.php         # Daily | Weekly | Monthly
+│   │   │   └── ReportStatus.php            # Pending | Processing | Success | Failed
 │   │   ├── Generators/
 │   │   │   ├── ReportGeneratorFactory.php  # Resolves generator by format
 │   │   │   ├── ScreenReportGenerator.php   # JSON data output (working)
@@ -155,21 +167,27 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   └── ExcelReportGenerator.php    # Stub — needs maatwebsite/excel
 │   │   ├── Http/
 │   │   │   ├── Controllers/
-│   │   │   │   └── ReportController.php    # index, store, batch, show, download, destroy
+│   │   │   │   ├── ReportController.php             # index, store, batch, show, download, destroy
+│   │   │   │   └── ReportSubscriptionController.php # index, store, show, update, destroy
 │   │   │   └── Requests/
 │   │   │       ├── StoreReportRequest.php
-│   │   │       └── StoreBatchReportRequest.php
+│   │   │       ├── StoreBatchReportRequest.php
+│   │   │       ├── StoreReportSubscriptionRequest.php
+│   │   │       └── UpdateReportSubscriptionRequest.php
 │   │   ├── Jobs/
-│   │   │   ├── GenerateReportJob.php       # ShouldQueue, Batchable — reports queue
+│   │   │   ├── GenerateReportJob.php       # ShouldQueue, Batchable — routes post-gen delivery
 │   │   │   └── GenerateReportBatchJob.php  # Bus::batch() dispatcher
 │   │   ├── Mail/
-│   │   │   └── ReportReadyMail.php
+│   │   │   ├── ReportReadyMail.php         # On-demand email (user's own report)
+│   │   │   └── ScheduledReportMail.php     # Scheduled delivery — attaches file, ShouldQueue
 │   │   ├── Policies/
-│   │   │   └── ReportPolicy.php
+│   │   │   ├── ReportPolicy.php
+│   │   │   └── ReportSubscriptionPolicy.php
 │   │   ├── Services/
-│   │   │   └── ReportFileService.php       # store, zip, merge (stub)
+│   │   │   ├── ReportFileService.php       # store, zip, merge (stub)
+│   │   │   └── ReportDeliveryService.php   # sendToRecipients, uploadToS3
 │   │   └── Routes/
-│   │       └── api_reports.php             # Reports API routes
+│   │       └── api_reports.php             # Reports + subscription API routes
 │   │
 │   └── Tenant/
 │       └── Routes/
@@ -278,6 +296,7 @@ What's built:
 - **Async report engine** — `GenerateReportJob` + `GenerateReportBatchJob` dispatched to the `reports` Redis queue; status tracked through `pending → processing → success / failed`; cancelled batches mark all pending reports `Failed`; `Storage::put` failures surface as `Failed` with an error message; screen format fully working; PDF and Excel are stubs awaiting package installation
 - **Batch homogeneity enforced** — all reports in a batch must share the same `format` and `delivery`; validated at the API boundary; ZIP archive path persisted on the first report for retrieval via the download endpoint
 - **Tenant migration version tracking** — after each `tenant:migrate` run, the applied migrations are synced from the tenant's `migrations` table to the central `tenant_migration_versions` table; `tenant:migrate:status` command shows applied/total count, up-to-date status, and latest migration for each tenant
+- **Per-tenant scheduled report subscriptions** — tenants subscribe to recurring reports (`daily` / `weekly` / `monthly`) with `email`, `s3`, or `email_and_s3` delivery; `php artisan reports:dispatch-subscriptions` runs every minute via the scheduler, iterates active tenants, finds due subscriptions, creates central `Report` records, and dispatches `GenerateReportJob`; `ScheduledReportMail` attaches the generated file; `ReportDeliveryService` uploads to S3; full CRUD API at `/api/reports/subscriptions`
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -317,7 +336,17 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `GET` | `/api/reports/{id}/download` | Bearer | Stream the generated file (success only) |
 | `DELETE` | `/api/reports/{id}` | Bearer | Delete a report and its stored file |
 
-The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}` so status, download, and delete requests work without manual copy-paste.
+**Report Subscriptions**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/reports/subscriptions` | Bearer | List subscriptions for the current tenant (paginated) |
+| `POST` | `/api/reports/subscriptions` | Bearer | Create a new scheduled report subscription |
+| `GET` | `/api/reports/subscriptions/{id}` | Bearer | Get a subscription by ID |
+| `PUT` | `/api/reports/subscriptions/{id}` | Bearer | Update a subscription (all fields optional) |
+| `DELETE` | `/api/reports/subscriptions/{id}` | Bearer | Delete a subscription |
+
+The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, and "Create Subscription" saves the ID to `{{subscription_id}}`, so subsequent requests work without manual copy-paste.
 
 ---
 
@@ -586,7 +615,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Laravel Horizon + Redis async report queue
 - [x] Per-tenant read replica support
 - [x] Tenant migration version tracking
-- [ ] Per-tenant scheduled report subscriptions (email/S3 delivery)
+- [x] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [ ] Tenant health dashboard in admin
 
 ---

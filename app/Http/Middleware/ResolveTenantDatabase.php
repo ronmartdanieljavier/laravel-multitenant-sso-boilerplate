@@ -61,10 +61,8 @@ class ResolveTenantDatabase
             ->where('tenant_id', $tenant->id)
             ->firstOrFail();
 
-        Config::set('database.connections.tenant', [
+        $connection = [
             'driver' => 'mysql',
-            'host' => $tenant->db_host,
-            'port' => $tenant->db_port ?? 3306,
             'database' => $tenant->db_name,
             'username' => $tenant->db_username,
             'password' => $tenant->db_password,
@@ -74,7 +72,28 @@ class ResolveTenantDatabase
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-        ]);
+        ];
+
+        if ($tenant->hasReadReplica()) {
+            $connection['write'] = [
+                'host' => $tenant->db_host,
+                'port' => $tenant->db_port ?? 3306,
+            ];
+            $connection['read'] = [
+                'host' => $tenant->read_replica_host,
+                'port' => $tenant->read_replica_port ?? $tenant->db_port ?? 3306,
+            ];
+            if ($tenant->read_replica_username !== null) {
+                $connection['read']['username'] = $tenant->read_replica_username;
+                $connection['read']['password'] = $tenant->read_replica_password ?? '';
+            }
+            $connection['sticky'] = true;
+        } else {
+            $connection['host'] = $tenant->db_host;
+            $connection['port'] = $tenant->db_port ?? 3306;
+        }
+
+        Config::set('database.connections.tenant', $connection);
 
         DB::purge('tenant');
 

@@ -5,11 +5,29 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Per-tenant read replica support
 - Tenant migration version tracking
 - Per-tenant scheduled report subscriptions (email/S3 delivery)
 - Tenant health dashboard in admin
 - PHPStan level raised beyond 5
+
+---
+
+## [1.5.0] — 2026-06-20
+
+### Added
+- **Per-tenant read replica support** — each tenant can optionally be configured with a dedicated read replica database; SELECT queries are automatically routed to the replica while all writes continue to hit the primary:
+  - Four new nullable columns on the `tenants` table: `read_replica_host`, `read_replica_port`, `read_replica_username`, `read_replica_password` (password stored encrypted)
+  - `Tenant::hasReadReplica()` helper returns `true` when `read_replica_host` is set
+  - `ResolveTenantDatabase` middleware now builds the `tenant` connection config dynamically — if a replica is configured, the connection uses Laravel's `read` / `write` array split with `sticky: true`; tenants without a replica use the existing flat config and are unaffected
+  - `sticky: true` ensures that writes performed during a request are immediately readable without hitting the replica, avoiding replication-lag reads within the same request cycle
+  - Replica port defaults to the primary `db_port` when `read_replica_port` is `null`
+  - Replica credentials (`read_replica_username` / `read_replica_password`) are optional — when absent, the replica inherits the primary connection's credentials; when present, they are applied exclusively to the `read` connection
+  - `TenantFactory` updated — all four replica fields default to `null` so existing factory usage is unchanged
+  - **4 new PHPUnit feature tests** in `ResolveTenantDatabaseMiddlewareTest`:
+    - `test_configures_read_write_split_when_read_replica_present` — asserts `read.host`, `read.port`, `write.host`, `write.port`, and `sticky` are set correctly
+    - `test_read_replica_inherits_primary_port_when_replica_port_not_set` — asserts replica falls back to primary port
+    - `test_read_replica_supports_separate_credentials` — asserts `read.username` and `read.password` are applied when set
+    - `test_no_read_write_split_when_no_replica` — asserts the flat config is used and `read` / `write` / `sticky` keys are absent when no replica is configured
 
 ---
 

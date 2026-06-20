@@ -5,10 +5,30 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Tenant migration version tracking
 - Per-tenant scheduled report subscriptions (email/S3 delivery)
 - Tenant health dashboard in admin
 - PHPStan level raised beyond 5
+
+---
+
+## [1.6.0] — 2026-06-20
+
+### Added
+- **Tenant migration version tracking** — after every `tenant:migrate` run, applied migrations are synced from each tenant's `migrations` table into a new central `tenant_migration_versions` table, giving a single place to query the migration state of every tenant database:
+  - `tenant_migration_versions` central table — columns: `tenant_id` (FK, cascades on delete), `migration`, `batch`, `migrated_at`; unique constraint on `(tenant_id, migration)` prevents duplicates
+  - `TenantMigrationVersion` model (`app/Models/Central/TenantMigrationVersion.php`) — `belongsTo(Tenant)`, fillable, `migrated_at` cast to datetime, no timestamps
+  - `Tenant::migrationVersions()` — new `HasMany` relationship for querying a tenant's migration history
+  - `TenantMigrateCommand` — after each successful migration run, `syncMigrationVersions()` reads the tenant's `migrations` table and upserts every row into `tenant_migration_versions`; skipped gracefully when the tenant's `migrations` table does not exist yet
+  - `php artisan tenant:migrate:status` — new command (`TenantMigrateStatusCommand`) that renders a console table showing, for each active tenant: name, slug, applied/total migration count, whether fully up to date, and the latest applied migration; supports `--tenant=slug` to inspect a single tenant
+  - **8 PHPUnit feature tests** in `tests/Feature/TenantMigrationVersionTest.php`:
+    - `test_tenant_migration_version_can_be_created` — asserts DB record created and `tenant` relationship resolves
+    - `test_tenant_migration_versions_deleted_when_tenant_deleted` — asserts cascade delete works
+    - `test_tenant_has_migration_versions_relationship` — asserts `HasMany` returns all versions
+    - `test_migration_version_enforces_unique_tenant_migration_pair` — asserts duplicate upsert throws `UniqueConstraintViolationException`
+    - `test_migrate_status_command_shows_tenant_table` — asserts tenant name appears in command output
+    - `test_migrate_status_command_filters_by_tenant_slug` — asserts `--tenant` flag scopes output correctly
+    - `test_migrate_status_command_warns_when_no_tenants_found` — asserts warning when slug matches nothing
+    - `test_migrate_status_command_shows_up_to_date_for_fully_migrated_tenant` — asserts `N/N` count shown when all migrations applied
 
 ---
 

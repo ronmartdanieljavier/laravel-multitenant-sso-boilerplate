@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Central\App;
 use App\Models\Central\Tenant;
 use Closure;
 use Illuminate\Http\Request;
@@ -13,7 +14,12 @@ class ResolveTenantDatabase
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $appSlug = $request->header('X-App');
         $tenantSlug = $request->header('X-Tenant');
+
+        if (! $appSlug) {
+            return response()->json(['message' => 'App not specified.'], Response::HTTP_BAD_REQUEST);
+        }
 
         if (! $tenantSlug) {
             return response()->json(['message' => 'Tenant not specified.'], Response::HTTP_BAD_REQUEST);
@@ -21,15 +27,39 @@ class ResolveTenantDatabase
 
         $user = $request->user();
 
+        $app = App::query()
+            ->where('slug', $appSlug)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $app) {
+            return response()->json(['message' => 'App not found or access denied.'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (! $user->tokenCan("app:{$app->slug}")) {
+            return response()->json(['message' => 'App not found or access denied.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $hasAppAccess = $user->userApps()->where('app_id', $app->id)->exists();
+
+        if (! $hasAppAccess) {
+            return response()->json(['message' => 'App not found or access denied.'], Response::HTTP_FORBIDDEN);
+        }
+
         $tenant = Tenant::query()
             ->where('slug', $tenantSlug)
             ->where('is_active', true)
-            ->whereHas('users', fn ($query) => $query->where('users.id', $user->id))
+            ->whereHas('users', fn ($query) => $query->where('users.id', $user->id)->where('user_app_tenants.app_id', $app->id))
             ->first();
 
         if (! $tenant) {
             return response()->json(['message' => 'Tenant not found or access denied.'], Response::HTTP_FORBIDDEN);
         }
+
+        $userAppTenant = $user->userAppTenants()
+            ->where('app_id', $app->id)
+            ->where('tenant_id', $tenant->id)
+            ->firstOrFail();
 
         Config::set('database.connections.tenant', [
             'driver' => 'mysql',
@@ -48,7 +78,9 @@ class ResolveTenantDatabase
 
         DB::purge('tenant');
 
-        $request->merge(['current_tenant' => $tenant]);
+        $request->attributes->set('current_app', $app);
+        $request->attributes->set('current_tenant', $tenant);
+        $request->attributes->set('current_role', $userAppTenant->role);
 
         return $next($request);
     }

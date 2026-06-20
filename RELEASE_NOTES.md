@@ -14,6 +14,24 @@
 
 ---
 
+## [1.0.0] — 2026-06-19
+
+### Added
+- **Docker Compose fixes** — resolved duplicate `depends_on` key in `docker-compose.yml` that prevented the stack from parsing
+- **Dockerfile fixes for PHP 8.5** — removed `pdo` (bundled in PHP 8.4+) and `opcache` (already compiled in) from `docker-php-ext-install`; added `zlib-dev` and `icu-libs` system dependencies required to compile `zip` and `intl` extensions
+- **`TenantSeeder`** — `database/seeders/TenantSeeder.php` creates a Demo Tenant using `Tenant::factory()` so `db_password` is stored encrypted via the model's `encrypted` cast; called from `DatabaseSeeder`
+- **Demo Tenant seeded in migration** — `create_tenants_table` migration now inserts the Demo Tenant row via `Tenant::create()` immediately after the table is created, ensuring a tenant exists before `tenant:migrate` is run
+- **Tenant gets its own database** — Demo Tenant seeded with `db_name = tenant_demo` instead of the central database name
+- **Auto-create tenant database** — `TenantMigrateCommand` now creates the tenant database if it does not exist by connecting to the `postgres` maintenance database and issuing `CREATE DATABASE`
+
+### Changed
+- **`AppServiceProvider`** — removed `tenant` migration path from the default migrator so `php artisan migrate` only runs `database/migrations/central/`; tenant migrations must be run via `php artisan tenant:migrate`
+- **`TenantMigrateCommand`** — switched driver from `mysql` to `pgsql` with correct PostgreSQL connection options (`charset utf8`, `sslmode prefer`)
+- **Tenant migration order** — renamed migration files in `database/migrations/tenant/` to enforce correct dependency order: `companies` → `properties` → `floors` → `units` → `leases` → `lease_documents` → `lease_renewals`
+- **`lease_documents` migration** — replaced `foreignId('uploaded_by')->constrained('users')` with `unsignedBigInteger('uploaded_by')->nullable()` since `users` lives in the central database and cannot be referenced by a foreign key from a separate tenant database
+
+---
+
 ## [0.9.0] — 2026-06-19
 
 ### Changed

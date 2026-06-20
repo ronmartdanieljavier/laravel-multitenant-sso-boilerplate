@@ -93,6 +93,11 @@ class TenantMigrateCommand extends Command
         DB::purge('tenant_admin');
 
         $dbName = $tenant->db_name;
+
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $dbName)) {
+            throw new \RuntimeException("Invalid database name for tenant [{$tenant->slug}]: {$dbName}");
+        }
+
         $exists = DB::connection('tenant_admin')
             ->selectOne('SELECT 1 FROM pg_database WHERE datname = ?', [$dbName]);
 

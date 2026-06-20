@@ -665,6 +665,10 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [ ] Authenticated users visiting `/login` are redirected — to `/apps` if they have multiple app accesses, or directly to their app dashboard if they have only one
 - [ ] Logout button available to users on all pages
 
+*User self-service*
+- [ ] User can update their display name
+- [ ] User can reset their own password
+
 *App management*
 - [ ] Admin can edit app information (name, description)
 

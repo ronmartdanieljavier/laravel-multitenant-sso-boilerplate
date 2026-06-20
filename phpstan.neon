@@ -7,3 +7,4 @@ parameters:
     level: 5
     ignoreErrors: []
     excludePaths: []
+    phpVersion: 80500

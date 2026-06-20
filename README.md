@@ -125,7 +125,8 @@ laravel-multitenant-sso-boilerplate/
 │   │
 │   ├── Http/
 │   │   ├── Controllers/Controller.php
-│   │   └── Middleware/HandleInertiaRequests.php
+│   │   ├── Middleware/HandleInertiaRequests.php
+│   │   └── Middleware/ResolveTenantDatabase.php
 │   │
 │   ├── Providers/AppServiceProvider.php
 │   │
@@ -229,11 +230,13 @@ What's built:
 - **Separated migrations** — `database/migrations/central/` (runs via `php artisan migrate`) and `database/migrations/tenant/` (runs via `php artisan tenant:migrate` against each tenant's own database)
 - **Modular routing** — each module owns its routes under `app/*/Routes/api_*.php`
 - **Collocated tests** — PHPUnit tests live inside each module (e.g. `app/Auth/Tests/`)
+- **Dynamic tenant database resolution** — `ResolveTenantDatabase` middleware reads `X-Tenant` header, verifies user access, and wires up a per-request `tenant` DB connection from credentials stored in the central DB
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
 - **Playwright E2E tests** — browser tests for all four pages against a live Laravel server
 - **GitHub Actions CI** — build, unit test, and E2E test jobs on every push and PR
+- **PHPStan + Larastan** — static analysis at level 5 targeting PHP 8.5; zero errors
 - **Tailwind CSS** via `@tailwindcss/vite`
 - **Bunny Fonts** (`Instrument Sans`) via `laravel-vite-plugin`
 - **commitlint 21 + Husky 9** — conventional commit enforcement
@@ -418,11 +421,13 @@ public function share(Request $request): array
 
 ## Static analysis — PHPStan
 
-PHPStan is configured in `phpstan.neon`:
+PHPStan + Larastan is configured in `phpstan.neon` at level 5 targeting PHP 8.5:
 
 ```bash
-./vendor/bin/phpstan analyse --level=8
+./vendor/bin/phpstan analyse --memory-limit=512M
 ```
+
+> **Note:** PHP's default CLI memory limit (128M) is too low for PHPStan to complete analysis. Pass `--memory-limit=512M` or raise `memory_limit` in your `php.ini`.
 
 ---
 
@@ -469,8 +474,8 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 | API client | Postman collection | ✅ Included |
 | AI coding | Claude Code (Anthropic) | ✅ Active |
 | Queue | Laravel Horizon + Redis | Planned |
-| Static analysis | PHPStan + Larastan (level 8) | Planned |
-| Tenant middleware | Dynamic DB resolution | Planned |
+| Static analysis | PHPStan + Larastan (level 5) | ✅ Active |
+| Tenant middleware | Dynamic DB resolution | ✅ Built |
 | Two-dimensional permissions | App + tenant DB | Planned |
 
 ---
@@ -503,8 +508,9 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Vitest unit tests for all four page components
 - [x] Playwright E2E tests for all four pages
 - [x] GitHub Actions CI — frontend build, unit, and E2E jobs
-- [ ] Dynamic tenant database resolution middleware
-- [ ] Two-dimensional permissions (app + tenant DB)
+- [x] Dynamic tenant database resolution middleware (`ResolveTenantDatabase` — `X-Tenant` header, user access check, per-request `tenant` DB connection)
+- [x] PHPStan + Larastan static analysis at level 5 (zero errors)
+- [ ] Two-dimensional permissions enforcement (app + tenant DB)
 - [ ] Inertia shared props — active tenant + permissions on every page
 
 **Phase 4 — Reporting & ops**

@@ -4,6 +4,7 @@ import AdminPage from './Index.vue';
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<slot />' },
+    Link: { template: '<a><slot /></a>', props: ['href'] },
 }));
 
 describe('Admin/Index', () => {

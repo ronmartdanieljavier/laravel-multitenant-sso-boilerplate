@@ -3,9 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Models\Central\Tenant;
+use App\Models\Central\TenantMigrationVersion;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class TenantMigrateCommand extends Command
 {
@@ -37,6 +39,7 @@ class TenantMigrateCommand extends Command
             try {
                 $this->configureTenantConnection($tenant);
                 $this->runMigration();
+                $this->syncMigrationVersions($tenant);
                 $this->line('  <fg=green>✓</> Done');
             } catch (\Throwable $e) {
                 $this->error("  ✗ Failed: {$e->getMessage()}");
@@ -110,6 +113,26 @@ class TenantMigrateCommand extends Command
 
         DB::purge('tenant_admin');
         Config::set('database.connections.tenant_admin', null);
+    }
+
+    private function syncMigrationVersions(Tenant $tenant): void
+    {
+        if (! Schema::connection('tenant')->hasTable('migrations')) {
+            return;
+        }
+
+        $rows = DB::connection('tenant')
+            ->table('migrations')
+            ->orderBy('batch')
+            ->orderBy('migration')
+            ->get();
+
+        foreach ($rows as $row) {
+            TenantMigrationVersion::updateOrCreate(
+                ['tenant_id' => $tenant->id, 'migration' => $row->migration],
+                ['batch' => $row->batch, 'migrated_at' => now()],
+            );
+        }
     }
 
     private function runMigration(): void

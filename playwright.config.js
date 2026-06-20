@@ -17,7 +17,7 @@ export default defineConfig({
     webServer: {
         command: 'php artisan serve --no-reload --port=8000',
         url: 'http://localhost:8000/up',
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: true,
         timeout: 30_000,
         env: {
             SESSION_DRIVER: 'file',

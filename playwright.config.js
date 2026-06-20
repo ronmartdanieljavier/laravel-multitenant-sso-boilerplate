@@ -14,4 +14,17 @@ export default defineConfig({
     projects: [
         { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     ],
+    webServer: {
+        command: 'php artisan serve --no-reload --port=8000',
+        url: 'http://localhost:8000/up',
+        reuseExistingServer: true,
+        timeout: 30_000,
+        env: {
+            SESSION_DRIVER: 'file',
+            CACHE_STORE: 'file',
+            QUEUE_CONNECTION: 'sync',
+            REDIS_HOST: '127.0.0.1',
+            DB_HOST: '127.0.0.1',
+        },
+    },
 });

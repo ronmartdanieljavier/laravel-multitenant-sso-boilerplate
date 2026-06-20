@@ -5,9 +5,74 @@
 ## [Unreleased] — In Progress
 
 ### Planned
-- Laravel Horizon + Redis async report queue
 - Per-tenant read replica support
+- Tenant migration version tracking
+- Per-tenant scheduled report subscriptions (email/S3 delivery)
+- Tenant health dashboard in admin
 - PHPStan level raised beyond 5
+
+---
+
+## [1.4.1] — 2026-06-20
+
+### Fixed
+- **`batch_id` spoofing removed** — `StoreReportRequest` no longer accepts `batch_id` from user input; standalone reports always have `batch_id = null`. Batch IDs are server-generated exclusively in `ReportController::batch()` via `Str::uuid()`.
+- **Batch format/delivery homogeneity enforced** — `StoreBatchReportRequest` now validates (via `after()`) that all items in a batch share the same `format` and `delivery`; mixed batches return `422`. This makes the post-completion ZIP and PDF-merge logic safe to apply uniformly.
+- **ZIP path persisted after batch completion** — `GenerateReportBatchJob::handleBatchCompletion()` now captures the return value of `ReportFileService::zipFiles()` and writes the ZIP's storage path to the first report's `file_path`, making the batch archive retrievable via `GET /api/reports/{id}/download`.
+- **Cancelled batch reports marked Failed** — when a Laravel Bus batch is cancelled, each job's report is now updated to `status = failed`, `error_message = 'Batch was cancelled.'`, and `completed_at` stamped, rather than remaining stuck in `Pending` or `Processing`.
+- **`Storage::put` failure throws** — `ReportFileService::storeFile()` now throws a `RuntimeException` when `Storage::put()` returns `false`, propagating the error into `GenerateReportJob::failed()` so the report is marked `Failed` instead of recording a path to a file that was never written.
+- **Duplicate `viewHorizon` gate resolved** — `AppServiceProvider` was defining `viewHorizon` first, then `HorizonServiceProvider::gate()` overwrote it with an empty allowlist, blocking access everywhere. The gate is now defined only in `HorizonServiceProvider::gate()` (its intended home); `AppServiceProvider` retains only the `Horizon::auth()` callback that delegates to it.
+
+### Updated
+- **Postman collection** — added a full `Reports` folder covering all 6 endpoints (`List`, `Dispatch Single`, `Dispatch Batch`, `Get Status`, `Download`, `Delete`) with example request bodies, example responses (including 422 error cases), and a `report_id` collection variable auto-saved by the dispatch request's test script.
+
+---
+
+## [1.4.0] — 2026-06-20
+
+### Added
+- **Laravel Horizon + Redis async report queue** — full async reporting engine under `App\Reports\`:
+  - `laravel/horizon` installed; `config/horizon.php` configured with a dedicated `report-worker` supervisor on the `reports` queue (5 max processes, 300 s timeout, 3 retries)
+  - `reports` central DB table — UUID primary key, tracks `type`, `format`, `delivery`, `status`, `parameters` (JSON), `file_path`, `error_message`, `batch_id`, `started_at`, `completed_at`
+  - `Report` model (`app/Models/Central/Report.php`) with `HasUuids`, enum casts for `ReportStatus`, `ReportFormat`, and `ReportDelivery`, and `belongsTo` relationships to `User` and `Tenant`
+  - `ReportStatus` enum — `Pending`, `Processing`, `Success`, `Failed`
+  - `ReportFormat` enum — `Screen`, `Pdf`, `Excel`
+  - `ReportDelivery` enum — `Download`, `Email`, `None`
+  - `GenerateReportJob` (`ShouldQueue`, `Batchable`) — queued on `reports`, sets status through `Pending → Processing → Success`; `failed()` handler records `error_message` and sets `Failed`
+  - `GenerateReportBatchJob` — dispatches multiple `GenerateReportJob` instances via `Bus::batch()`; post-completion callback handles ZIP packaging of batch output
+  - `ReportGeneratorFactory` — resolves the correct generator by `ReportFormat`
+  - `ScreenReportGenerator` — fully working; returns JSON data payload
+  - `PdfReportGenerator` — stub (requires `barryvdh/laravel-dompdf` or `spatie/laravel-pdf`)
+  - `ExcelReportGenerator` — stub (requires `maatwebsite/excel`)
+  - `ReportFileService` — `storeFile()`, `zipFiles()` (ZipArchive, working), `mergePdfs()` (stub, requires `setasign/fpdi`)
+  - `ReportReadyMail` mailable + `resources/views/emails/reports/ready.blade.php` for email delivery
+  - `ReportPolicy` — authorizes `view`, `download`, `delete` to the report's owner only
+  - `ReportController` with six endpoints: `index`, `store`, `batch`, `show`, `download`, `destroy`
+  - `StoreReportRequest` / `StoreBatchReportRequest` form request validation (max 50 reports per batch)
+  - `ReportFactory` with states: `pending`, `processing`, `success`, `failed`, `screen`, `pdf`, `excel`
+  - **17 PHPUnit feature tests** across `ReportDispatchTest`, `GenerateReportJobTest`, `ReportBatchTest`, `ReportDownloadTest`
+- **Horizon Docker service** — `docker-compose.yml` gains a dedicated `horizon` container running `php artisan horizon` with a health check; restarts automatically
+- **`viewHorizon` gate** — Horizon dashboard at `/horizon` gated to `local` environment by default; update the gate in `AppServiceProvider` to restrict to admin users once `is_admin` is added to the `users` table
+
+### API routes added
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/reports` | List the authenticated user's reports (paginated) |
+| `POST` | `/api/reports` | Dispatch a single report job |
+| `POST` | `/api/reports/batch` | Dispatch up to 50 report jobs as a batch |
+| `GET` | `/api/reports/{id}` | Get status and result data for a report |
+| `GET` | `/api/reports/{id}/download` | Stream the generated file (success only) |
+| `DELETE` | `/api/reports/{id}` | Delete a report and its stored file |
+
+### Pending (Phase 4 — requires additional packages)
+
+| Feature | Package |
+|---|---|
+| PDF generation | `barryvdh/laravel-dompdf` or `spatie/laravel-pdf` |
+| Excel generation | `maatwebsite/excel` |
+| PDF merging | `setasign/fpdi` |
+| Horizon restricted to admins | `is_admin` column on `users` table |
 
 ---
 

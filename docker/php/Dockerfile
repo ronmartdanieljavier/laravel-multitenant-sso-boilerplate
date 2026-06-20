@@ -13,15 +13,15 @@ RUN apk add --no-cache \
     icu-dev \
     icu-libs
 
-# pdo is bundled in PHP 8.4+; opcache is compiled in but must be explicitly enabled
+# pdo, mbstring, opcache are bundled/compiled in PHP 8.5+
+# pcntl is required by laravel/horizon for worker process management
 RUN docker-php-ext-install \
     pdo_pgsql \
     pgsql \
-    mbstring \
     zip \
     bcmath \
     intl \
-    && docker-php-ext-enable opcache
+    pcntl
 
 # Redis extension
 RUN apk add --no-cache $PHPIZE_DEPS \

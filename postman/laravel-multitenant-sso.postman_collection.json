@@ -27,6 +27,18 @@
       "type": "string"
     },
     {
+      "key": "admin_email",
+      "value": "admin@example.com",
+      "type": "string",
+      "description": "Default admin email — matches ADMIN_EMAIL in .env"
+    },
+    {
+      "key": "admin_password",
+      "value": "password",
+      "type": "string",
+      "description": "Default admin password — matches ADMIN_PASSWORD in .env"
+    },
+    {
       "key": "report_id",
       "value": "",
       "type": "string"
@@ -68,7 +80,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -76,7 +88,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "login"]
             },
-            "description": "Authenticate with email and password. Returns a Bearer token, user info, and accessible apps with their tenants.\n\nThe test script automatically saves the returned token to the `token` collection variable."
+            "description": "Authenticate with email and password. Returns a Bearer token, user info, and accessible apps with their tenants.\n\nDefault admin credentials are pre-filled via `admin_email` and `admin_password` collection variables (set from `ADMIN_EMAIL` / `ADMIN_PASSWORD` in your `.env`).\n\nThe test script automatically saves the returned token to the `token` collection variable."
           },
           "response": [
             {
@@ -89,7 +101,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
+                  "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/api/login",
@@ -112,7 +124,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"wrong@example.com\",\n  \"password\": \"wrong\"\n}"
+                  "raw": "{\n  \"email\": \"notauser@example.com\",\n  \"password\": \"wrongpassword\"\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/api/login",

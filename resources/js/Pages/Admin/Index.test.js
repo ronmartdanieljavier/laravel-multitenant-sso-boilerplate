@@ -5,6 +5,8 @@ import AdminPage from './Index.vue';
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<slot />' },
     Link: { template: '<a><slot /></a>', props: ['href'] },
+    router: { post: vi.fn() },
+    usePage: () => ({ props: { auth: { user: { name: 'Admin', email: 'admin@example.com' } }, idleTimeoutMinutes: null } }),
 }));
 
 describe('Admin/Index', () => {

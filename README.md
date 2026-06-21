@@ -119,9 +119,11 @@ laravel-multitenant-sso-boilerplate/
 │   ├── Http/Controllers/
 │   │   ├── Admin/
 │   │   │   └── TenantHealthController.php      # GET /admin/tenants — aggregates per-tenant health metrics
-│   │   └── Auth/
-│   │       ├── WebLoginController.php          # Web login + post-auth app routing
-│   │       └── WebAppPickerController.php      # App picker page + selection handler
+│   │   ├── Auth/
+│   │   │   ├── WebLoginController.php          # Web login + post-auth app routing
+│   │   │   └── WebAppPickerController.php      # App picker page + selection handler
+│   │   └── Profile/
+│   │       └── ProfileController.php           # GET /profile, PUT /profile/name, POST /profile/picture, PUT /profile/password
 │   │   ├── Http/Requests/
 │   │   │   └── LoginRequest.php
 │   │   ├── Routes/
@@ -236,7 +238,9 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── Reports/Index.vue           # Reports landing page
 │   │   │   ├── Reports/Index.test.js
 │   │   │   ├── Tenant/Index.vue            # Tenant portal landing page
-│   │   │   └── Tenant/Index.test.js
+│   │   │   ├── Tenant/Index.test.js
+│   │   │   ├── Profile/Index.vue           # User profile page (name, picture, password)
+│   │   │   └── Profile/Index.test.js
 │   │   ├── composables/
 │   │   │   └── useIdleTimeout.js           # Idle session timeout composable
 │   │   ├── e2e/
@@ -312,6 +316,7 @@ What's built:
 - **Tenant health dashboard** — admin page at `/admin/tenants` aggregates per-tenant health metrics (migration compliance, user count, report failures, read-replica status) and computes a `healthy` / `warning` / `critical` status per tenant; summary bar shows totals across all tenants
 - **Web login flow with app picker** — after successful login, users with one app are redirected directly; users with multiple apps see an app picker page (`/apps`); login errors display as a prominent red banner
 - **Authentication flow (Phase 5.1)** — authenticated users visiting `/login` are redirected instead of seeing the form; web logout (`POST /logout`) invalidates the session and is available on every page; configurable idle session timeout auto-logs out inactive browser sessions based on the `authentication_idle_time` system setting (default 30 min)
+- **User self-service profile (Phase 5.2)** — authenticated users can update their display name, upload/replace their profile picture, and change their password at `/profile`; profile picture stored on the `public` disk and exposed as `profile_picture_url` on the `auth.user` Inertia shared prop; Admin and Tenant pages display the avatar in the sidebar/nav with a link to the profile page
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -360,6 +365,15 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `GET` | `/api/reports/subscriptions/{id}` | Bearer | Get a subscription by ID |
 | `PUT` | `/api/reports/subscriptions/{id}` | Bearer | Update a subscription (all fields optional) |
 | `DELETE` | `/api/reports/subscriptions/{id}` | Bearer | Delete a subscription |
+
+**Profile (Web — session auth)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/profile` | Session | Show the user profile page |
+| `PUT` | `/profile/name` | Session | Update display name |
+| `POST` | `/profile/picture` | Session | Upload or replace profile picture (image, max 2 MB) |
+| `PUT` | `/profile/password` | Session | Change password (requires current password) |
 
 The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, and "Create Subscription" saves the ID to `{{subscription_id}}`, so subsequent requests work without manual copy-paste.
 
@@ -552,7 +566,8 @@ public function share(Request $request): array
 {
     return [
         ...parent::share($request),
-        'auth'                => ['user' => $request->user()],
+        'auth'                => ['user' => $request->user()],  // user includes profile_picture_url
+        'flash'               => fn () => ['success' => $request->session()->get('success')],
         'tenant'              => fn () => $request->attributes->get('current_tenant'),
         'app'                 => fn () => $request->attributes->get('current_app'),
         'role'                => fn () => $request->attributes->get('current_role'),
@@ -673,10 +688,10 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Logout available on all pages
 - [x] Configurable idle session timeout (driven by the `authentication_idle_time` system setting)
 
-*5.2 — User self-service*
-- [ ] User can update their display name
-- [ ] User can upload and update their profile picture
-- [ ] User can reset their own password
+*5.2 — User self-service* *(done)*
+- [x] User can update their display name
+- [x] User can upload and update their profile picture
+- [x] User can reset their own password
 
 *5.3 — System settings (admin)*
 - [ ] Admin can manage system-wide settings:

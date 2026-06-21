@@ -1,5 +1,13 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { useIdleTimeout } from '../../composables/useIdleTimeout';
+
+const page = usePage();
+useIdleTimeout(page.props.idleTimeoutMinutes);
+
+function logout() {
+    router.post('/logout');
+}
 
 const apps = [
     { name: 'Admin Portal', description: 'Manage users, settings, and system configurations.', icon: '🛡️', color: 'violet', href: '#' },
@@ -32,8 +40,15 @@ const colorMap = {
                     <span class="font-semibold text-white">Tenant Portal</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-sm text-slate-400">ACME Corporation</span>
-                    <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold">B</div>
+                    <span class="text-sm text-slate-400">{{ page.props.auth.user?.name }}</span>
+                    <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold">
+                        {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'U' }}
+                    </div>
+                    <button @click="logout" title="Sign out" class="text-slate-400 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </header>

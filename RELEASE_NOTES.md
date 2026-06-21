@@ -9,6 +9,51 @@
 
 ---
 
+## [2.0.0] — 2026-06-21
+
+### Added
+- **Login redirect for authenticated users** — `GET /login` now checks whether the visitor is already authenticated before rendering the form:
+  - Users with **one app** are redirected directly to that app's dashboard (`/admin` or `/tenant`)
+  - Users with **multiple apps** are redirected to `/apps` (the app picker)
+  - Users with **no apps** are redirected to `/apps` (which itself redirects back to `/login`)
+  - The same redirect logic is reused from the post-login flow via the shared `redirectBasedOnApps()` helper on `WebLoginController`
+- **Web logout** — `POST /logout` (session-based, `auth` middleware) added to `WebLoginController`:
+  - Calls `Auth::logout()`, invalidates the session, and regenerates the CSRF token
+  - Redirects to `GET /login` on success
+  - Unauthenticated requests are redirected to login by the `auth` middleware
+  - Logout button added to every authenticated page:
+    - **Admin** — icon button in the sidebar user section
+    - **Tenant** — icon button in the top nav
+    - **Reports** — icon button in the top nav
+    - **AppPicker** — "Sign out" inline text link
+- **Configurable idle session timeout** — inactive browser sessions are automatically logged out after a configurable number of minutes:
+  - Timeout duration read from the `authentication_idle_time` system setting (default: `30` minutes)
+  - `idleTimeoutMinutes` shared to all Inertia pages via `HandleInertiaRequests::share()` — `null` for unauthenticated visitors
+  - `resources/js/composables/useIdleTimeout.js` — Vue composable that tracks activity events (`mousemove`, `mousedown`, `keydown`, `scroll`, `touchstart`, `click`) and fires `POST /logout` after the configured idle period; timers are reset on any activity and cleaned up on component unmount
+  - Composable mounted on all authenticated pages: `Admin/Index.vue`, `Tenant/Index.vue`, `Reports/Index.vue`, `Auth/AppPicker.vue`
+
+### Tests
+- **`tests/Feature/Auth/WebAuthenticationFlowTest.php`** — 11 PHPUnit feature tests:
+  - `test_guest_can_view_login_page` — asserts 200 + Inertia component `Login/Index`
+  - `test_authenticated_user_visiting_login_is_redirected_to_apps_when_multiple_apps` — asserts redirect to `/apps` when user has 2+ apps
+  - `test_authenticated_user_visiting_login_is_redirected_directly_to_app_when_single_app` — asserts direct redirect to `/admin` when user has exactly 1 app
+  - `test_authenticated_user_with_no_apps_visiting_login_is_redirected_to_apps` — asserts redirect to `/apps` when user has no apps
+  - `test_login_redirects_to_apps_when_user_has_multiple_apps` — asserts post-login redirect to `/apps`
+  - `test_login_redirects_directly_to_app_when_user_has_single_app` — asserts post-login direct redirect to `/admin`
+  - `test_logout_clears_session_and_redirects_to_login` — asserts session invalidation and redirect
+  - `test_unauthenticated_user_cannot_access_logout` — asserts `auth` middleware redirects to login
+  - `test_idle_timeout_minutes_is_shared_with_authenticated_pages` — asserts `idleTimeoutMinutes` prop reflects `authentication_idle_time` setting
+  - `test_idle_timeout_is_null_for_guests` — asserts prop is `null` on the login page
+  - `test_idle_timeout_defaults_to_30_when_setting_not_configured` — asserts default of 30 when setting is absent
+
+### Updated
+- **Postman collection** — Auth folder updated:
+  - Renamed existing "Logout" to "Logout (API)" to distinguish from the web flow
+  - Added "Logout (Web)" entry documenting `POST /logout` (session-based, CSRF required, returns `302 → /login`)
+  - Added folder-level description explaining the API vs. web auth distinction and the idle timeout behaviour
+
+---
+
 ## [1.9.0] — 2026-06-20
 
 ### Added

@@ -9,6 +9,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 | Module | Route prefix | Responsibility |
 |---|---|---|
 | **Auth** | `/api/login`, `/api/logout`, `/api/apps` | SSO — issues Sanctum token, returns app + tenant access list |
+| **Web Auth** | `/login`, `/logout`, `/apps` | Browser session flow — login, logout, app picker |
 | **Admin** | `/api/admin/...` | Manage users, permissions, tenant DBs, system settings |
 | **Tenant** | `/api/tenant/...` | Transactional app — reads and writes to tenant DB |
 | **Reports** | `/api/reports/...` | Read-only heavy queries, async generation, replica support |
@@ -236,6 +237,8 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── Reports/Index.test.js
 │   │   │   ├── Tenant/Index.vue            # Tenant portal landing page
 │   │   │   └── Tenant/Index.test.js
+│   │   ├── composables/
+│   │   │   └── useIdleTimeout.js           # Idle session timeout composable
 │   │   ├── e2e/
 │   │   │   ├── admin.spec.js
 │   │   │   ├── login.spec.js
@@ -308,6 +311,7 @@ What's built:
 - **Per-tenant scheduled report subscriptions** — tenants subscribe to recurring reports (`daily` / `weekly` / `monthly`) with `email`, `s3`, or `email_and_s3` delivery; `php artisan reports:dispatch-subscriptions` runs every minute via the scheduler, iterates active tenants, finds due subscriptions, creates central `Report` records, and dispatches `GenerateReportJob`; `ScheduledReportMail` attaches the generated file; `ReportDeliveryService` uploads to S3; full CRUD API at `/api/reports/subscriptions`
 - **Tenant health dashboard** — admin page at `/admin/tenants` aggregates per-tenant health metrics (migration compliance, user count, report failures, read-replica status) and computes a `healthy` / `warning` / `critical` status per tenant; summary bar shows totals across all tenants
 - **Web login flow with app picker** — after successful login, users with one app are redirected directly; users with multiple apps see an app picker page (`/apps`); login errors display as a prominent red banner
+- **Authentication flow (Phase 5.1)** — authenticated users visiting `/login` are redirected instead of seeing the form; web logout (`POST /logout`) invalidates the session and is available on every page; configurable idle session timeout auto-logs out inactive browser sessions based on the `authentication_idle_time` system setting (default 30 min)
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -548,10 +552,13 @@ public function share(Request $request): array
 {
     return [
         ...parent::share($request),
-        'auth'   => ['user' => $request->user()],
-        'tenant' => fn () => $request->attributes->get('current_tenant'),
-        'app'    => fn () => $request->attributes->get('current_app'),
-        'role'   => fn () => $request->attributes->get('current_role'),
+        'auth'                => ['user' => $request->user()],
+        'tenant'              => fn () => $request->attributes->get('current_tenant'),
+        'app'                 => fn () => $request->attributes->get('current_app'),
+        'role'                => fn () => $request->attributes->get('current_role'),
+        'idleTimeoutMinutes'  => fn () => $request->user()
+            ? (int) SystemSetting::get('authentication_idle_time', 30)
+            : null,
     ];
 }
 ```
@@ -659,12 +666,12 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [x] Tenant health dashboard in admin
 
-**Phase 5 — Authentication UX & admin management** *(planned)*
+**Phase 5 — Authentication UX & admin management** *(in progress)*
 
-*5.1 — Authentication flow*
-- [ ] Authenticated users visiting `/login` are redirected — to `/apps` if they have multiple app accesses, or directly to their app dashboard if they have only one
-- [ ] Logout available on all pages
-- [ ] Configurable idle session timeout (driven by the `authentication_idle_time` system setting)
+*5.1 — Authentication flow* *(done)*
+- [x] Authenticated users visiting `/login` are redirected — to `/apps` if they have multiple app accesses, or directly to their app dashboard if they have only one
+- [x] Logout available on all pages
+- [x] Configurable idle session timeout (driven by the `authentication_idle_time` system setting)
 
 *5.2 — User self-service*
 - [ ] User can update their display name

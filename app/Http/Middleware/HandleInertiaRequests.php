@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Central\SystemSetting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,6 +41,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'idleTimeoutMinutes' => fn () => $request->user()
+                ? (int) SystemSetting::get('authentication_idle_time', 30)
+                : null,
             'tenant' => fn () => $request->attributes->get('current_tenant'),
             'app' => fn () => $request->attributes->get('current_app'),
             'role' => fn () => $request->attributes->get('current_role'),

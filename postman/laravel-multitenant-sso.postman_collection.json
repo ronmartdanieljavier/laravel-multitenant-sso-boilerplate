@@ -52,6 +52,7 @@
   "item": [
     {
       "name": "Auth",
+      "description": "Authentication endpoints.\n\n**API auth** (`/api/login`, `/api/logout`) — stateless Sanctum token flow used by mobile clients and SPAs that manage their own token storage.\n\n**Web auth** (`/login`, `/logout`) — session-based flow for the browser frontend (Inertia.js). After login the server redirects: users with one app go directly to that app's dashboard; users with multiple apps are sent to `/apps` to choose. An idle session timeout (configurable via the `authentication_idle_time` system setting, default 30 min) automatically logs out inactive browser sessions. The web logout endpoint invalidates the session and redirects to `/login`.\n\nNote: web endpoints use Laravel session cookies and require a valid CSRF token (`X-XSRF-TOKEN` header or `_token` form field). They are documented here for reference — use the API endpoints for token-based integrations.",
       "item": [
         {
           "name": "Login",
@@ -140,7 +141,7 @@
           ]
         },
         {
-          "name": "Logout",
+          "name": "Logout (API)",
           "request": {
             "method": "POST",
             "header": [
@@ -151,7 +152,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "logout"]
             },
-            "description": "Revokes the current Sanctum access token. Requires a valid Bearer token (inherited from collection auth)."
+            "description": "Revokes the current Sanctum access token. Requires a valid Bearer token (inherited from collection auth). Use this for token-based (mobile / SPA) clients."
           },
           "response": [
             {
@@ -169,6 +170,47 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "body": "{\n  \"message\": \"Logged out successfully.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout (Web)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "text/html" },
+              { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}", "description": "Required CSRF token. Obtain from the XSRF-TOKEN cookie set by GET /login." }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            },
+            "description": "Session-based web logout. Invalidates the Laravel session and regenerates the CSRF token, then redirects to `/login`.\n\nRequires an active browser session (session cookie) and a valid CSRF token in the `X-XSRF-TOKEN` header.\n\nThis is the endpoint the browser frontend calls — it is not a JSON API and does not use a Bearer token. The response is a `302` redirect to `/login`."
+          },
+          "response": [
+            {
+              "name": "302 Redirect to /login",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "text/html" },
+                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["logout"]
+                }
+              },
+              "status": "Found",
+              "code": 302,
+              "_postman_previewlanguage": "text",
+              "header": [{ "key": "Location", "value": "http://localhost/login" }],
+              "body": ""
             }
           ]
         },

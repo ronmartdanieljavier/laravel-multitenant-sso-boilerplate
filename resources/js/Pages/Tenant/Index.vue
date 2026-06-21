@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { useIdleTimeout } from '../../composables/useIdleTimeout';
 
 const page = usePage();
@@ -40,10 +40,15 @@ const colorMap = {
                     <span class="font-semibold text-white">Tenant Portal</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-sm text-slate-400">{{ page.props.auth.user?.name }}</span>
-                    <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold">
-                        {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'U' }}
-                    </div>
+                    <Link href="/profile" class="flex items-center gap-2 hover:opacity-80 transition">
+                        <span class="text-sm text-slate-400">{{ page.props.auth.user?.name }}</span>
+                        <div v-if="page.props.auth.user?.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                            <img :src="page.props.auth.user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
+                        </div>
+                        <div v-else class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold">
+                            {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'U' }}
+                        </div>
+                    </Link>
                     <button @click="logout" title="Sign out" class="text-slate-400 hover:text-white transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

@@ -661,31 +661,44 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 
 **Phase 5 — Authentication UX & admin management** *(planned)*
 
-*Authentication*
+*5.1 — Authentication flow*
 - [ ] Authenticated users visiting `/login` are redirected — to `/apps` if they have multiple app accesses, or directly to their app dashboard if they have only one
-- [ ] Logout button available to users on all pages
+- [ ] Logout available on all pages
+- [ ] Configurable idle session timeout (driven by the `authentication_idle_time` system setting)
 
-*User self-service*
+*5.2 — User self-service*
 - [ ] User can update their display name
 - [ ] User can upload and update their profile picture
 - [ ] User can reset their own password
 
-*App management*
+*5.3 — System settings (admin)*
+- [ ] Admin can manage system-wide settings:
+  - Default email service — SMTP **or** Postmark (only one active at a time)
+  - Authentication idle timeout duration
+  - Default S3 storage settings
+- [ ] A persistent notification banner is shown on all admin pages for any required system setting that is unset, with a direct link to the settings page
+
+*5.4 — App management (admin)*
 - [ ] Admin can edit app information (name, description)
 
-*Tenant management*
-- [ ] Admin can toggle a tenant's `is_active` flag
-- [ ] When a tenant is deactivated, all users holding a tenant role on that tenant are force-logged out (tokens revoked)
-- [ ] Admin can add/edit tenant details and connection settings
-- [ ] Admin can trigger migrations on a selected tenant or across all tenants from the UI
-- [ ] Admin can delete a tenant — the tenant's database is dropped and all related records are removed
-
-*User management*
+*5.5 — User management (admin)*
 - [ ] Admin can invite a user by email — before sending the invitation the admin selects which apps the user can access and, if the app has tenants, which tenant(s) the user belongs to; the account is inactive until the invitation is accepted
 - [ ] Admin can edit a user's profile data and app/tenant permissions
 
-*Tenant migration on new tenant*
-- [ ] When a new tenant is created, migrations for that tenant database run automatically
+*5.6 — Tenant management (admin)*
+- [ ] Admin can add and edit tenant details and database connection settings
+- [ ] When a new tenant is created, its tenant database migrations run automatically
+- [ ] Admin can trigger migrations on a selected tenant or across all tenants from the UI
+- [ ] Admin can toggle a tenant's `is_active` flag — when deactivated, all users with a tenant role on that tenant are force-logged out (tokens revoked)
+- [ ] Admin can delete a tenant — the tenant's database is dropped and all related central records are removed
+
+*5.7 — Tenant settings (admin)*
+- [ ] Admin can add, update, and delete per-tenant settings:
+  - **Email service** — SMTP or Postmark (only one active at a time); if unset, the system default email service is used
+  - **S3 settings** — bucket, region, and credentials; if unset, the system default S3 settings are used
+  - **Report PDF header and footer** — configurable text and optional logo upload, with a live frontend preview
+  - **Report server settings** — any tenant-specific overrides for report generation (e.g. queue, timeout)
+- [ ] The tenant's mail driver and S3 disk are resolved at runtime per request so all outbound emails and file uploads from a tenant context use that tenant's configured service
 
 ---
 

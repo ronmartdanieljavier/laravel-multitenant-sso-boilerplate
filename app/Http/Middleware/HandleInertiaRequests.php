@@ -41,6 +41,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'flash' => fn () => [
+                'success' => $request->session()->get('success'),
+            ],
             'idleTimeoutMinutes' => fn () => $request->user()
                 ? (int) SystemSetting::get('authentication_idle_time', 30)
                 : null,

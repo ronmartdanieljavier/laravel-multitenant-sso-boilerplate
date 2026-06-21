@@ -9,6 +9,50 @@
 
 ---
 
+## [2.1.0] — 2026-06-21
+
+### Added
+- **User profile page** — authenticated users can manage their own account at `GET /profile`:
+  - **Display name** — `PUT /profile/name` validates and saves a new name (max 255 chars); the updated name is reflected immediately in the sidebar/nav on next page load via the Inertia `auth.user` shared prop
+  - **Profile picture** — `POST /profile/picture` accepts an image file (JPG, PNG, GIF, max 2 MB); stored on the `public` disk under `profile-pictures/` with `0644` permissions so it is web-accessible; the old file is deleted when a new one is uploaded; the public URL is exposed as `profile_picture_url` on the `auth.user` shared prop via a `toArray()` override on the `User` model
+  - **Password change** — `PUT /profile/password` requires the current password (`current_password` validation rule) and a confirmed new password (min 8 characters); password is hashed before storage
+  - Flash success messages shared globally via `flash.success` in `HandleInertiaRequests::share()` and displayed as a dismissible banner on the profile page
+- **Profile picture in sidebar/nav** — Admin and Tenant pages now render the user's avatar in the user section:
+  - Shows the uploaded picture when `profile_picture_url` is set, falls back to the initial-letter circle when not
+  - Clicking the user section (avatar + name + email) navigates to `/profile` via Inertia `<Link>`
+- **`profile_picture` column** — nullable `string` added to the `users` table via migration `2026_06_21_040058_add_profile_picture_to_users_table`
+- **Public disk permissions** — `config/filesystems.php` updated with explicit `permissions` (files `0644`, dirs `0755`) and `directory_visibility: public` on the `public` disk to ensure uploaded files are readable by the web server inside Docker
+
+### Routes added
+
+| Method | Endpoint | Middleware | Description |
+|---|---|---|---|
+| `GET` | `/profile` | `auth` | Show the profile page |
+| `PUT` | `/profile/name` | `auth` | Update display name |
+| `POST` | `/profile/picture` | `auth` | Upload or replace profile picture |
+| `PUT` | `/profile/password` | `auth` | Change password |
+
+### Tests
+- **`tests/Feature/Profile/ProfileControllerTest.php`** — 13 PHPUnit feature tests:
+  - `test_guest_is_redirected_from_profile` — asserts unauthenticated request redirects to `/login`
+  - `test_authenticated_user_can_view_profile_page` — asserts 200 + Inertia component `Profile/Index`
+  - `test_user_can_update_display_name` — asserts name saved to DB and flash success set
+  - `test_update_name_requires_name` — asserts `name` field error on empty submit
+  - `test_update_name_enforces_max_length` — asserts error when name exceeds 255 chars
+  - `test_user_can_upload_profile_picture` — asserts file stored on `public` disk and `profile_picture` saved to DB
+  - `test_uploading_new_picture_deletes_old_one` — asserts old file removed from `public` disk on re-upload
+  - `test_profile_picture_must_be_an_image` — asserts PDF is rejected with a validation error
+  - `test_profile_picture_must_not_exceed_2mb` — asserts file over 2 MB is rejected
+  - `test_user_can_update_password` — asserts new password hash saved and flash success set
+  - `test_password_update_requires_correct_current_password` — asserts `current_password` error on wrong password
+  - `test_password_update_requires_confirmation` — asserts `password` error when confirmation does not match
+  - `test_new_password_must_be_at_least_8_characters` — asserts error on passwords shorter than 8 chars
+
+### Updated
+- **Postman collection** — new "Profile (Web)" folder with 3 requests documenting the web profile endpoints (`Update Display Name`, `Upload Profile Picture`, `Update Password`)
+
+---
+
 ## [2.0.0] — 2026-06-21
 
 ### Added

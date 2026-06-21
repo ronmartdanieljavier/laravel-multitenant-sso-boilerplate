@@ -1,5 +1,13 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { useIdleTimeout } from '../../composables/useIdleTimeout';
+
+const page = usePage();
+useIdleTimeout(page.props.idleTimeoutMinutes);
+
+function logout() {
+    router.post('/logout');
+}
 
 const stats = [
     { label: 'Total Users', value: '4,291', change: '+12%', up: true },
@@ -49,9 +57,14 @@ const recentUsers = [
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-xs font-bold text-white">A</div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-white truncate">Super Admin</p>
-                        <p class="text-xs text-slate-400 truncate">admin@system.com</p>
+                        <p class="text-sm font-medium text-white truncate">{{ page.props.auth.user?.name ?? 'Admin' }}</p>
+                        <p class="text-xs text-slate-400 truncate">{{ page.props.auth.user?.email }}</p>
                     </div>
+                    <button @click="logout" title="Sign out" class="text-slate-400 hover:text-white transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </aside>

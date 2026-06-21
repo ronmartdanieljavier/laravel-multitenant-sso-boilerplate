@@ -652,12 +652,40 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Two-dimensional permissions enforcement — `X-App` + `X-Tenant` headers, token ability check, `user_apps`/`user_app_tenants` enforcement, `RequireRole` middleware
 - [x] Inertia shared props — active tenant + permissions on every page
 
-**Phase 4 — Reporting & ops** *(in progress)*
+**Phase 4 — Reporting & ops** *(done)*
 - [x] Laravel Horizon + Redis async report queue
 - [x] Per-tenant read replica support
 - [x] Tenant migration version tracking
 - [x] Per-tenant scheduled report subscriptions (email/S3 delivery)
-- [ ] Tenant health dashboard in admin
+- [x] Tenant health dashboard in admin
+
+**Phase 5 — Authentication UX & admin management** *(planned)*
+
+*Authentication*
+- [ ] Authenticated users visiting `/login` are redirected — to `/apps` if they have multiple app accesses, or directly to their app dashboard if they have only one
+- [ ] Logout button available to users on all pages
+
+*User self-service*
+- [ ] User can update their display name
+- [ ] User can upload and update their profile picture
+- [ ] User can reset their own password
+
+*App management*
+- [ ] Admin can edit app information (name, description)
+
+*Tenant management*
+- [ ] Admin can toggle a tenant's `is_active` flag
+- [ ] When a tenant is deactivated, all users holding a tenant role on that tenant are force-logged out (tokens revoked)
+- [ ] Admin can add/edit tenant details and connection settings
+- [ ] Admin can trigger migrations on a selected tenant or across all tenants from the UI
+- [ ] Admin can delete a tenant — the tenant's database is dropped and all related records are removed
+
+*User management*
+- [ ] Admin can invite a user by email — before sending the invitation the admin selects which apps the user can access and, if the app has tenants, which tenant(s) the user belongs to; the account is inactive until the invitation is accepted
+- [ ] Admin can edit a user's profile data and app/tenant permissions
+
+*Tenant migration on new tenant*
+- [ ] When a new tenant is created, migrations for that tenant database run automatically
 
 ---
 

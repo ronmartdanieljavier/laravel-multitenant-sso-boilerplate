@@ -11,14 +11,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'profile_picture'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    /** @return array<string, mixed> */
+    public function toArray(): array
+    {
+        return array_merge(parent::toArray(), [
+            'profile_picture_url' => $this->profile_picture
+                ? Storage::disk('public')->url($this->profile_picture)
+                : null,
+        ]);
+    }
 
     protected static function newFactory(): UserFactory
     {

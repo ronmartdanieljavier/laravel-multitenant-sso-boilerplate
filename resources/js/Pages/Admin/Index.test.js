@@ -6,7 +6,7 @@ vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<slot />' },
     Link: { template: '<a><slot /></a>', props: ['href'] },
     router: { post: vi.fn() },
-    usePage: () => ({ props: { auth: { user: { name: 'Admin', email: 'admin@example.com' } }, idleTimeoutMinutes: null } }),
+    usePage: () => ({ props: { auth: { user: { name: 'Admin', email: 'admin@example.com', profile_picture_url: null } }, idleTimeoutMinutes: null } }),
 }));
 
 describe('Admin/Index', () => {

@@ -820,6 +820,236 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Profile (Web)",
+      "description": "User self-service profile endpoints. All three use the browser session (cookie + CSRF token) — they are not JSON API endpoints and do not use a Bearer token.\n\nRequires an active browser session (session cookie) and a valid CSRF token in the `X-XSRF-TOKEN` header. Each endpoint returns a `302` redirect back to `/profile` on success with a `flash.success` message.",
+      "item": [
+        {
+          "name": "Update Display Name",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}", "description": "Required CSRF token. Obtain from the XSRF-TOKEN cookie set by any authenticated page load." }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/name",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "name"]
+            },
+            "description": "Updates the authenticated user's display name. Validation: required, string, max 255 characters. Returns `302` back to `/profile` with a `flash.success` session value of `\"Display name updated.\"`."
+          },
+          "response": [
+            {
+              "name": "302 Redirect (success)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Doe\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile/name",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "name"]
+                }
+              },
+              "status": "Found",
+              "code": 302,
+              "_postman_previewlanguage": "text",
+              "header": [{ "key": "Location", "value": "http://localhost/profile" }],
+              "body": ""
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile/name",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "name"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The name field is required.\",\n  \"errors\": {\n    \"name\": [\"The name field is required.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload Profile Picture",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}", "description": "Required CSRF token." }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profile_picture",
+                  "type": "file",
+                  "description": "Image file (JPG, PNG, GIF). Max size: 2 MB."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/picture",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "picture"]
+            },
+            "description": "Uploads or replaces the authenticated user's profile picture. The file is stored on the `public` disk under `profile-pictures/` and the path is saved to `users.profile_picture`. Any previously uploaded picture is deleted. The public URL is exposed as `profile_picture_url` on the `auth.user` Inertia shared prop.\n\nValidation: required, must be an image (jpg/png/gif/bmp/svg/webp), max 2048 KB (2 MB).\n\nReturns `302` back to `/profile` with `flash.success = \"Profile picture updated.\"`."
+          },
+          "response": [
+            {
+              "name": "302 Redirect (success)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [{ "key": "profile_picture", "type": "file" }]
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile/picture",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "picture"]
+                }
+              },
+              "status": "Found",
+              "code": 302,
+              "_postman_previewlanguage": "text",
+              "header": [{ "key": "Location", "value": "http://localhost/profile" }],
+              "body": ""
+            },
+            {
+              "name": "422 Validation Error (not an image)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [{ "key": "profile_picture", "type": "file", "description": "A non-image file, e.g. document.pdf" }]
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile/picture",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "picture"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The profile picture field must be an image.\",\n  \"errors\": {\n    \"profile_picture\": [\"The profile picture field must be an image.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}", "description": "Required CSRF token." }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"old-password\",\n  \"password\": \"new-password123\",\n  \"password_confirmation\": \"new-password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/password",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "password"]
+            },
+            "description": "Changes the authenticated user's password. Validation: `current_password` must match the user's existing password; `password` is required, confirmed, and must be at least 8 characters.\n\nReturns `302` back to `/profile` with `flash.success = \"Password updated.\"`."
+          },
+          "response": [
+            {
+              "name": "302 Redirect (success)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"current_password\": \"old-password\",\n  \"password\": \"new-password123\",\n  \"password_confirmation\": \"new-password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile/password",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "password"]
+                }
+              },
+              "status": "Found",
+              "code": 302,
+              "_postman_previewlanguage": "text",
+              "header": [{ "key": "Location", "value": "http://localhost/profile" }],
+              "body": ""
+            },
+            {
+              "name": "422 Validation Error (wrong current password)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"current_password\": \"wrong-password\",\n  \"password\": \"new-password123\",\n  \"password_confirmation\": \"new-password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile/password",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "password"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The password is incorrect.\",\n  \"errors\": {\n    \"current_password\": [\"The password is incorrect.\"]\n  }\n}"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

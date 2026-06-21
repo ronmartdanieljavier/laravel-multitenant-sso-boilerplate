@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\TenantHealthController;
 use App\Http\Controllers\Auth\WebAppPickerController;
 use App\Http\Controllers\Auth\WebLoginController;
+use App\Http\Controllers\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,6 +18,11 @@ Route::post('/logout', [WebLoginController::class, 'logout'])->name('logout')->m
 Route::middleware('auth')->group(function () {
     Route::get('/apps', [WebAppPickerController::class, 'index'])->name('apps');
     Route::post('/apps/select', [WebAppPickerController::class, 'select'])->name('apps.select');
+
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::put('/profile/name', [ProfileController::class, 'updateName'])->name('profile.name');
+    Route::post('/profile/picture', [ProfileController::class, 'updatePicture'])->name('profile.picture');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     Route::get('/admin', function () {
         return Inertia::render('Admin/Index');

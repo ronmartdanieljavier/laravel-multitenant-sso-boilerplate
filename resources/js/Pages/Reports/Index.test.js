@@ -4,6 +4,8 @@ import ReportsPage from './Index.vue';
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<slot />' },
+    router: { post: vi.fn() },
+    usePage: () => ({ props: { auth: { user: { name: 'Reporter', email: 'reporter@example.com' } }, idleTimeoutMinutes: null } }),
 }));
 
 describe('Reports/Index', () => {

@@ -1,5 +1,9 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { useIdleTimeout } from '../../composables/useIdleTimeout';
+
+const page = usePage();
+useIdleTimeout(page.props.idleTimeoutMinutes);
 
 const props = defineProps({
     apps: Array,
@@ -61,6 +65,8 @@ function select(slug) {
 
             <p class="text-center text-slate-500 text-sm mt-8">
                 Signed in as <span class="text-slate-400">{{ user.email }}</span>
+                &mdash;
+                <button @click="router.post('/logout')" class="text-slate-400 hover:text-white underline transition">Sign out</button>
             </p>
         </div>
     </div>

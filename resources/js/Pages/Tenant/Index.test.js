@@ -4,6 +4,8 @@ import TenantPage from './Index.vue';
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<slot />' },
+    router: { post: vi.fn() },
+    usePage: () => ({ props: { auth: { user: { name: 'Bob', email: 'bob@example.com' } }, idleTimeoutMinutes: null } }),
 }));
 
 describe('Tenant/Index', () => {

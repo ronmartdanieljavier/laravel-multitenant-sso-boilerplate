@@ -1,6 +1,14 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useIdleTimeout } from '../../composables/useIdleTimeout';
+
+const page = usePage();
+useIdleTimeout(page.props.idleTimeoutMinutes);
+
+function logout() {
+    router.post('/logout');
+}
 
 const activeTab = ref('overview');
 
@@ -45,7 +53,14 @@ const formatColor = {
                 <button class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition">
                     Generate Report
                 </button>
-                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">R</div>
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">
+                    {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'U' }}
+                </div>
+                <button @click="logout" title="Sign out" class="text-slate-400 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
             </div>
         </header>
 

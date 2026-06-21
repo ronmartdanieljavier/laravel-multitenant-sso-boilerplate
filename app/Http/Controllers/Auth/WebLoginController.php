@@ -13,8 +13,12 @@ use Inertia\Response;
 
 class WebLoginController extends Controller
 {
-    public function show(): Response
+    public function show(Request $request): Response|RedirectResponse
     {
+        if ($request->user()) {
+            return $this->redirectBasedOnApps($request->user());
+        }
+
         return Inertia::render('Login/Index');
     }
 
@@ -33,6 +37,21 @@ class WebLoginController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
+
+        return $this->redirectBasedOnApps($user);
+    }
+
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
+    }
+
+    private function redirectBasedOnApps(User $user): RedirectResponse
+    {
         $apps = $user->userApps()->with('app')->get();
 
         if ($apps->count() === 1) {

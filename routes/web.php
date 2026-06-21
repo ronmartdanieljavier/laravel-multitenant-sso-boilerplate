@@ -12,6 +12,7 @@ Route::get('/', function () {
 
 Route::get('/login', [WebLoginController::class, 'show'])->name('login');
 Route::post('/login', [WebLoginController::class, 'login'])->name('login.post');
+Route::post('/logout', [WebLoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::middleware('auth')->group(function () {
     Route::get('/apps', [WebAppPickerController::class, 'index'])->name('apps');

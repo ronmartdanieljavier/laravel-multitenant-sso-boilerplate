@@ -21,7 +21,7 @@ class ReportBatchTest extends TestCase
 
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/reports/batch', [
+        $response = $this->actingAs($user)->postJson('/api/v1/reports/batch', [
             'reports' => [
                 ['type' => 'user_activity', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::None->value],
                 ['type' => 'app_access', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::None->value],
@@ -46,7 +46,7 @@ class ReportBatchTest extends TestCase
 
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/reports/batch', [
+        $response = $this->actingAs($user)->postJson('/api/v1/reports/batch', [
             'reports' => [
                 ['type' => 'user_activity', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::None->value],
                 ['type' => 'app_access', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::None->value],
@@ -69,7 +69,7 @@ class ReportBatchTest extends TestCase
 
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/reports/batch', [
+        $response = $this->actingAs($user)->postJson('/api/v1/reports/batch', [
             'reports' => [
                 ['type' => 'user_activity', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::None->value],
                 ['type' => 'app_access', 'format' => ReportFormat::Pdf->value, 'delivery' => ReportDelivery::None->value],
@@ -86,7 +86,7 @@ class ReportBatchTest extends TestCase
 
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/reports/batch', [
+        $response = $this->actingAs($user)->postJson('/api/v1/reports/batch', [
             'reports' => [
                 ['type' => 'user_activity', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::None->value],
                 ['type' => 'app_access', 'format' => ReportFormat::Screen->value, 'delivery' => ReportDelivery::Download->value],
@@ -109,7 +109,7 @@ class ReportBatchTest extends TestCase
             'delivery' => ReportDelivery::None->value,
         ]);
 
-        $response = $this->actingAs($user)->postJson('/api/reports/batch', [
+        $response = $this->actingAs($user)->postJson('/api/v1/reports/batch', [
             'reports' => $reports,
         ]);
 

@@ -9,6 +9,112 @@
 
 ---
 
+## [2.3.0] — 2026-06-22
+
+### Changed
+
+- **Module structure refactored** — controllers relocated from the central `app/Http/Controllers/` tree into their owning modules, matching the colocation pattern already used by `app/Auth/` and `app/Reports/`:
+  - `app/Http/Controllers/Admin/TenantHealthController` → `app/Admin/Http/Controllers/TenantHealthController` (`App\Admin\Http\Controllers`)
+  - `app/Http/Controllers/Auth/WebLoginController` → `app/Auth/Http/Controllers/WebLoginController` (`App\Auth\Http\Controllers`)
+  - `app/Http/Controllers/Auth/WebAppPickerController` → `app/Auth/Http/Controllers/WebAppPickerController` (`App\Auth\Http\Controllers`)
+  - `app/Http/Controllers/Profile/ProfileController` → `app/Profile/Http/Controllers/ProfileController` (`App\Profile\Http\Controllers`)
+  - API controllers (`LoginController`, `AppPickerController`) moved from `app/Auth/Http/Controllers/Auth/` (incorrect extra subdirectory) to `app/Auth/Http/Controllers/` — namespace corrected from `App\Auth\Http\Controllers\Auth` to `App\Auth\Http\Controllers`
+  - All route files updated to reference the new namespaces
+
+- **Form Request classes extracted** — inline `$request->validate()` calls replaced with dedicated `FormRequest` classes across all modules:
+
+  | Class | Module | Validates |
+  |---|---|---|
+  | `App\Auth\Http\Requests\WebLoginRequest` | Auth | `email` (required, email), `password` (required) |
+  | `App\Auth\Http\Requests\SelectAppRequest` | Auth | `slug` (required, string) |
+  | `App\Profile\Http\Requests\UpdateNameRequest` | Profile | `name` (required, string, max:255) |
+  | `App\Profile\Http\Requests\UpdatePictureRequest` | Profile | `profile_picture` (required, image, max:2048) |
+  | `App\Profile\Http\Requests\UpdatePasswordRequest` | Profile | `current_password` (required, current\_password), `password` (required, confirmed, min:8) |
+
+  The three Profile request classes are shared between `ProfileController` (web/session) and `ProfileApiController` (API/Bearer) — no duplication.
+
+- **Admin module layered** — `TenantHealthService` extracted from `TenantHealthController`, two data classes added:
+  - `App\Admin\Services\TenantHealthService` — all query and health-computation logic (`getTenants()`, `getSummary()`, `computeHealthStatus()`); controller is now a thin 3-line delegate
+  - `App\Admin\Data\TenantHealthData` — Spatie Data object representing one tenant's health snapshot (13 typed fields)
+  - `App\Admin\Data\TenantHealthSummaryData` — Spatie Data object for the four summary counts
+
+- **Profile module layered** — added `Services/` and `Data/` layers matching the Admin pattern:
+  - `App\Profile\Services\ProfileService` — `getProfile()`, `updateName()`, `updatePicture()`, `updatePassword()`; used by both web and API controllers
+  - `App\Profile\Data\ProfileData` — Spatie Data object (`id`, `name`, `email`, `profilePicture`)
+  - `App\Data\Repositories\Central\UserRepositoryData` — underlying repository data shape
+  - `App\Repositories\Central\UserRepository` — thin repository wrapping `User` model operations
+
+- **`HandleInertiaRequests` — `auth.user` now lazily resolved** — `auth` was previously evaluated eagerly (non-closure), which could expose a stale in-memory model instance on navigation. Changed to a closure evaluated at serialization time; `auth.user` is now explicitly shaped to only the fields the frontend needs:
+  ```php
+  'auth' => fn () => ['user' => $this->resolveAuthUser($request)]
+  ```
+  `resolveAuthUser()` returns `null` for guests or an array of `{ id, name, email, profile_picture_url }` for authenticated users — `profile_picture_url` is always freshly computed from `Storage::disk('public')->url()`, eliminating the stale-URL bug seen after profile picture changes.
+
+- **`Admin/Tenants/Index.vue` sidebar** — hardcoded `"Super Admin"` / `"admin@system.com"` placeholder replaced with live `page.props.auth.user` data, matching `Admin/Index.vue`; profile picture, initial-letter fallback, profile link, and logout button all wired up.
+
+- **`User` model — `profile_picture_url` converted to proper accessor** — removed the `toArray()` override that appended `profile_picture_url` and replaced it with an Eloquent `Attribute::get()` accessor (`profilePictureUrl()`). The accessor is auto-included in serialization and is correctly understood by Larastan.
+
+### Fixed
+
+- **`ProfileService::updatePassword` spurious `return`** — method is declared `void` but had `return $this->userRepository->updatePassword(...)`, causing a fatal error when the profile routes were first hit after the module restructure.
+- **`UserRepository` constructor threw `Exception('Not implemented')`** — a scaffolding placeholder left in the constructor prevented the Profile controllers from resolving via the container.
+
+### Added (PHPStan)
+
+- `/** @mixin Report */` on `ReportResource` — resolves all "undefined property" errors for proxied model attributes accessed via `$this->` inside `toArray()`.
+- `/** @mixin User */` on `UserResource` — same fix; `profile_picture_url` is now computed inline from the raw `profile_picture` column (which PHPStan can see through the mixin) rather than via the accessor.
+- Zero PHPStan errors at level 5.
+
+### Tests
+
+- **195 PHPUnit tests** — up from 110; no tests removed or skipped.
+- **`app/Admin/Tests/` test suite** — registered as `Admin` in `phpunit.xml`:
+  - `TenantHealthServiceTest` (12 tests) — unit tests for `TenantHealthService` covering each health status transition, user-count aggregation, and `getSummary()` counts
+  - `TenantHealthWebTest` (7 tests) — HTTP tests for `GET /admin/tenants`: auth guard, payload structure, `tenants.*` field presence, all three health statuses
+- **`app/Profile/Tests/` test suite** — registered as `Profile` in `phpunit.xml`:
+  - `ProfileServiceTest` (5 tests) — `getProfile`, `updateName`, `updatePicture`, `updatePassword`, and not-found exception
+  - `ProfileWebTest` (16 tests) — guest redirects, view, name/picture/password happy paths and all validation edge cases
+  - `ProfileApiTest` (14 tests) — same coverage over the API surface (`actingAs sanctum`, JSON assertions)
+- **`WebAuthenticationFlowTest`** — 9 new tests: login validation (missing email, bad format, missing password, wrong credentials), app picker view, app picker `select` happy paths (admin, tenant), access-denied for wrong slug, missing slug validation, unauthenticated guard.
+- **`ProfileApiControllerTest`** — new file (13 tests) covering `GET`, `PUT /name`, `POST /picture`, and `PUT /password` over the API surface.
+
+---
+
+## [2.2.0] — 2026-06-22
+
+### Added
+- **API versioning** — all API routes are now served under the `/api/v1/` prefix via a `Route::prefix('v1')` wrapper in `routes/api.php`. The glob-loader that auto-discovers `app/*/Routes/api_*.php` files is unchanged; the prefix is applied at the top level so no individual route files needed updating.
+
+- **Eloquent API Resources** — two resource classes provide a consistent `{ "data": { ... } }` envelope for JSON responses:
+  - `App\Http\Resources\UserResource` — exposes `id`, `name`, `email`, `profile_picture_url`, `created_at`; hidden fields (`password`, `remember_token`) are never leaked
+  - `App\Http\Resources\Reports\ReportResource` — exposes `id`, `type`, `format`, `delivery`, `status`, `parameters`, `batch_id`, `error_message`, `started_at`, `completed_at`, `created_at`; `file_path` is intentionally excluded from the public shape (download is via the dedicated endpoint)
+  - `ReportController::index` returns `ReportResource::collection($reports)` — paginated responses include the full `links` + `meta` envelope alongside `data`
+  - `ReportController::store` returns `(new ReportResource($report))->response()->setStatusCode(201)`
+  - `ReportController::show` returns `new ReportResource($report)`
+
+- **Profile API module** (`app/Profile/`) — user self-service operations are now available over stateless Bearer token auth alongside the existing Inertia web surface:
+
+  | Method | Endpoint | Response |
+  |---|---|---|
+  | `GET` | `/api/v1/profile` | `UserResource` |
+  | `PUT` | `/api/v1/profile/name` | `UserResource` (updated) |
+  | `POST` | `/api/v1/profile/picture` | `UserResource` (with `profile_picture_url`) |
+  | `PUT` | `/api/v1/profile/password` | `{ "message": "Password updated successfully." }` |
+
+  The API controller (`App\Profile\Http\Controllers\ProfileApiController`) shares all business logic (validation rules, storage handling, hash strategy) with the existing `ProfileController` — neither delegates to the other; both are thin controllers calling the same framework primitives.
+
+### Changed
+- **`ReportController`** — `index` return type changed from `JsonResponse` to `AnonymousResourceCollection`; `store` changed to return `JsonResponse` (resource response); `show` return type changed to `ReportResource`
+- **All feature tests** — API endpoint paths updated from `/api/*` to `/api/v1/*` across `LoginTest`, `AppPickerTest`, `ReportDispatchTest`, `ReportDownloadTest`, `ReportBatchTest`, and `ReportSubscriptionTest`
+
+### Updated
+- **Postman collection** — all API request URLs and path arrays updated to `/api/v1/`; report response bodies updated to reflect the `{ "data": { ... } }` `ReportResource` envelope; `List Reports` response updated to include `links` + `meta` pagination envelope; "Dispatch Single Report" test script updated from `json.id` → `json.data.id`; new **Profile (API)** folder added with 4 requests (`Get Profile`, `Update Display Name`, `Upload Profile Picture`, `Update Password`)
+
+### Tests
+- 110 PHPUnit tests pass — no tests removed or skipped
+
+---
+
 ## [2.1.0] — 2026-06-21
 
 ### Added

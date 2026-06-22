@@ -22,7 +22,7 @@ class ReportDispatchTest extends TestCase
 
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/reports', [
+        $response = $this->actingAs($user)->postJson('/api/v1/reports', [
             'type' => 'user_activity',
             'format' => ReportFormat::Screen->value,
             'delivery' => ReportDelivery::None->value,
@@ -42,7 +42,7 @@ class ReportDispatchTest extends TestCase
 
     public function test_unauthenticated_user_cannot_request_a_report(): void
     {
-        $response = $this->postJson('/api/reports', [
+        $response = $this->postJson('/api/v1/reports', [
             'type' => 'user_activity',
             'format' => ReportFormat::Screen->value,
             'delivery' => ReportDelivery::None->value,
@@ -57,7 +57,7 @@ class ReportDispatchTest extends TestCase
 
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/reports', [
+        $response = $this->actingAs($user)->postJson('/api/v1/reports', [
             'type' => 'user_activity',
             'format' => 'invalid_format',
             'delivery' => ReportDelivery::None->value,
@@ -75,7 +75,7 @@ class ReportDispatchTest extends TestCase
         Report::factory()->count(3)->create(['user_id' => $user->id]);
         Report::factory()->count(2)->create(['user_id' => $otherUser->id]);
 
-        $response = $this->actingAs($user)->getJson('/api/reports');
+        $response = $this->actingAs($user)->getJson('/api/v1/reports');
 
         $response->assertOk();
         $response->assertJsonCount(3, 'data');
@@ -86,7 +86,7 @@ class ReportDispatchTest extends TestCase
         $user = User::factory()->create();
         $report = Report::factory()->create(['user_id' => $user->id]);
 
-        $response = $this->actingAs($user)->getJson("/api/reports/{$report->id}");
+        $response = $this->actingAs($user)->getJson("/api/v1/reports/{$report->id}");
 
         $response->assertOk();
         $response->assertJsonFragment(['id' => $report->id]);
@@ -98,7 +98,7 @@ class ReportDispatchTest extends TestCase
         $otherUser = User::factory()->create();
         $report = Report::factory()->create(['user_id' => $otherUser->id]);
 
-        $response = $this->actingAs($user)->getJson("/api/reports/{$report->id}");
+        $response = $this->actingAs($user)->getJson("/api/v1/reports/{$report->id}");
 
         $response->assertForbidden();
     }
@@ -108,7 +108,7 @@ class ReportDispatchTest extends TestCase
         $user = User::factory()->create();
         $report = Report::factory()->create(['user_id' => $user->id]);
 
-        $response = $this->actingAs($user)->deleteJson("/api/reports/{$report->id}");
+        $response = $this->actingAs($user)->deleteJson("/api/v1/reports/{$report->id}");
 
         $response->assertNoContent();
         $this->assertDatabaseMissing('reports', ['id' => $report->id]);

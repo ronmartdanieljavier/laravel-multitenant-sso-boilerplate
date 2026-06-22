@@ -8,11 +8,13 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 
 | Module | Route prefix | Responsibility |
 |---|---|---|
-| **Auth** | `/api/login`, `/api/logout`, `/api/apps` | SSO — issues Sanctum token, returns app + tenant access list |
+| **Auth** | `/api/v1/login`, `/api/v1/logout`, `/api/v1/apps` | SSO — issues Sanctum token, returns app + tenant access list |
 | **Web Auth** | `/login`, `/logout`, `/apps` | Browser session flow — login, logout, app picker |
-| **Admin** | `/api/admin/...` | Manage users, permissions, tenant DBs, system settings |
-| **Tenant** | `/api/tenant/...` | Transactional app — reads and writes to tenant DB |
-| **Reports** | `/api/reports/...` | Read-only heavy queries, async generation, replica support |
+| **Admin** | `/api/v1/admin/...` | Manage users, permissions, tenant DBs, system settings |
+| **Tenant** | `/api/v1/tenant/...` | Transactional app — reads and writes to tenant DB |
+| **Reports** | `/api/v1/reports/...` | Read-only heavy queries, async generation, replica support |
+| **Profile (API)** | `/api/v1/profile/...` | User self-service — name, picture, password (Bearer token) |
+| **Profile (Web)** | `/profile/...` | User self-service — same actions via Inertia/session |
 
 ---
 
@@ -20,13 +22,14 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   /api/login                        │
+│                /api/v1/login                        │
 │        Single login — issues Sanctum token          │
 └────────────┬───────────────────┬────────────────────┘
              │                   │
      ┌───────▼──────┐   ┌────────▼──────────┐
-     │  /api/admin  │   │ /api/tenant        │
-     │              │   │ /api/reports       │
+     │/api/v1/admin │   │ /api/v1/tenant     │
+     │              │   │ /api/v1/reports    │
+     │              │   │ /api/v1/profile    │
      └───────┬──────┘   └────────┬───────────┘
              │                   │
      ┌───────▼───────────────────▼─────────┐
@@ -97,14 +100,24 @@ laravel-multitenant-sso-boilerplate/
 │
 ├── app/
 │   ├── Admin/
-│   │   └── Routes/
-│   │       └── api_admin.php               # Admin API routes
+│   │   ├── Data/
+│   │   │   ├── TenantHealthData.php            # Spatie Data — per-tenant health snapshot (13 fields)
+│   │   │   └── TenantHealthSummaryData.php     # Spatie Data — healthy/warning/critical totals
+│   │   ├── Http/Controllers/
+│   │   │   └── TenantHealthController.php      # GET /admin/tenants — delegates to TenantHealthService
+│   │   ├── Routes/
+│   │   │   └── web_admin.php                   # Admin web routes
+│   │   ├── Services/
+│   │   │   └── TenantHealthService.php         # getTenants(), getSummary(), computeHealthStatus()
+│   │   └── Tests/
+│   │       ├── TenantHealthServiceTest.php     # 12 service-layer unit tests
+│   │       └── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
 │   │
 │   ├── Auth/
 │   │   ├── Actions/
 │   │   │   ├── LoginAction.php
 │   │   │   └── LoadUserAppsAction.php
-│   │   ├── Data/Core/                      # spatie/laravel-data DTOs
+│   │   ├── Data/Core/                          # spatie/laravel-data DTOs
 │   │   │   ├── AppAccessCoreData.php
 │   │   │   ├── AuthTokenCoreData.php
 │   │   │   ├── LoginCredentialsCoreData.php
@@ -112,25 +125,30 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   └── UserCoreData.php
 │   │   ├── Enums/
 │   │   │   └── Role.php
-│   │   ├── Http/Controllers/Auth/
-│   │   │   ├── AppPickerController.php
-│   │   │   └── LoginController.php
-│   │
-│   ├── Http/Controllers/
-│   │   ├── Admin/
-│   │   │   └── TenantHealthController.php      # GET /admin/tenants — aggregates per-tenant health metrics
-│   │   ├── Auth/
-│   │   │   ├── WebLoginController.php          # Web login + post-auth app routing
-│   │   │   └── WebAppPickerController.php      # App picker page + selection handler
-│   │   └── Profile/
-│   │       └── ProfileController.php           # GET /profile, PUT /profile/name, POST /profile/picture, PUT /profile/password
+│   │   ├── Http/Controllers/
+│   │   │   ├── AppPickerController.php         # API — GET /api/v1/apps
+│   │   │   ├── LoginController.php             # API — POST /api/v1/login, /logout
+│   │   │   ├── WebAppPickerController.php      # Web — GET /apps, POST /apps/select
+│   │   │   └── WebLoginController.php          # Web — GET /login, POST /login
 │   │   ├── Http/Requests/
-│   │   │   └── LoginRequest.php
+│   │   │   ├── SelectAppRequest.php            # slug (required, string)
+│   │   │   └── WebLoginRequest.php             # email (required, email), password (required)
 │   │   ├── Routes/
-│   │   │   └── api_login.php               # SSO API routes
+│   │   │   ├── api_login.php                   # SSO API routes
+│   │   │   └── web_login.php                   # Web login + app picker routes
 │   │   └── Tests/
-│   │       ├── LoginTest.php
-│   │       └── AppPickerTest.php
+│   │       ├── AppPickerTest.php
+│   │       └── LoginTest.php
+│   │
+│   ├── Http/
+│   │   ├── Controllers/Controller.php
+│   │   ├── Middleware/HandleInertiaRequests.php # Inertia shared props — auth (closure), flash, tenant, app, role
+│   │   ├── Middleware/RequireRole.php
+│   │   └── Middleware/ResolveTenantDatabase.php
+│   ├── Http/Resources/
+│   │   ├── UserResource.php                    # { id, name, email, profile_picture_url, created_at }
+│   │   └── Reports/
+│   │       └── ReportResource.php              # { id, type, format, delivery, status, parameters, ... }
 │   │
 │   ├── Models/
 │   │   ├── Central/                        # Central DB models (App\Models\Central)
@@ -199,6 +217,26 @@ laravel-multitenant-sso-boilerplate/
 │   │   └── Routes/
 │   │       └── api_reports.php             # Reports + subscription API routes
 │   │
+│   ├── Profile/
+│   │   ├── Data/
+│   │   │   └── ProfileData.php             # Spatie Data — { id, name, email, profilePicture }
+│   │   ├── Http/Controllers/
+│   │   │   ├── ProfileApiController.php    # GET, PUT /name, POST /picture, PUT /password (API/Bearer)
+│   │   │   └── ProfileController.php       # GET /profile, PUT /name, POST /picture, PUT /password (web/session)
+│   │   ├── Http/Requests/
+│   │   │   ├── UpdateNameRequest.php       # name (required, string, max:255)
+│   │   │   ├── UpdatePasswordRequest.php   # current_password, password (confirmed, min:8)
+│   │   │   └── UpdatePictureRequest.php    # profile_picture (image, max:2048)
+│   │   ├── Routes/
+│   │   │   ├── api_profile.php             # Profile API routes under /api/v1/profile
+│   │   │   └── web_profile.php             # Profile web routes under /profile
+│   │   ├── Services/
+│   │   │   └── ProfileService.php          # getProfile(), updateName(), updatePicture(), updatePassword()
+│   │   └── Tests/
+│   │       ├── ProfileApiTest.php          # 14 API-surface tests (Sanctum Bearer)
+│   │       ├── ProfileServiceTest.php      # 5 service-layer unit tests
+│   │       └── ProfileWebTest.php          # 16 web-surface tests (session)
+│   │
 │   └── Tenant/
 │       └── Routes/
 │           └── api_tenant.php              # Tenant API routes
@@ -254,7 +292,7 @@ laravel-multitenant-sso-boilerplate/
 │   └── views/app.blade.php
 │
 ├── routes/
-│   ├── api.php                             # Loads all app/*/Routes/ files
+│   ├── api.php                             # Loads all app/*/Routes/ files under /api/v1/ prefix
 │   ├── web.php
 │   └── console.php
 │
@@ -304,7 +342,7 @@ What's built:
 - **Central models** — `App`, `Tenant`, `User`, `UserApp`, `UserAppTenant`, `SystemSetting` under `App\Models\Central\`
 - **Central DB schema** — `users`, `apps`, `tenants`, `user_apps`, `user_app_tenants`, `system_settings` in `database/migrations/central/`
 - **Separated migrations** — `database/migrations/central/` (runs via `php artisan migrate`) and `database/migrations/tenant/` (runs via `php artisan tenant:migrate` against each tenant's own database)
-- **Modular routing** — each module owns its routes under `app/*/Routes/api_*.php`
+- **Modular routing** — each module owns its routes under `app/*/Routes/api_*.php`; all API routes versioned under `/api/v1/` via `routes/api.php`
 - **Collocated tests** — PHPUnit tests live inside each module (e.g. `app/Auth/Tests/`)
 - **Dynamic tenant database resolution** — `ResolveTenantDatabase` middleware reads `X-Tenant` header, verifies user access, and wires up a per-request `tenant` DB connection from credentials stored in the central DB
 - **Two-dimensional permissions enforcement** — `ResolveTenantDatabase` enforces both the app dimension (`X-App` header, Sanctum token ability `app:{slug}`, `user_apps` record) and the tenant dimension (`user_app_tenants` scoped to the resolved app); `RequireRole` middleware available for per-route role enforcement (`admin`, `user`, `readonly`)
@@ -317,6 +355,7 @@ What's built:
 - **Web login flow with app picker** — after successful login, users with one app are redirected directly; users with multiple apps see an app picker page (`/apps`); login errors display as a prominent red banner
 - **Authentication flow (Phase 5.1)** — authenticated users visiting `/login` are redirected instead of seeing the form; web logout (`POST /logout`) invalidates the session and is available on every page; configurable idle session timeout auto-logs out inactive browser sessions based on the `authentication_idle_time` system setting (default 30 min)
 - **User self-service profile (Phase 5.2)** — authenticated users can update their display name, upload/replace their profile picture, and change their password at `/profile`; profile picture stored on the `public` disk and exposed as `profile_picture_url` on the `auth.user` Inertia shared prop; Admin and Tenant pages display the avatar in the sidebar/nav with a link to the profile page
+- **RESTful API + Inertia.js combined architecture** — Inertia.js web routes (session auth) coexist with a versioned RESTful API (`/api/v1/`) under Sanctum token auth; Eloquent API Resources (`UserResource`, `ReportResource`) provide consistent `{ "data": {...} }` envelopes; `Profile` module exposes all profile operations over both surfaces independently
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -335,42 +374,51 @@ What's built:
 
 A Postman collection is included at [`postman/laravel-multitenant-sso.postman_collection.json`](postman/laravel-multitenant-sso.postman_collection.json).
 
-Import via **Postman → Import → File**. The collection uses two variables — `base_url` (default `http://localhost`) and `token` — and covers all SSO endpoints:
+Import via **Postman → Import → File**. The collection uses two variables — `base_url` (default `http://localhost`) and `token` — and covers all endpoints. All API endpoints are under `/api/v1/` and use Bearer token auth (Sanctum).
 
 **Auth**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `POST` | `/api/login` | — | Authenticate and receive a Bearer token + app list |
-| `POST` | `/api/logout` | Bearer | Revoke the current token |
-| `GET` | `/api/apps` | Bearer | List accessible apps and tenant clients |
+| `POST` | `/api/v1/login` | — | Authenticate and receive a Bearer token + app list |
+| `POST` | `/api/v1/logout` | Bearer | Revoke the current token |
+| `GET` | `/api/v1/apps` | Bearer | List accessible apps and tenant clients |
 
 **Reports**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `GET` | `/api/reports` | Bearer | List the authenticated user's reports (paginated) |
-| `POST` | `/api/reports` | Bearer | Dispatch a single report job |
-| `POST` | `/api/reports/batch` | Bearer | Dispatch up to 50 report jobs as a batch (same format + delivery required) |
-| `GET` | `/api/reports/{id}` | Bearer | Poll status and result for a report |
-| `GET` | `/api/reports/{id}/download` | Bearer | Stream the generated file (success only) |
-| `DELETE` | `/api/reports/{id}` | Bearer | Delete a report and its stored file |
+| `GET` | `/api/v1/reports` | Bearer | List the authenticated user's reports (paginated) |
+| `POST` | `/api/v1/reports` | Bearer | Dispatch a single report job |
+| `POST` | `/api/v1/reports/batch` | Bearer | Dispatch up to 50 report jobs as a batch (same format + delivery required) |
+| `GET` | `/api/v1/reports/{id}` | Bearer | Poll status and result for a report |
+| `GET` | `/api/v1/reports/{id}/download` | Bearer | Stream the generated file (success only) |
+| `DELETE` | `/api/v1/reports/{id}` | Bearer | Delete a report and its stored file |
 
 **Report Subscriptions**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `GET` | `/api/reports/subscriptions` | Bearer | List subscriptions for the current tenant (paginated) |
-| `POST` | `/api/reports/subscriptions` | Bearer | Create a new scheduled report subscription |
-| `GET` | `/api/reports/subscriptions/{id}` | Bearer | Get a subscription by ID |
-| `PUT` | `/api/reports/subscriptions/{id}` | Bearer | Update a subscription (all fields optional) |
-| `DELETE` | `/api/reports/subscriptions/{id}` | Bearer | Delete a subscription |
+| `GET` | `/api/v1/reports/subscriptions` | Bearer | List subscriptions for the current tenant (paginated) |
+| `POST` | `/api/v1/reports/subscriptions` | Bearer | Create a new scheduled report subscription |
+| `GET` | `/api/v1/reports/subscriptions/{id}` | Bearer | Get a subscription by ID |
+| `PUT` | `/api/v1/reports/subscriptions/{id}` | Bearer | Update a subscription (all fields optional) |
+| `DELETE` | `/api/v1/reports/subscriptions/{id}` | Bearer | Delete a subscription |
+
+**Profile (API — Bearer token auth)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/profile` | Bearer | Get the authenticated user's profile |
+| `PUT` | `/api/v1/profile/name` | Bearer | Update display name |
+| `POST` | `/api/v1/profile/picture` | Bearer | Upload or replace profile picture (image, max 2 MB) |
+| `PUT` | `/api/v1/profile/password` | Bearer | Change password (requires current password) |
 
 **Profile (Web — session auth)**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `GET` | `/profile` | Session | Show the user profile page |
+| `GET` | `/profile` | Session | Show the user profile page (Inertia) |
 | `PUT` | `/profile/name` | Session | Update display name |
 | `POST` | `/profile/picture` | Session | Upload or replace profile picture (image, max 2 MB) |
 | `PUT` | `/profile/password` | Session | Change password (requires current password) |
@@ -566,7 +614,7 @@ public function share(Request $request): array
 {
     return [
         ...parent::share($request),
-        'auth'                => ['user' => $request->user()],  // user includes profile_picture_url
+        'auth'                => fn () => ['user' => $this->resolveAuthUser($request)],
         'flash'               => fn () => ['success' => $request->session()->get('success')],
         'tenant'              => fn () => $request->attributes->get('current_tenant'),
         'app'                 => fn () => $request->attributes->get('current_app'),
@@ -576,7 +624,25 @@ public function share(Request $request): array
             : null,
     ];
 }
+
+private function resolveAuthUser(Request $request): ?array
+{
+    $user = $request->user();
+    if (! $user) {
+        return null;
+    }
+    return [
+        'id'                  => $user->id,
+        'name'                => $user->name,
+        'email'               => $user->email,
+        'profile_picture_url' => $user->profile_picture
+            ? Storage::disk('public')->url($user->profile_picture)
+            : null,
+    ];
+}
 ```
+
+`auth` is a closure so it is evaluated lazily — after all middleware has run — preventing stale model data from being serialised during navigation. The user shape is explicit: only the four fields the frontend needs are included, and `profile_picture_url` is always recomputed from the raw column value.
 
 ---
 
@@ -692,6 +758,12 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] User can update their display name
 - [x] User can upload and update their profile picture
 - [x] User can reset their own password
+
+*5.2.1 — RESTful API + Inertia.js combined* *(done)*
+- [x] All API routes versioned under `/api/v1/` prefix
+- [x] `UserResource` and `ReportResource` Eloquent API Resources
+- [x] `Profile` API module — full profile CRUD over Bearer token (alongside existing Inertia web surface)
+- [x] Postman collection updated with Profile (API) folder and v1 paths
 
 *5.3 — System settings (admin)*
 - [ ] Admin can manage system-wide settings:

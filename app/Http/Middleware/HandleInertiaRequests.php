@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Models\Central\SystemSetting;
+use App\Models\Central\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -22,6 +24,26 @@ class HandleInertiaRequests extends Middleware
      *
      * @see https://inertiajs.com/asset-versioning
      */
+    /** @return array<string, mixed>|null */
+    private function resolveAuthUser(Request $request): ?array
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        if (! $user) {
+            return null;
+        }
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'profile_picture_url' => $user->profile_picture
+                ? Storage::disk('public')->url($user->profile_picture)
+                : null,
+        ];
+    }
+
     public function version(Request $request): ?string
     {
         return parent::version($request);
@@ -38,8 +60,8 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            'auth' => [
-                'user' => $request->user(),
+            'auth' => fn () => [
+                'user' => $this->resolveAuthUser($request),
             ],
             'flash' => fn () => [
                 'success' => $request->session()->get('success'),

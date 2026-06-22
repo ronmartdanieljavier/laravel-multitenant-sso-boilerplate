@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Auth\Http\Controllers;
 
+use App\Auth\Http\Requests\WebLoginRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Central\User;
 use App\Models\Central\UserApp;
@@ -13,6 +14,9 @@ use Inertia\Response;
 
 class WebLoginController extends Controller
 {
+    /**
+     * Show the login form.
+     */
     public function show(Request $request): Response|RedirectResponse
     {
         if ($request->user()) {
@@ -22,12 +26,12 @@ class WebLoginController extends Controller
         return Inertia::render('Login/Index');
     }
 
-    public function login(Request $request): RedirectResponse
+    /**
+     * Log the user in.
+     */
+    public function login(WebLoginRequest $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        $credentials = $request->only('email', 'password');
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors(['email' => 'These credentials do not match our records.']);
@@ -41,6 +45,9 @@ class WebLoginController extends Controller
         return $this->redirectBasedOnApps($user);
     }
 
+    /**
+     * Log the user out.
+     */
     public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
@@ -50,6 +57,9 @@ class WebLoginController extends Controller
         return redirect()->route('login');
     }
 
+    /**
+     * Redirect the user based on their app access.
+     */
     private function redirectBasedOnApps(User $user): RedirectResponse
     {
         $apps = $user->userApps()->with('app')->get();
@@ -61,6 +71,9 @@ class WebLoginController extends Controller
         return redirect()->route('apps');
     }
 
+    /**
+     * Resolve the URL for a given user app.
+     */
     private function resolveAppUrl(UserApp $userApp): string
     {
         return match ($userApp->app->slug) {

@@ -17,7 +17,7 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create(['password' => bcrypt('secret')]);
 
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/v1/login', [
             'email' => $user->email,
             'password' => 'secret',
         ]);
@@ -46,7 +46,7 @@ class LoginTest extends TestCase
             'is_default' => true,
         ]);
 
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/v1/login', [
             'email' => $user->email,
             'password' => 'secret',
         ]);
@@ -61,7 +61,7 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->postJson('/api/login', [
+        $this->postJson('/api/v1/login', [
             'email' => $user->email,
             'password' => 'wrong-password',
         ])->assertUnauthorized();
@@ -69,7 +69,7 @@ class LoginTest extends TestCase
 
     public function test_login_fails_with_unknown_email(): void
     {
-        $this->postJson('/api/login', [
+        $this->postJson('/api/v1/login', [
             'email' => 'ghost@example.com',
             'password' => 'anything',
         ])->assertUnauthorized();
@@ -77,7 +77,7 @@ class LoginTest extends TestCase
 
     public function test_login_validates_required_fields(): void
     {
-        $this->postJson('/api/login', [])
+        $this->postJson('/api/v1/login', [])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['email', 'password']);
     }
@@ -86,13 +86,13 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create(['password' => bcrypt('secret')]);
 
-        $loginResponse = $this->postJson('/api/login', [
+        $loginResponse = $this->postJson('/api/v1/login', [
             'email' => $user->email,
             'password' => 'secret',
         ]);
 
         $this->withToken($loginResponse->json('token'))
-            ->postJson('/api/logout')
+            ->postJson('/api/v1/logout')
             ->assertOk()
             ->assertJson(['message' => 'Logged out successfully.']);
 

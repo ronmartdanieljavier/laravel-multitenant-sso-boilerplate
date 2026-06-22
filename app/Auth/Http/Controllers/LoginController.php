@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Auth\Http\Controllers\Auth;
+namespace App\Auth\Http\Controllers;
 
 use App\Auth\Actions\LoginAction;
 use App\Auth\Http\Requests\LoginRequest;
@@ -16,6 +16,9 @@ class LoginController extends Controller
         private readonly LoginAction $loginAction,
     ) {}
 
+    /**
+     * Log the user in.
+     */
     public function login(LoginRequest $request): JsonResponse
     {
         try {
@@ -27,6 +30,9 @@ class LoginController extends Controller
         return response()->json($authToken);
     }
 
+    /**
+     * Log the user out.
+     */
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();

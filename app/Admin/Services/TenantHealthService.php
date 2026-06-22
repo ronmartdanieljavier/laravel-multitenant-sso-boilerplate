@@ -1,19 +1,24 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Admin\Services;
 
-use App\Http\Controllers\Controller;
+use App\Admin\Data\TenantHealthData;
+use App\Admin\Data\TenantHealthSummaryData;
 use App\Models\Central\Report;
 use App\Models\Central\Tenant;
 use App\Reports\Enums\ReportStatus;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use Inertia\Response;
 
-class TenantHealthController extends Controller
+class TenantHealthService
 {
-    public function index(): Response
+    /**
+     * Get a list of tenants with their health data.
+     *
+     * @return Collection<int, TenantHealthData>|\Illuminate\Database\Eloquent\Collection<int, TenantHealthData>
+     */
+    public function getTenants(): Collection
     {
         $tenants = Tenant::with('migrationVersions')->get();
 
@@ -40,56 +45,54 @@ class TenantHealthController extends Controller
             ->groupBy('tenant_id')
             ->pluck('count', 'tenant_id');
 
-        $enriched = $tenants->map(function (Tenant $tenant) use (
+        return $tenants->map(function (Tenant $tenant) use (
             $pendingByTenant,
             $failedByTenant,
             $lastReportByTenant,
             $userCountByTenant,
         ) {
             $lastMigration = $tenant->migrationVersions->max('migrated_at');
-            $migrationCount = $tenant->migrationVersions->count();
             $userCount = (int) ($userCountByTenant[$tenant->id] ?? 0);
             $pendingReports = (int) ($pendingByTenant[$tenant->id] ?? 0);
             $failedReports = (int) ($failedByTenant[$tenant->id] ?? 0);
-            $lastReportAt = $lastReportByTenant[$tenant->id] ?? null;
 
-            $healthStatus = $this->computeHealthStatus(
+            return new TenantHealthData(
+                id: $tenant->id,
+                name: $tenant->name,
+                slug: $tenant->slug,
                 isActive: $tenant->is_active,
-                failedReports: $failedReports,
+                hasReadReplica: $tenant->hasReadReplica(),
                 userCount: $userCount,
-                lastMigration: $lastMigration ? Carbon::parse($lastMigration) : null,
+                migrationCount: $tenant->migrationVersions->count(),
+                lastMigration: $lastMigration,
+                pendingReports: $pendingReports,
+                failedReports: $failedReports,
+                lastReportAt: $lastReportByTenant[$tenant->id] ?? null,
+                healthStatus: $this->computeHealthStatus(
+                    isActive: $tenant->is_active,
+                    failedReports: $failedReports,
+                    userCount: $userCount,
+                    lastMigration: $lastMigration ? Carbon::parse($lastMigration) : null,
+                ),
             );
-
-            return [
-                'id' => $tenant->id,
-                'name' => $tenant->name,
-                'slug' => $tenant->slug,
-                'is_active' => $tenant->is_active,
-                'has_read_replica' => $tenant->hasReadReplica(),
-                'user_count' => $userCount,
-                'migration_count' => $migrationCount,
-                'last_migration' => $lastMigration,
-                'pending_reports' => $pendingReports,
-                'failed_reports' => $failedReports,
-                'last_report_at' => $lastReportAt,
-                'health_status' => $healthStatus,
-            ];
         });
-
-        $summary = [
-            'total' => $enriched->count(),
-            'healthy' => $enriched->where('health_status', 'healthy')->count(),
-            'warning' => $enriched->where('health_status', 'warning')->count(),
-            'critical' => $enriched->where('health_status', 'critical')->count(),
-        ];
-
-        return Inertia::render('Admin/Tenants/Index', [
-            'tenants' => $enriched->values(),
-            'summary' => $summary,
-        ]);
     }
 
-    private function computeHealthStatus(
+    /** @param Collection<int, TenantHealthData> $tenants */
+    public function getSummary(Collection $tenants): TenantHealthSummaryData
+    {
+        return new TenantHealthSummaryData(
+            total: $tenants->count(),
+            healthy: $tenants->where('healthStatus', 'healthy')->count(),
+            warning: $tenants->where('healthStatus', 'warning')->count(),
+            critical: $tenants->where('healthStatus', 'critical')->count(),
+        );
+    }
+
+    /**
+     * Compute the health status of a tenant based on their data.
+     */
+    public function computeHealthStatus(
         bool $isActive,
         int $failedReports,
         int $userCount,

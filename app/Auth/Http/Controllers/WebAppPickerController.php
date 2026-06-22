@@ -1,17 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Auth\Http\Controllers;
 
+use App\Auth\Http\Requests\SelectAppRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Central\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class WebAppPickerController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index(): Response|RedirectResponse
     {
         /** @var User $user */
@@ -33,11 +36,12 @@ class WebAppPickerController extends Controller
         ]);
     }
 
-    public function select(Request $request): RedirectResponse
+    /**
+     * Select an app for the user.
+     */
+    public function select(SelectAppRequest $request): RedirectResponse
     {
-        $request->validate(['slug' => ['required', 'string']]);
-
-        $slug = $request->input('slug');
+        $slug = $request->string('slug')->toString();
 
         /** @var User $user */
         $user = Auth::user();

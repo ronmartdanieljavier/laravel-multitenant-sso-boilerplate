@@ -111,4 +111,98 @@ class WebAuthenticationFlowTest extends TestCase
             ->get('/apps')
             ->assertInertia(fn ($page) => $page->where('idleTimeoutMinutes', 30));
     }
+
+    public function test_login_requires_email(): void
+    {
+        $this->post('/login', ['password' => 'secret'])
+            ->assertSessionHasErrors('email');
+    }
+
+    public function test_login_requires_valid_email_format(): void
+    {
+        $this->post('/login', ['email' => 'not-an-email', 'password' => 'secret'])
+            ->assertSessionHasErrors('email');
+    }
+
+    public function test_login_requires_password(): void
+    {
+        $this->post('/login', ['email' => 'user@example.com'])
+            ->assertSessionHasErrors('password');
+    }
+
+    public function test_login_fails_with_wrong_credentials(): void
+    {
+        User::factory()->create(['email' => 'user@example.com', 'password' => bcrypt('secret')]);
+
+        $this->post('/login', ['email' => 'user@example.com', 'password' => 'wrong'])
+            ->assertSessionHasErrors('email');
+    }
+
+    public function test_authenticated_user_can_view_app_picker(): void
+    {
+        $user = User::factory()->create();
+        $appA = App::where('slug', 'admin')->first();
+        $appB = App::where('slug', 'tenant')->first();
+        $user->userApps()->create(['app_id' => $appA->id, 'role' => Role::Admin]);
+        $user->userApps()->create(['app_id' => $appB->id, 'role' => Role::User]);
+
+        $this->actingAs($user)
+            ->get('/apps')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Auth/AppPicker')->has('apps', 2));
+    }
+
+    public function test_app_picker_redirects_to_login_when_user_has_no_apps(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/apps')->assertRedirect(route('login'));
+    }
+
+    public function test_select_app_redirects_to_admin(): void
+    {
+        $user = User::factory()->create();
+        $app = App::where('slug', 'admin')->first();
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::Admin]);
+
+        $this->actingAs($user)
+            ->post('/apps/select', ['slug' => 'admin'])
+            ->assertRedirect(route('admin'));
+    }
+
+    public function test_select_app_redirects_to_tenant(): void
+    {
+        $user = User::factory()->create();
+        $app = App::where('slug', 'tenant')->first();
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::User]);
+
+        $this->actingAs($user)
+            ->post('/apps/select', ['slug' => 'tenant'])
+            ->assertRedirect(route('tenant'));
+    }
+
+    public function test_select_app_rejects_app_user_does_not_have_access_to(): void
+    {
+        $user = User::factory()->create();
+        $app = App::where('slug', 'admin')->first();
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::Admin]);
+
+        $this->actingAs($user)
+            ->post('/apps/select', ['slug' => 'tenant'])
+            ->assertSessionHasErrors('slug');
+    }
+
+    public function test_select_app_requires_slug(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/apps/select', [])
+            ->assertSessionHasErrors('slug');
+    }
+
+    public function test_unauthenticated_user_cannot_select_app(): void
+    {
+        $this->post('/apps/select', ['slug' => 'admin'])->assertRedirect(route('login'));
+    }
 }

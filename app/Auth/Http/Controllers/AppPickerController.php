@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Auth\Http\Controllers\Auth;
+namespace App\Auth\Http\Controllers;
 
 use App\Auth\Actions\LoadUserAppsAction;
 use App\Http\Controllers\Controller;
@@ -14,6 +14,9 @@ class AppPickerController extends Controller
         private readonly LoadUserAppsAction $loadUserAppsAction,
     ) {}
 
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request): JsonResponse
     {
         /** @var User $user */

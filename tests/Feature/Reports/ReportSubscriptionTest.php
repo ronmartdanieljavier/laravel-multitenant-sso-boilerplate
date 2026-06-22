@@ -35,7 +35,7 @@ class ReportSubscriptionTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->getJson('/api/reports/subscriptions');
+        $response = $this->actingAs($user)->getJson('/api/v1/reports/subscriptions');
 
         $response->assertOk();
         $response->assertJsonStructure(['data', 'current_page', 'total']);
@@ -43,14 +43,14 @@ class ReportSubscriptionTest extends TestCase
 
     public function test_unauthenticated_user_cannot_list_subscriptions(): void
     {
-        $this->getJson('/api/reports/subscriptions')->assertUnauthorized();
+        $this->getJson('/api/v1/reports/subscriptions')->assertUnauthorized();
     }
 
     public function test_authenticated_user_can_create_subscription(): void
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/reports/subscriptions', [
+        $response = $this->actingAs($user)->postJson('/api/v1/reports/subscriptions', [
             'type' => 'user_activity',
             'format' => ReportFormat::Screen->value,
             'frequency' => ReportFrequency::Daily->value,
@@ -70,7 +70,7 @@ class ReportSubscriptionTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->postJson('/api/reports/subscriptions', [])
+        $this->actingAs($user)->postJson('/api/v1/reports/subscriptions', [])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['type', 'format', 'frequency', 'delivery']);
     }
@@ -79,7 +79,7 @@ class ReportSubscriptionTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->postJson('/api/reports/subscriptions', [
+        $this->actingAs($user)->postJson('/api/v1/reports/subscriptions', [
             'type' => 'audit_log',
             'format' => ReportFormat::Screen->value,
             'frequency' => ReportFrequency::Daily->value,
@@ -100,7 +100,7 @@ class ReportSubscriptionTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->actingAs($user)->putJson("/api/reports/subscriptions/{$subscription->id}", [
+        $response = $this->actingAs($user)->putJson("/api/v1/reports/subscriptions/{$subscription->id}", [
             'is_active' => false,
             'frequency' => ReportFrequency::Weekly->value,
         ]);
@@ -119,7 +119,7 @@ class ReportSubscriptionTest extends TestCase
             'delivery' => ReportDelivery::None->value,
         ]);
 
-        $this->actingAs($user)->deleteJson("/api/reports/subscriptions/{$subscription->id}")
+        $this->actingAs($user)->deleteJson("/api/v1/reports/subscriptions/{$subscription->id}")
             ->assertNoContent();
 
         $this->assertDatabaseMissing('report_subscriptions', ['id' => $subscription->id], 'tenant');

@@ -3,6 +3,7 @@
 namespace App\Reports\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Reports\ReportResource;
 use App\Models\Central\Report;
 use App\Reports\Enums\ReportDelivery;
 use App\Reports\Enums\ReportFormat;
@@ -13,6 +14,7 @@ use App\Reports\Jobs\GenerateReportBatchJob;
 use App\Reports\Jobs\GenerateReportJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -22,14 +24,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $reports = Report::query()
             ->where('user_id', $request->user()->id)
             ->latest()
             ->paginate(20);
 
-        return response()->json($reports);
+        return ReportResource::collection($reports);
     }
 
     public function store(StoreReportRequest $request): JsonResponse
@@ -45,7 +47,7 @@ class ReportController extends Controller
 
         GenerateReportJob::dispatch($report);
 
-        return response()->json($report, Response::HTTP_CREATED);
+        return (new ReportResource($report))->response()->setStatusCode(Response::HTTP_CREATED);
     }
 
     public function batch(StoreBatchReportRequest $request, GenerateReportBatchJob $batchJob): JsonResponse
@@ -77,13 +79,13 @@ class ReportController extends Controller
         ], Response::HTTP_CREATED);
     }
 
-    public function show(Request $request, Report $report): JsonResponse
+    public function show(Request $request, Report $report): ReportResource
     {
         Gate::authorize('view', $report);
 
         $report->loadMissing('user', 'tenant');
 
-        return response()->json($report);
+        return new ReportResource($report);
     }
 
     public function download(Request $request, Report $report): StreamedResponse

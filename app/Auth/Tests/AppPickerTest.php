@@ -15,7 +15,7 @@ class AppPickerTest extends TestCase
 
     public function test_unauthenticated_request_is_rejected(): void
     {
-        $this->getJson('/api/apps')->assertUnauthorized();
+        $this->getJson('/api/v1/apps')->assertUnauthorized();
     }
 
     public function test_returns_empty_apps_list_when_user_has_no_access(): void
@@ -23,7 +23,7 @@ class AppPickerTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user, 'sanctum')
-            ->getJson('/api/apps')
+            ->getJson('/api/v1/apps')
             ->assertOk()
             ->assertJson([]);
     }
@@ -43,7 +43,7 @@ class AppPickerTest extends TestCase
         ]);
 
         $this->actingAs($user, 'sanctum')
-            ->getJson('/api/apps')
+            ->getJson('/api/v1/apps')
             ->assertOk()
             ->assertJsonCount(1)
             ->assertJsonPath('0.app_id', $app->id)
@@ -64,7 +64,7 @@ class AppPickerTest extends TestCase
         $userB->userApps()->create(['app_id' => $appB->id, 'role' => Role::User]);
 
         $this->actingAs($userA, 'sanctum')
-            ->getJson('/api/apps')
+            ->getJson('/api/v1/apps')
             ->assertOk()
             ->assertJsonCount(1)
             ->assertJsonPath('0.app_id', $appA->id);

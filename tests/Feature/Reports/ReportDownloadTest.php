@@ -24,7 +24,7 @@ class ReportDownloadTest extends TestCase
             'file_path' => "reports/{$user->id}/report.pdf",
         ]);
 
-        $response = $this->actingAs($user)->getJson("/api/reports/{$report->id}/download");
+        $response = $this->actingAs($user)->getJson("/api/v1/reports/{$report->id}/download");
 
         $response->assertOk();
     }
@@ -34,7 +34,7 @@ class ReportDownloadTest extends TestCase
         $user = User::factory()->create();
         $report = Report::factory()->pending()->create(['user_id' => $user->id]);
 
-        $response = $this->actingAs($user)->getJson("/api/reports/{$report->id}/download");
+        $response = $this->actingAs($user)->getJson("/api/v1/reports/{$report->id}/download");
 
         $response->assertUnprocessable();
     }
@@ -44,7 +44,7 @@ class ReportDownloadTest extends TestCase
         $user = User::factory()->create();
         $report = Report::factory()->failed()->create(['user_id' => $user->id]);
 
-        $response = $this->actingAs($user)->getJson("/api/reports/{$report->id}/download");
+        $response = $this->actingAs($user)->getJson("/api/v1/reports/{$report->id}/download");
 
         $response->assertUnprocessable();
     }
@@ -62,7 +62,7 @@ class ReportDownloadTest extends TestCase
             'file_path' => "reports/{$otherUser->id}/report.pdf",
         ]);
 
-        $response = $this->actingAs($user)->getJson("/api/reports/{$report->id}/download");
+        $response = $this->actingAs($user)->getJson("/api/v1/reports/{$report->id}/download");
 
         $response->assertForbidden();
     }

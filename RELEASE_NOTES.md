@@ -9,6 +9,70 @@
 
 ---
 
+## [2.6.0] — 2026-06-23
+
+### Added
+
+- **System settings — Phase 5.3** — full admin settings management across seven tabs, exposed over both the Inertia web interface and a versioned REST API:
+
+  **Service & validation**
+  - `App\Admin\Services\SystemSettingsService` — `getSettings()` (fetches all known keys in one query), `updateSettings(array)` (upserts via `SystemSetting::set()`), `getMissingRequiredSettings()` (returns labels for the three required keys: `email_driver`, `authentication_idle_time`, `storage_driver`)
+  - `App\Http\Requests\Admin\UpdateSystemSettingsRequest` — validates all settings fields across all tabs (80+ rules); `authorize()` requires an authenticated user
+
+  **Web controller**
+  - `App\Admin\Http\Controllers\SystemSettingsController` — `GET /admin/settings` renders `Admin/Settings/Index` via Inertia with all settings as props; `PUT /admin/settings` saves and redirects with a flash success message
+
+  **API controller**
+  - `App\Admin\Http\Controllers\SystemSettingsApiController` — `GET /api/v1/admin/settings` returns `{ "data": {...}, "missing_required": [...] }`; `PUT /api/v1/admin/settings` saves and returns the same envelope; both endpoints require Sanctum Bearer auth
+
+  **Missing-settings banner**
+  - `HandleInertiaRequests::share()` — adds `missingRequiredSettings` as a lazy closure prop shared to every page; resolves to an array of setting labels that are unset; used by admin pages to display an amber banner linking to `/admin/settings`
+  - Banner implemented on `Admin/Index.vue`, `Admin/Tenants/Index.vue`, and `Admin/Settings/Index.vue`
+
+  **Settings tabs (7)**
+
+  | Tab | Driver / options | Fields |
+  |---|---|---|
+  | **Email** | SMTP, Postmark, Mailgun, Amazon SES | Host, port, encryption, credentials, from address/name per driver |
+  | **SMS** | Twilio, Vonage, Amazon SNS | Credentials + sender per driver; SNS sender ID capped at 11 chars |
+  | **Push** | FCM, APNs, OneSignal | Firebase/APNS/OneSignal credentials; APNs environment (sandbox/production) |
+  | **Storage** | Local, Amazon S3, Cloudflare R2, Google Cloud Storage, FTP, SFTP | Credentials + bucket/path per driver; GCS accepts service account JSON |
+  | **Authentication** | — | Idle timeout (1–1440 min), max login attempts (1–100) |
+  | **Security** | — | Password min length, require uppercase/digit/symbol (boolean), expiry days (0–365), 2FA (off/optional/required), session concurrency limit |
+  | **Branding** | — | App name, support email + URL, logo URL, favicon URL (inline preview with error fallback) |
+
+  **Email footer** (always visible, driver-independent)
+  - `email_footer_signature` — rich-text HTML via TipTap editor (max 2000 chars); appended to all outbound emails; tenants can override
+  - `email_footer_unsubscribe_url` — URL field for CAN-SPAM/GDPR compliance
+
+  **TipTap rich text editor**
+  - `resources/js/Pages/Admin/Settings/RichTextEditor.vue` — self-contained TipTap v3 editor component used for the email footer signature; toolbar: Bold, Italic, Underline, Bullet list, Ordered list, Link (URL prompt), Remove link, Clear formatting; restricted to email-safe marks (no headings, blockquotes, code blocks); emits `update:modelValue` as raw HTML; wired via `v-model` into `emailForm.email_footer_signature`
+  - `@tiptap/vue-3`, `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/extension-link`, `@tiptap/extension-underline` added as npm dependencies
+
+  **Per-tab form isolation**
+  - Seven separate `useForm` instances (`emailForm`, `smsForm`, `pushForm`, `storageForm`, `authForm`, `securityForm`, `brandingForm`) so saving one tab does not reset or dirty others
+  - Each tab has its own save button; boolean security settings initialised with `=== '1' || === true` to handle string storage
+
+  **Admin sidebar**
+  - `Admin/Index.vue` and `Admin/Tenants/Index.vue` — "Settings" sidebar link updated to use a real Inertia `<Link>` pointing to `route('admin.settings')`
+
+### Routes added
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/admin/settings` | Session | Show the settings page (Inertia) |
+| `PUT` | `/admin/settings` | Session | Save settings (redirects with flash) |
+| `GET` | `/api/v1/admin/settings` | Bearer | Retrieve all settings + missing required list |
+| `PUT` | `/api/v1/admin/settings` | Bearer | Update settings, return updated data + missing required list |
+
+### Tests
+
+- **`app/Admin/Tests/SystemSettingsWebTest.php`** — 43 PHPUnit feature tests covering: auth guard, page rendering, saving each driver's settings (SMTP, Postmark, Mailgun, SES, Twilio, Vonage, SNS, FCM, APNs, OneSignal, S3, R2, GCS, Local, FTP, SFTP), all validation rules, boolean security settings, branding, email footer (plain text, HTML, clear), and the missing-required banner prop
+- **`app/Admin/Tests/SystemSettingsApiTest.php`** — 33 PHPUnit feature tests covering: 401 on unauthenticated requests, JSON structure, each driver save, validation rejection, email footer (HTML, clear), and missing-required logic
+- **`resources/js/Pages/Admin/Settings/RichTextEditor.test.js`** — 6 Vitest component tests: toolbar renders all buttons, `EditorContent` mounts, `update:modelValue` emitted on init, remove-link button conditional on active link state, `modelValue` prop passed to editor
+
+---
+
 ## [2.5.0] — 2026-06-23
 
 ### Changed

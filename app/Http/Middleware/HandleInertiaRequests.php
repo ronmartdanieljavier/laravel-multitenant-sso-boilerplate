@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Admin\Services\SystemSettingsService;
 use App\Models\Central\SystemSetting;
 use App\Models\Central\User;
 use Illuminate\Http\Request;
@@ -69,6 +70,9 @@ class HandleInertiaRequests extends Middleware
             'idleTimeoutMinutes' => fn () => $request->user()
                 ? (int) SystemSetting::get('authentication_idle_time', 30)
                 : null,
+            'missingRequiredSettings' => fn () => $request->user()
+                ? app(SystemSettingsService::class)->getMissingRequiredSettings()
+                : [],
             'tenant' => fn () => $request->attributes->get('current_tenant'),
             'app' => fn () => $request->attributes->get('current_app'),
             'role' => fn () => $request->attributes->get('current_role'),

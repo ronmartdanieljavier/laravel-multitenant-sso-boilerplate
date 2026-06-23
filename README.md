@@ -10,7 +10,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 |---|---|---|
 | **Auth** | `/api/v1/login`, `/api/v1/logout`, `/api/v1/apps` | SSO — issues Sanctum token, returns app + tenant access list |
 | **Web Auth** | `/login`, `/logout`, `/apps` | Browser session flow — login, logout, app picker |
-| **Admin** | `/api/v1/admin/...` | Manage users, permissions, tenant DBs, system settings |
+| **Admin** | `/api/v1/admin/...`, `/admin/...` | Manage users, permissions, tenant DBs, system settings |
 | **Tenant** | `/api/v1/tenant/...` | Transactional app — reads and writes to tenant DB |
 | **Reports** | `/api/v1/reports/...` | Read-only heavy queries, async generation, replica support |
 | **Profile (API)** | `/api/v1/profile/...` | User self-service — name, picture, password (Bearer token) |
@@ -84,7 +84,9 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 **Admin panel**
 - Manage users and assign app + tenant DB access
 - Add new tenant databases and run migrations from the UI
-- System-wide settings management
+- System-wide settings across seven tabs: Email (SMTP/Postmark/Mailgun/SES), SMS (Twilio/Vonage/SNS), Push (FCM/APNs/OneSignal), Storage (Local/S3/R2/GCS/FTP/SFTP), Authentication, Security, and Branding
+- Email footer signature editor (TipTap rich text) with unsubscribe URL for CAN-SPAM/GDPR compliance
+- Persistent amber banner on all admin pages when required settings are unset
 
 **Inertia.js + Vue 3 frontend**
 - Vue 3 page components served via Inertia.js — no separate frontend server
@@ -104,14 +106,20 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── TenantHealthData.php            # Spatie Data — per-tenant health snapshot (13 fields)
 │   │   │   └── TenantHealthSummaryData.php     # Spatie Data — healthy/warning/critical totals
 │   │   ├── Http/Controllers/
-│   │   │   └── TenantHealthController.php      # GET /admin/tenants — delegates to TenantHealthService
+│   │   │   ├── TenantHealthController.php      # GET /admin/tenants — delegates to TenantHealthService
+│   │   │   ├── SystemSettingsController.php    # GET|PUT /admin/settings — Inertia web surface
+│   │   │   └── SystemSettingsApiController.php # GET|PUT /api/v1/admin/settings — REST API surface
 │   │   ├── Routes/
-│   │   │   └── web_admin.php                   # Admin web routes
+│   │   │   ├── web_admin.php                   # Admin web routes
+│   │   │   └── api_admin.php                   # Admin API routes
 │   │   ├── Services/
-│   │   │   └── TenantHealthService.php         # getTenants(), getSummary(), computeHealthStatus() — no direct model access
+│   │   │   ├── TenantHealthService.php         # getTenants(), getSummary(), computeHealthStatus()
+│   │   │   └── SystemSettingsService.php       # getSettings(), updateSettings(), getMissingRequiredSettings()
 │   │   └── Tests/
 │   │       ├── TenantHealthServiceTest.php     # 14 service-layer unit tests
-│   │       └── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
+│   │       ├── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
+│   │       ├── SystemSettingsWebTest.php       # 43 PHPUnit tests — web surface, all tabs and validation
+│   │       └── SystemSettingsApiTest.php       # 33 PHPUnit tests — API surface, all tabs and validation
 │   │
 │   ├── Auth/
 │   │   ├── Data/                               # spatie/laravel-data DTOs
@@ -145,9 +153,11 @@ laravel-multitenant-sso-boilerplate/
 │   │
 │   ├── Http/
 │   │   ├── Controllers/Controller.php
-│   │   ├── Middleware/HandleInertiaRequests.php # Inertia shared props — auth (closure), flash, tenant, app, role
+│   │   ├── Middleware/HandleInertiaRequests.php # Inertia shared props — auth (closure), flash, tenant, app, role, missingRequiredSettings
 │   │   ├── Middleware/RequireRole.php
-│   │   └── Middleware/ResolveTenantDatabase.php
+│   │   ├── Middleware/ResolveTenantDatabase.php
+│   │   └── Requests/Admin/
+│   │       └── UpdateSystemSettingsRequest.php  # 80+ validation rules across all 7 setting tabs
 │   ├── Http/Resources/
 │   │   ├── UserResource.php                    # { id, name, email, profile_picture_url, created_at }
 │   │   └── Reports/
@@ -277,9 +287,12 @@ laravel-multitenant-sso-boilerplate/
 ├── resources/
 │   ├── js/
 │   │   ├── Pages/
-│   │   │   ├── Admin/Index.vue             # Admin landing page
+│   │   │   ├── Admin/Index.vue             # Admin landing page (missing-settings banner)
 │   │   │   ├── Admin/Index.test.js
-│   │   │   ├── Admin/Tenants/Index.vue     # Tenant health dashboard
+│   │   │   ├── Admin/Tenants/Index.vue     # Tenant health dashboard (missing-settings banner)
+│   │   │   ├── Admin/Settings/Index.vue    # System settings — 7 tabs, per-tab useForm
+│   │   │   ├── Admin/Settings/RichTextEditor.vue  # TipTap editor for email footer signature
+│   │   │   ├── Admin/Settings/RichTextEditor.test.js
 │   │   │   ├── Auth/AppPicker.vue          # Multi-app picker shown after login
 │   │   │   ├── Login/Index.vue             # Login page with error banner
 │   │   │   ├── Login/Index.test.js
@@ -365,7 +378,8 @@ What's built:
 - **Web login flow with app picker** — after successful login, users with one app are redirected directly; users with multiple apps see an app picker page (`/apps`); login errors display as a prominent red banner
 - **Authentication flow (Phase 5.1)** — authenticated users visiting `/login` are redirected instead of seeing the form; web logout (`POST /logout`) invalidates the session and is available on every page; configurable idle session timeout auto-logs out inactive browser sessions based on the `authentication_idle_time` system setting (default 30 min)
 - **User self-service profile (Phase 5.2)** — authenticated users can update their display name, upload/replace their profile picture, and change their password at `/profile`; profile picture stored on the `public` disk and exposed as `profile_picture_url` on the `auth.user` Inertia shared prop; Admin and Tenant pages display the avatar in the sidebar/nav with a link to the profile page
-- **RESTful API + Inertia.js combined architecture** — Inertia.js web routes (session auth) coexist with a versioned RESTful API (`/api/v1/`) under Sanctum token auth; Eloquent API Resources (`UserResource`, `ReportResource`) provide consistent `{ "data": {...} }` envelopes; `Profile` module exposes all profile operations over both surfaces independently
+- **RESTful API + Inertia.js combined architecture** — Inertia.js web routes (session auth) coexist with a versioned RESTful API (`/api/v1/`) under Sanctum token auth; Eloquent API Resources (`UserResource`, `ReportResource`) provide consistent `{ "data": {...} }` envelopes; `Profile` and `SystemSettings` modules expose all operations over both surfaces independently
+- **System settings (Phase 5.3)** — seven-tab admin settings page at `/admin/settings` with per-tab save; settings managed via `SystemSettingsService` as a key-value store (`system_settings` table); required settings (email driver, auth idle timeout, storage driver) trigger a persistent amber banner on all admin pages when unset; full REST API at `/api/v1/admin/settings`; email footer signature uses a TipTap rich-text editor (`RichTextEditor.vue`) outputting HTML stored as a setting value; 76 PHPUnit + 23 Vitest tests
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -432,6 +446,20 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `PUT` | `/profile/name` | Session | Update display name |
 | `POST` | `/profile/picture` | Session | Upload or replace profile picture (image, max 2 MB) |
 | `PUT` | `/profile/password` | Session | Change password (requires current password) |
+
+**System Settings (API — Bearer token auth)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/admin/settings` | Bearer | Retrieve all settings and the list of unset required settings |
+| `PUT` | `/api/v1/admin/settings` | Bearer | Update one or more settings, returns updated data and missing required list |
+
+**System Settings (Web — session auth)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/admin/settings` | Session | Show the settings page (Inertia — 7 tabs) |
+| `PUT` | `/admin/settings` | Session | Save settings, redirect with flash success |
 
 The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, and "Create Subscription" saves the ID to `{{subscription_id}}`, so subsequent requests work without manual copy-paste.
 
@@ -702,6 +730,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 | CSS | Tailwind CSS (`@tailwindcss/vite`) | ✅ Installed |
 | Fonts | Bunny Fonts — Instrument Sans | ✅ Installed |
 | Build | Vite + `laravel-vite-plugin` | ✅ Installed |
+| Rich text editor | TipTap v3 (vue-3, starter-kit, link, underline) | ✅ Installed |
 | Unit tests | Vitest 4 + Vue Test Utils 2 | ✅ Installed |
 | E2E tests | Playwright 1.61 (Chromium) | ✅ Installed |
 | DB | PostgreSQL 17 (central + tenant) | ✅ Configured |
@@ -775,12 +804,11 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] `Profile` API module — full profile CRUD over Bearer token (alongside existing Inertia web surface)
 - [x] Postman collection updated with Profile (API) folder and v1 paths
 
-*5.3 — System settings (admin)*
-- [ ] Admin can manage system-wide settings:
-  - Default email service — SMTP **or** Postmark (only one active at a time)
-  - Authentication idle timeout duration
-  - Default S3 storage settings
-- [ ] A persistent notification banner is shown on all admin pages for any required system setting that is unset, with a direct link to the settings page
+*5.3 — System settings (admin)* *(done)*
+- [x] Admin can manage system-wide settings across seven tabs: Email (SMTP/Postmark/Mailgun/SES), SMS (Twilio/Vonage/SNS), Push (FCM/APNs/OneSignal), Storage (Local/S3/R2/GCS/FTP/SFTP), Authentication (idle timeout, max login attempts), Security (password policy, 2FA, session concurrency), Branding (app name, support contact, logo/favicon)
+- [x] Email footer signature (rich-text via TipTap) and unsubscribe URL (CAN-SPAM/GDPR) as global email defaults
+- [x] Persistent amber banner on all admin pages when required settings (email driver, auth idle timeout, storage driver) are unset
+- [x] Full REST API at `/api/v1/admin/settings` (GET + PUT) for mobile / external clients
 
 *5.4 — App management (admin)*
 - [ ] Admin can edit app information (name, description)

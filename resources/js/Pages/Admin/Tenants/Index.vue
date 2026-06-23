@@ -2,6 +2,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
+const missingSettings = page.props.missingRequiredSettings ?? [];
 
 function logout() {
     router.post('/logout');
@@ -50,23 +51,24 @@ const healthBadge = {
                 <span class="font-semibold text-white">SSO Admin</span>
             </div>
             <nav class="flex-1 px-3 py-4 space-y-1">
-                <template v-for="item in ['Dashboard', 'Users', 'Apps', 'Tenants', 'Settings']" :key="item">
-                    <Link v-if="item === 'Tenants'"
-                          href="/admin/tenants"
-                          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition bg-violet-600/20 text-violet-300">
-                        {{ item }}
-                    </Link>
-                    <Link v-else-if="item === 'Dashboard'"
-                          href="/admin"
-                          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
-                        {{ item }}
-                    </Link>
-                    <a v-else
-                       href="#"
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
-                        {{ item }}
-                    </a>
-                </template>
+                <Link href="/admin"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
+                    Dashboard
+                </Link>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
+                    Users
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
+                    Apps
+                </a>
+                <Link href="/admin/tenants"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition bg-violet-600/20 text-violet-300">
+                    Tenants
+                </Link>
+                <Link href="/admin/settings"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
+                    Settings
+                </Link>
             </nav>
             <div class="p-4 border-t border-white/5">
                 <div class="flex items-center gap-3">
@@ -93,6 +95,19 @@ const healthBadge = {
 
         <!-- Main -->
         <div class="ml-60">
+            <!-- Missing settings banner -->
+            <div v-if="missingSettings.length > 0"
+                 class="bg-amber-500/10 border-b border-amber-500/20 px-8 py-3 flex items-center gap-3">
+                <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p class="text-sm text-amber-300">
+                    Required settings not configured:
+                    <span class="font-medium">{{ missingSettings.join(', ') }}</span>.
+                    <Link href="/admin/settings" class="underline hover:text-amber-200 ml-1">Go to Settings</Link>
+                </p>
+            </div>
+
             <!-- Header -->
             <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
                 <h2 class="text-lg font-semibold">Tenant Health</h2>

@@ -1284,6 +1284,520 @@
           ]
         }
       ]
+    },
+    {
+      "name": "System Settings (API)",
+      "description": "Manage system-wide settings over the REST API using Sanctum Bearer token auth.\n\nAll settings are stored as a flat key-value store — sending only the keys you want to change is safe; omitted keys are left untouched.\n\nThe response envelope is always `{ \"data\": { ...all settings... }, \"missing_required\": [...] }`. `missing_required` lists the human-readable labels of required settings that have no value set (`email_driver`, `authentication_idle_time`, `storage_driver`).",
+      "item": [
+        {
+          "name": "Get All Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "Returns all system settings and a list of required settings that are not yet configured."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/settings",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "admin", "settings"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"postmark_token\": \"pm-token-abc\",\n    \"postmark_from_address\": \"hello@example.com\",\n    \"postmark_from_name\": \"MyApp\",\n    \"email_footer_signature\": \"<p><strong>\\u00a9 2025 My SaaS.</strong></p>\",\n    \"email_footer_unsubscribe_url\": \"https://example.com/unsubscribe\",\n    \"authentication_idle_time\": \"30\",\n    \"max_login_attempts\": \"5\",\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKID\",\n    \"s3_bucket\": \"app-bucket\",\n    \"sms_driver\": null,\n    \"push_driver\": null,\n    \"two_factor_auth\": \"off\",\n    \"app_name\": \"My SaaS\",\n    \"support_email\": \"support@example.com\"\n  },\n  \"missing_required\": []\n}"
+            },
+            {
+              "name": "200 OK — missing required settings",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/settings",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "admin", "settings"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": null,\n    \"authentication_idle_time\": null,\n    \"storage_driver\": null\n  },\n  \"missing_required\": [\n    \"Default email service\",\n    \"Authentication idle timeout\",\n    \"Default storage provider\"\n  ]\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/settings",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "admin", "settings"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Email Settings (Postmark)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_driver\": \"postmark\",\n  \"postmark_token\": \"pm-token-abc\",\n  \"postmark_from_address\": \"hello@example.com\",\n  \"postmark_from_name\": \"MyApp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "Activate Postmark as the email driver. Only the supplied keys are updated."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"email_driver\": \"postmark\",\n  \"postmark_token\": \"pm-token-abc\",\n  \"postmark_from_address\": \"hello@example.com\",\n  \"postmark_from_name\": \"MyApp\"\n}" },
+                "url": { "raw": "{{base_url}}/api/v1/admin/settings", "host": ["{{base_url}}"], "path": ["api", "v1", "admin", "settings"] }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"postmark_token\": \"pm-token-abc\",\n    \"postmark_from_address\": \"hello@example.com\",\n    \"postmark_from_name\": \"MyApp\"\n  },\n  \"missing_required\": [\n    \"Authentication idle timeout\",\n    \"Default storage provider\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Email Settings (SMTP)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_driver\": \"smtp\",\n  \"smtp_host\": \"smtp.mailtrap.io\",\n  \"smtp_port\": 587,\n  \"smtp_username\": \"user\",\n  \"smtp_password\": \"pass\",\n  \"smtp_encryption\": \"tls\",\n  \"smtp_from_address\": \"no-reply@example.com\",\n  \"smtp_from_name\": \"MyApp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Email Settings (Mailgun)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_driver\": \"mailgun\",\n  \"mailgun_domain\": \"mg.example.com\",\n  \"mailgun_secret\": \"key-abc123\",\n  \"mailgun_endpoint\": \"api.mailgun.net\",\n  \"mailgun_from_address\": \"hello@example.com\",\n  \"mailgun_from_name\": \"MyApp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Email Settings (Amazon SES)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_driver\": \"ses\",\n  \"ses_key\": \"AKIAIOSFODNN7EXAMPLE\",\n  \"ses_secret\": \"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\",\n  \"ses_region\": \"ap-southeast-1\",\n  \"ses_from_address\": \"no-reply@example.com\",\n  \"ses_from_name\": \"MyApp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Email Footer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_footer_signature\": \"<p><strong>\\u00a9 2025 My SaaS. All rights reserved.</strong><br>123 Example St, City, Country</p>\",\n  \"email_footer_unsubscribe_url\": \"https://example.com/unsubscribe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "Set the global email footer signature (HTML, max 2000 chars) and CAN-SPAM/GDPR unsubscribe URL. Both fields are nullable — send null to clear."
+          },
+          "response": [
+            {
+              "name": "422 — signature too long",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"email_footer_signature\": \"(2001 character string)\"\n}" },
+                "url": { "raw": "{{base_url}}/api/v1/admin/settings", "host": ["{{base_url}}"], "path": ["api", "v1", "admin", "settings"] }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The email footer signature field must not be greater than 2000 characters.\",\n  \"errors\": {\n    \"email_footer_signature\": [\"The email footer signature field must not be greater than 2000 characters.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update SMS Settings (Twilio)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sms_driver\": \"twilio\",\n  \"twilio_sid\": \"ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"twilio_token\": \"auth-token-abc\",\n  \"twilio_from\": \"+15550001234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update SMS Settings (Vonage)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sms_driver\": \"vonage\",\n  \"vonage_key\": \"abc123\",\n  \"vonage_secret\": \"secret456\",\n  \"vonage_from\": \"MyApp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update SMS Settings (Amazon SNS)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sms_driver\": \"sns\",\n  \"sns_sms_key\": \"AKIAIOSFODNN7EXAMPLE\",\n  \"sns_sms_secret\": \"wJalrXUtnFEMI/K7MDENG\",\n  \"sns_sms_region\": \"us-east-1\",\n  \"sns_sms_sender_id\": \"MyApp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "SNS Sender ID must be 11 characters or fewer."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Push Settings (FCM)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"push_driver\": \"fcm\",\n  \"fcm_project_id\": \"my-firebase-project\",\n  \"fcm_server_key\": \"AAAAxxxxx:APA91bHPRgkFLJu\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Push Settings (APNs)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"push_driver\": \"apns\",\n  \"apns_key_id\": \"ABC1234DEF\",\n  \"apns_team_id\": \"DEF5678GHI\",\n  \"apns_private_key\": \"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\",\n  \"apns_bundle_id\": \"com.example.myapp\",\n  \"apns_environment\": \"production\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "`apns_environment` must be `sandbox` or `production`."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Push Settings (OneSignal)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"push_driver\": \"onesignal\",\n  \"onesignal_app_id\": \"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\",\n  \"onesignal_rest_api_key\": \"os-rest-key-abc123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Storage Settings (Amazon S3)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storage_driver\": \"s3\",\n  \"s3_key\": \"AKIAIOSFODNN7EXAMPLE\",\n  \"s3_secret\": \"wJalrXUtnFEMI/K7MDENG\",\n  \"s3_region\": \"ap-southeast-1\",\n  \"s3_bucket\": \"app-bucket\",\n  \"s3_url\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Storage Settings (Cloudflare R2)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storage_driver\": \"r2\",\n  \"r2_account_id\": \"abc123def456\",\n  \"r2_access_key\": \"r2-key\",\n  \"r2_secret\": \"r2-secret\",\n  \"r2_bucket\": \"my-r2-bucket\",\n  \"r2_url\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Storage Settings (Google Cloud Storage)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storage_driver\": \"gcs\",\n  \"gcs_project_id\": \"my-gcp-project\",\n  \"gcs_key_json\": \"{\\\"type\\\": \\\"service_account\\\", \\\"project_id\\\": \\\"my-project\\\"}\",\n  \"gcs_bucket\": \"my-gcs-bucket\",\n  \"gcs_url\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "`gcs_key_json` accepts the raw JSON string of a GCP service account key file."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Storage Settings (Local / FTP / SFTP)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storage_driver\": \"local\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "Set `storage_driver` to `local` for server filesystem storage. Use `ftp` or `sftp` for remote filesystem storage — add the corresponding `ftp_*` or `sftp_*` fields."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Authentication Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authentication_idle_time\": 30,\n  \"max_login_attempts\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "`authentication_idle_time` is in minutes (1–1440). `max_login_attempts` is 1–100."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Security Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password_min_length\": 12,\n  \"password_require_uppercase\": true,\n  \"password_require_digit\": true,\n  \"password_require_symbol\": false,\n  \"password_expiry_days\": 90,\n  \"two_factor_auth\": \"optional\",\n  \"session_concurrency_limit\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "`two_factor_auth` must be `off`, `optional`, or `required`. `password_expiry_days` 0 means never. `session_concurrency_limit` 0 means unlimited."
+          },
+          "response": [
+            {
+              "name": "422 — invalid 2FA value",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"two_factor_auth\": \"mandatory\"\n}" },
+                "url": { "raw": "{{base_url}}/api/v1/admin/settings", "host": ["{{base_url}}"], "path": ["api", "v1", "admin", "settings"] }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The selected two factor auth is invalid.\",\n  \"errors\": {\n    \"two_factor_auth\": [\"The selected two factor auth is invalid.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Branding Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"app_name\": \"My SaaS\",\n  \"support_email\": \"support@example.com\",\n  \"support_url\": \"https://help.example.com\",\n  \"logo_url\": \"https://cdn.example.com/logo.png\",\n  \"favicon_url\": \"https://cdn.example.com/favicon.ico\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "422 — Invalid Driver",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_driver\": \"sendgrid\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "settings"]
+            },
+            "description": "Example of a validation failure — `sendgrid` is not an accepted email driver."
+          },
+          "response": [
+            {
+              "name": "422 Unprocessable",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"email_driver\": \"sendgrid\"\n}" },
+                "url": { "raw": "{{base_url}}/api/v1/admin/settings", "host": ["{{base_url}}"], "path": ["api", "v1", "admin", "settings"] }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The selected email driver is invalid.\",\n  \"errors\": {\n    \"email_driver\": [\"The selected email driver is invalid.\"]\n  }\n}"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

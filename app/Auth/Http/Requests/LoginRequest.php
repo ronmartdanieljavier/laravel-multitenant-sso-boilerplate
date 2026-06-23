@@ -2,7 +2,7 @@
 
 namespace App\Auth\Http\Requests;
 
-use App\Auth\Data\Core\LoginCredentialsCoreData;
+use App\Auth\Data\LoginCredentialsData;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LoginRequest extends FormRequest
@@ -21,9 +21,9 @@ class LoginRequest extends FormRequest
         ];
     }
 
-    public function toData(): LoginCredentialsCoreData
+    public function toData(): LoginCredentialsData
     {
-        return new LoginCredentialsCoreData(
+        return new LoginCredentialsData(
             email: $this->string('email')->toString(),
             password: $this->string('password')->toString(),
         );

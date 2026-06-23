@@ -3,9 +3,9 @@
 namespace App\Auth\Http\Controllers;
 
 use App\Auth\Http\Requests\WebLoginRequest;
+use App\Auth\Services\AppService;
 use App\Http\Controllers\Controller;
 use App\Models\Central\User;
-use App\Models\Central\UserApp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +14,10 @@ use Inertia\Response;
 
 class WebLoginController extends Controller
 {
+    public function __construct(
+        private readonly AppService $appService,
+    ) {}
+
     /**
      * Show the login form.
      */
@@ -62,21 +66,23 @@ class WebLoginController extends Controller
      */
     private function redirectBasedOnApps(User $user): RedirectResponse
     {
-        $apps = $user->userApps()->with('app')->get();
+        $apps = $this->appService->loadApps($user->id);
 
-        if ($apps->count() === 1) {
-            return redirect($this->resolveAppUrl($apps->first()));
+        if ($apps->toCollection()->count() === 1) {
+            $slug = $apps->toCollection()->first()->slug;
+
+            return redirect($this->resolveRouteForSlug($slug));
         }
 
         return redirect()->route('apps');
     }
 
     /**
-     * Resolve the URL for a given user app.
+     * Resolve the route for a given app slug.
      */
-    private function resolveAppUrl(UserApp $userApp): string
+    private function resolveRouteForSlug(string $slug): string
     {
-        return match ($userApp->app->slug) {
+        return match ($slug) {
             'admin' => route('admin'),
             'tenant' => route('tenant'),
             default => route('admin'),

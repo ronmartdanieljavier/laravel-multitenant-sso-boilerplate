@@ -3,6 +3,7 @@
 namespace App\Auth\Http\Controllers;
 
 use App\Auth\Http\Requests\SelectAppRequest;
+use App\Auth\Services\AppService;
 use App\Http\Controllers\Controller;
 use App\Models\Central\User;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +13,10 @@ use Inertia\Response;
 
 class WebAppPickerController extends Controller
 {
+    public function __construct(
+        private readonly AppService $appService,
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -19,19 +24,21 @@ class WebAppPickerController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $apps = $user->userApps()->with('app')->get()->map(fn ($ua) => [
-            'slug' => $ua->app->slug,
-            'name' => $ua->app->name,
-            'description' => $ua->app->description,
-            'role' => $ua->role->value,
-        ])->values();
+        $apps = $this->appService->loadApps($user->id);
 
-        if ($apps->isEmpty()) {
+        if ($apps->toCollection()->isEmpty()) {
             return redirect()->route('login');
         }
 
+        $appsForView = $apps->toCollection()->map(fn ($app) => [
+            'slug' => $app->slug,
+            'name' => $app->name,
+            'description' => $app->description,
+            'role' => $app->role->value,
+        ])->values();
+
         return Inertia::render('Auth/AppPicker', [
-            'apps' => $apps,
+            'apps' => $appsForView,
             'user' => ['name' => $user->name, 'email' => $user->email],
         ]);
     }
@@ -45,9 +52,9 @@ class WebAppPickerController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
-        $hasAccess = $user->userApps()->with('app')
-            ->get()
-            ->contains(fn ($ua) => $ua->app->slug === $slug);
+        $apps = $this->appService->loadApps($user->id);
+
+        $hasAccess = $apps->toCollection()->contains(fn ($app) => $app->slug === $slug);
 
         if (! $hasAccess) {
             return back()->withErrors(['slug' => 'You do not have access to this app.']);

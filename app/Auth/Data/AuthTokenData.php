@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Auth\Data\Core;
+namespace App\Auth\Data;
 
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\DataCollection;
 
-class AuthTokenCoreData extends Data
+class AuthTokenData extends Data
 {
     public function __construct(
         public readonly string $token,
         public readonly string $tokenType,
-        public readonly UserCoreData $user,
-        /** @var DataCollection<int, AppAccessCoreData> */
-        #[DataCollectionOf(AppAccessCoreData::class)]
+        public readonly UserData $user,
+        /** @var DataCollection<int, AppAccessData> */
+        #[DataCollectionOf(AppAccessData::class)]
         public readonly DataCollection $apps,
     ) {}
 }

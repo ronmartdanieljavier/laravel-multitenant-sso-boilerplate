@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Auth\Data\Core;
+namespace App\Auth\Data;
 
 use App\Auth\Enums\Role;
 use Spatie\LaravelData\Data;
 
-class TenantAccessCoreData extends Data
+class TenantAccessData extends Data
 {
     public function __construct(
         public readonly int $tenantId,

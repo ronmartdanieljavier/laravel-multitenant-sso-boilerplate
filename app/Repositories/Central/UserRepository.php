@@ -74,4 +74,36 @@ class UserRepository
         $user = $this->model->findOrFail($id);
         $user->update(['password' => Hash::make($password)]);
     }
+
+    /**
+     * Find a user by email address.
+     */
+    public function findByEmail(string $email): ?UserRepositoryData
+    {
+        $user = $this->model->where('email', $email)->first();
+
+        return $user ? UserRepositoryData::from($user) : null;
+    }
+
+    /**
+     * Verify a plain-text password against the stored hash for the given user.
+     */
+    public function verifyPassword(int $id, string $password): bool
+    {
+        $user = $this->model->findOrFail($id);
+
+        return Hash::check($password, $user->password);
+    }
+
+    /**
+     * Create a Sanctum token for the given user and return the plain-text token.
+     *
+     * @param  array<int, string>  $abilities
+     */
+    public function createSanctumToken(int $id, string $name, array $abilities): string
+    {
+        $user = $this->model->findOrFail($id);
+
+        return $user->createToken($name, $abilities)->plainTextToken;
+    }
 }

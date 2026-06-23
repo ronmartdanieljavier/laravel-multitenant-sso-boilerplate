@@ -9,6 +9,26 @@
 
 ---
 
+## [2.5.0] — 2026-06-23
+
+### Changed
+
+- **`App\Auth\` module — refactored to match Profile module pattern** — `Actions/` and `Data/Core/` removed; replaced with `Services/` and a flat `Data/` directory, consistent with how `App\Profile\` is structured. All model access now lives exclusively in repositories:
+  - `App\Auth\Actions\LoginAction` → `App\Auth\Services\AuthService` — `login(LoginCredentialsData): AuthTokenData`; delegates user lookup, password verification, and token creation to `UserRepository`; delegates app loading to `AppService`; no Eloquent imports remain
+  - `App\Auth\Actions\LoadUserAppsAction` → `App\Auth\Services\AppService` — `loadApps(int $userId): DataCollection`; accepts a user ID instead of a `User` model; delegates all queries to `UserAppRepository`
+  - `App\Repositories\Central\UserAppRepository` (new) — `getAppsForUser(int $userId)` and `getTenantsByAppForUser(int $userId)`; resolves the `User` model internally; encapsulates all `UserApp` and `UserAppTenant` queries
+  - `App\Repositories\Central\UserRepository` — three new methods added: `findByEmail(string $email): ?UserRepositoryData`, `verifyPassword(int $id, string $password): bool`, `createSanctumToken(int $id, string $name, array $abilities): string`
+  - `App\Auth\Data\Core\*CoreData` → `App\Auth\Data\*Data` — five DTO classes renamed and moved to the flat `Data/` directory: `AppAccessData` (gains `?description` field), `AuthTokenData`, `LoginCredentialsData`, `TenantAccessData`, `UserData`
+  - Controllers (`LoginController`, `AppPickerController`, `WebLoginController`, `WebAppPickerController`) — updated to inject services; pass `$user->id` to `AppService::loadApps()` rather than the model instance
+
+### Tests
+
+- **`App\Auth\Tests\AuthServiceTest`** (new, 5 tests) — `login()` returns correct `AuthTokenData`; token abilities include `app:{slug}`; app and tenant access is included; throws `AuthenticationException` for wrong password and unknown email
+- **`App\Auth\Tests\AppServiceTest`** (new, 5 tests) — `loadApps()` returns empty collection, correct app data, tenant access, user isolation, and multiple apps
+- **20 Auth tests passing** — 10 existing integration tests (`LoginTest`, `AppPickerTest`) + 10 new service tests
+
+---
+
 ## [2.4.0] — 2026-06-23
 
 ### Changed

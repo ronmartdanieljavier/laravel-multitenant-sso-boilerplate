@@ -4,15 +4,19 @@ namespace App\Admin\Services;
 
 use App\Admin\Data\TenantHealthData;
 use App\Admin\Data\TenantHealthSummaryData;
-use App\Models\Central\Report;
 use App\Models\Central\Tenant;
-use App\Reports\Enums\ReportStatus;
+use App\Repositories\Central\ReportRepository;
+use App\Repositories\Central\TenantRepository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class TenantHealthService
 {
+    public function __construct(
+        protected TenantRepository $tenantRepository,
+        protected ReportRepository $reportRepository,
+    ) {}
+
     /**
      * Get a list of tenants with their health data.
      *
@@ -20,30 +24,12 @@ class TenantHealthService
      */
     public function getTenants(): Collection
     {
-        $tenants = Tenant::with('migrationVersions')->get();
+        $tenants = $this->tenantRepository->allWithMigrationVersions();
 
-        $pendingByTenant = Report::query()
-            ->where('status', ReportStatus::Pending)
-            ->selectRaw('tenant_id, COUNT(*) as count')
-            ->groupBy('tenant_id')
-            ->pluck('count', 'tenant_id');
-
-        $failedByTenant = Report::query()
-            ->where('status', ReportStatus::Failed)
-            ->selectRaw('tenant_id, COUNT(*) as count')
-            ->groupBy('tenant_id')
-            ->pluck('count', 'tenant_id');
-
-        $lastReportByTenant = Report::query()
-            ->where('status', ReportStatus::Success)
-            ->selectRaw('tenant_id, MAX(completed_at) as last_report_at')
-            ->groupBy('tenant_id')
-            ->pluck('last_report_at', 'tenant_id');
-
-        $userCountByTenant = DB::table('user_app_tenants')
-            ->selectRaw('tenant_id, COUNT(DISTINCT user_id) as count')
-            ->groupBy('tenant_id')
-            ->pluck('count', 'tenant_id');
+        $pendingByTenant = $this->reportRepository->pendingCountByTenant();
+        $failedByTenant = $this->reportRepository->failedCountByTenant();
+        $lastReportByTenant = $this->reportRepository->lastSuccessAtByTenant();
+        $userCountByTenant = $this->tenantRepository->userCountByTenant();
 
         return $tenants->map(function (Tenant $tenant) use (
             $pendingByTenant,

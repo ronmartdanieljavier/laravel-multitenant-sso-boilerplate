@@ -9,6 +9,21 @@
 
 ---
 
+## [2.4.0] — 2026-06-23
+
+### Changed
+
+- **`TenantHealthService` — model access extracted to repositories** — direct `Tenant`, `Report`, and `DB::table()` calls moved out of the service into two new repository classes under `App\Repositories\Central\`, following the pattern established by `UserRepository` and `ProfileService`:
+  - `App\Repositories\Central\TenantRepository` — `allWithMigrationVersions()` (eager-loads `migrationVersions` relation) and `userCountByTenant()` (aggregates `user_app_tenants` pivot via `DB::table`)
+  - `App\Repositories\Central\ReportRepository` — `pendingCountByTenant()`, `failedCountByTenant()`, `lastSuccessAtByTenant()` (each returns a `tenant_id → value` pluck map)
+  - `TenantHealthService` — constructor now receives `TenantRepository` and `ReportRepository` via injection; `getTenants()`, `getSummary()`, and `computeHealthStatus()` are unchanged in behaviour; no model or `DB` imports remain
+
+### Tests
+
+- **195 PHPUnit tests** — unchanged count; all 14 `TenantHealthServiceTest` tests pass without modification (service resolved via `app()` so the container wires the new repositories automatically)
+
+---
+
 ## [2.3.0] — 2026-06-22
 
 ### Changed

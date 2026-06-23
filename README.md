@@ -108,9 +108,9 @@ laravel-multitenant-sso-boilerplate/
 │   │   ├── Routes/
 │   │   │   └── web_admin.php                   # Admin web routes
 │   │   ├── Services/
-│   │   │   └── TenantHealthService.php         # getTenants(), getSummary(), computeHealthStatus()
+│   │   │   └── TenantHealthService.php         # getTenants(), getSummary(), computeHealthStatus() — no direct model access
 │   │   └── Tests/
-│   │       ├── TenantHealthServiceTest.php     # 12 service-layer unit tests
+│   │       ├── TenantHealthServiceTest.php     # 14 service-layer unit tests
 │   │       └── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
 │   │
 │   ├── Auth/
@@ -237,6 +237,12 @@ laravel-multitenant-sso-boilerplate/
 │   │       ├── ProfileServiceTest.php      # 5 service-layer unit tests
 │   │       └── ProfileWebTest.php          # 16 web-surface tests (session)
 │   │
+│   ├── Repositories/
+│   │   └── Central/
+│   │       ├── ReportRepository.php        # pendingCountByTenant(), failedCountByTenant(), lastSuccessAtByTenant()
+│   │       ├── TenantRepository.php        # allWithMigrationVersions(), userCountByTenant()
+│   │       └── UserRepository.php          # find(), list(), updateName(), updatePicture(), updatePassword()
+│   │
 │   └── Tenant/
 │       └── Routes/
 │           └── api_tenant.php              # Tenant API routes
@@ -351,7 +357,7 @@ What's built:
 - **Batch homogeneity enforced** — all reports in a batch must share the same `format` and `delivery`; validated at the API boundary; ZIP archive path persisted on the first report for retrieval via the download endpoint
 - **Tenant migration version tracking** — after each `tenant:migrate` run, the applied migrations are synced from the tenant's `migrations` table to the central `tenant_migration_versions` table; `tenant:migrate:status` command shows applied/total count, up-to-date status, and latest migration for each tenant
 - **Per-tenant scheduled report subscriptions** — tenants subscribe to recurring reports (`daily` / `weekly` / `monthly`) with `email`, `s3`, or `email_and_s3` delivery; `php artisan reports:dispatch-subscriptions` runs every minute via the scheduler, iterates active tenants, finds due subscriptions, creates central `Report` records, and dispatches `GenerateReportJob`; `ScheduledReportMail` attaches the generated file; `ReportDeliveryService` uploads to S3; full CRUD API at `/api/reports/subscriptions`
-- **Tenant health dashboard** — admin page at `/admin/tenants` aggregates per-tenant health metrics (migration compliance, user count, report failures, read-replica status) and computes a `healthy` / `warning` / `critical` status per tenant; summary bar shows totals across all tenants
+- **Tenant health dashboard** — admin page at `/admin/tenants` aggregates per-tenant health metrics (migration compliance, user count, report failures, read-replica status) and computes a `healthy` / `warning` / `critical` status per tenant; summary bar shows totals across all tenants; data access extracted into `TenantRepository` and `ReportRepository` under `App\Repositories\Central\`
 - **Web login flow with app picker** — after successful login, users with one app are redirected directly; users with multiple apps see an app picker page (`/apps`); login errors display as a prominent red banner
 - **Authentication flow (Phase 5.1)** — authenticated users visiting `/login` are redirected instead of seeing the form; web logout (`POST /logout`) invalidates the session and is available on every page; configurable idle session timeout auto-logs out inactive browser sessions based on the `authentication_idle_time` system setting (default 30 min)
 - **User self-service profile (Phase 5.2)** — authenticated users can update their display name, upload/replace their profile picture, and change their password at `/profile`; profile picture stored on the `public` disk and exposed as `profile_picture_url` on the `auth.user` Inertia shared prop; Admin and Tenant pages display the avatar in the sidebar/nav with a link to the profile page

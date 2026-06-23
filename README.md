@@ -114,15 +114,12 @@ laravel-multitenant-sso-boilerplate/
 │   │       └── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
 │   │
 │   ├── Auth/
-│   │   ├── Actions/
-│   │   │   ├── LoginAction.php
-│   │   │   └── LoadUserAppsAction.php
-│   │   ├── Data/Core/                          # spatie/laravel-data DTOs
-│   │   │   ├── AppAccessCoreData.php
-│   │   │   ├── AuthTokenCoreData.php
-│   │   │   ├── LoginCredentialsCoreData.php
-│   │   │   ├── TenantAccessCoreData.php
-│   │   │   └── UserCoreData.php
+│   │   ├── Data/                               # spatie/laravel-data DTOs
+│   │   │   ├── AppAccessData.php
+│   │   │   ├── AuthTokenData.php
+│   │   │   ├── LoginCredentialsData.php
+│   │   │   ├── TenantAccessData.php
+│   │   │   └── UserData.php
 │   │   ├── Enums/
 │   │   │   └── Role.php
 │   │   ├── Http/Controllers/
@@ -131,14 +128,20 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── WebAppPickerController.php      # Web — GET /apps, POST /apps/select
 │   │   │   └── WebLoginController.php          # Web — GET /login, POST /login
 │   │   ├── Http/Requests/
+│   │   │   ├── LoginRequest.php                # email (required, email), password (required, string)
 │   │   │   ├── SelectAppRequest.php            # slug (required, string)
 │   │   │   └── WebLoginRequest.php             # email (required, email), password (required)
 │   │   ├── Routes/
 │   │   │   ├── api_login.php                   # SSO API routes
 │   │   │   └── web_login.php                   # Web login + app picker routes
+│   │   ├── Services/
+│   │   │   ├── AppService.php                  # loadApps() — builds AppAccessData via UserAppRepository
+│   │   │   └── AuthService.php                 # login() — authenticates via UserRepository, delegates to AppService
 │   │   └── Tests/
-│   │       ├── AppPickerTest.php
-│   │       └── LoginTest.php
+│   │       ├── AppPickerTest.php               # API — GET /api/v1/apps
+│   │       ├── AppServiceTest.php              # 5 AppService unit tests
+│   │       ├── AuthServiceTest.php             # 5 AuthService unit tests
+│   │       └── LoginTest.php                   # API — POST /api/v1/login, /logout
 │   │
 │   ├── Http/
 │   │   ├── Controllers/Controller.php
@@ -241,7 +244,8 @@ laravel-multitenant-sso-boilerplate/
 │   │   └── Central/
 │   │       ├── ReportRepository.php        # pendingCountByTenant(), failedCountByTenant(), lastSuccessAtByTenant()
 │   │       ├── TenantRepository.php        # allWithMigrationVersions(), userCountByTenant()
-│   │       └── UserRepository.php          # find(), list(), updateName(), updatePicture(), updatePassword()
+│   │       ├── UserAppRepository.php       # getAppsForUser(), getTenantsByAppForUser()
+│   │       └── UserRepository.php          # find(), list(), updateName(), updatePicture(), updatePassword(), findByEmail(), verifyPassword(), createSanctumToken()
 │   │
 │   └── Tenant/
 │       └── Routes/
@@ -343,7 +347,7 @@ What's built:
 - **Laravel 13** — framework at repo root
 - **Laravel Boost 2.4** — starter kit scaffolding
 - **Laravel Sanctum 4.0** — API token authentication
-- **spatie/laravel-data 4.23** — DTOs under `App\Auth\Data\Core\` using `*CoreData` suffix
+- **spatie/laravel-data 4.23** — DTOs under `App\Auth\Data\` and `App\Profile\Data\`
 - **SSO backend** — login, logout, and app-picker API under `App\Auth\`
 - **Central models** — `App`, `Tenant`, `User`, `UserApp`, `UserAppTenant`, `SystemSetting` under `App\Models\Central\`
 - **Central DB schema** — `users`, `apps`, `tenants`, `user_apps`, `user_app_tenants`, `system_settings` in `database/migrations/central/`
@@ -723,7 +727,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 
 **Phase 2 — SSO backend** *(done)*
 - [x] Central DB schema — users, apps, tenants, user_apps, user_app_tenants, system_settings
-- [x] `App\Auth\` module — models, DTOs, actions, controllers
+- [x] `App\Auth\` module — models, DTOs, services, controllers
 - [x] SSO API — `POST /api/login`, `POST /api/logout`, `GET /api/apps`
 - [x] Sanctum token with per-app abilities embedded as token scopes
 - [x] Modular routing — each module owns `app/*/Routes/api_*.php`

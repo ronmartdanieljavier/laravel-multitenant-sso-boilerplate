@@ -2578,6 +2578,435 @@
       ]
     },
     {
+      "name": "Tenant Management (API)",
+      "item": [
+        {
+          "name": "List Tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants"
+              ]
+            },
+            "description": "Returns all tenants with health metrics and database connection info."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Demo Tenant\",\n      \"slug\": \"demo\",\n      \"is_active\": true,\n      \"db_host\": \"127.0.0.1\",\n      \"db_port\": 5432,\n      \"db_name\": \"tenant_demo\",\n      \"db_username\": \"laravel\",\n      \"is_password_set\": true,\n      \"has_read_replica\": false,\n      \"migration_count\": 5,\n      \"user_count\": 2,\n      \"pending_reports\": 0,\n      \"failed_reports\": 0,\n      \"health_status\": \"healthy\"\n    }\n  ],\n  \"summary\": {\n    \"total\": 1,\n    \"healthy\": 1,\n    \"warning\": 0,\n    \"critical\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var r = pm.response.json();",
+                  "if (r.data && r.data.id) pm.environment.set('tenant_id', r.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp\",\n  \"slug\": \"acme-corp\",\n  \"db_host\": \"127.0.0.1\",\n  \"db_port\": 5432,\n  \"db_name\": \"tenant_acme\",\n  \"db_username\": \"laravel\",\n  \"db_password\": \"secret\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants"
+              ]
+            },
+            "description": "Creates a new tenant and automatically runs its database migrations. Saves returned id to {{tenant_id}}."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Acme Corp\",\n    \"slug\": \"acme-corp\",\n    \"is_active\": true,\n    \"db_host\": \"127.0.0.1\",\n    \"db_port\": 5432,\n    \"db_name\": \"tenant_acme\",\n    \"db_username\": \"laravel\",\n    \"is_password_set\": true,\n    \"has_read_replica\": false,\n    \"migration_count\": 0,\n    \"user_count\": 0,\n    \"pending_reports\": 0,\n    \"failed_reports\": 0,\n    \"health_status\": \"warning\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp Updated\",\n  \"slug\": \"acme-corp\",\n  \"db_host\": \"10.0.0.1\",\n  \"db_port\": 5432,\n  \"db_name\": \"tenant_acme\",\n  \"db_username\": \"laravel\",\n  \"db_password\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}"
+              ]
+            },
+            "description": "Updates tenant details and database connection settings. Omit db_password (or send null) to keep the existing password."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    "{{tenant_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Acme Corp Updated\",\n    \"slug\": \"acme-corp\",\n    \"is_active\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Tenant Active",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "active"
+              ]
+            },
+            "description": "Activates or deactivates a tenant. When deactivating (is_active: false), all Sanctum tokens for users assigned to this tenant are immediately revoked."
+          },
+          "response": [
+            {
+              "name": "200 OK \u2014 Deactivated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/active",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    "{{tenant_id}}",
+                    "active"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Tenant deactivated and user tokens revoked.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Run Migrations (Single Tenant)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/migrate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "migrate"
+              ]
+            },
+            "description": "Runs pending database migrations against a single tenant's database."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/migrate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    "{{tenant_id}}",
+                    "migrate"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Migrations run for Acme Corp.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Run Migrations (All Tenants)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/migrate-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "migrate-all"
+              ]
+            },
+            "description": "Runs pending database migrations across all tenant databases."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants/migrate-all",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    "migrate-all"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Migrations run for all tenants.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}"
+              ]
+            },
+            "description": "Deletes a tenant. Revokes all user tokens, drops the tenant database (best-effort), and removes all central records (user_app_tenants, tenant_migration_versions cascade automatically)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    "{{tenant_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Tenant deleted.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "System Settings (API)",
       "description": "Manage system-wide settings over the REST API using Sanctum Bearer token auth.\n\nAll settings are stored as a flat key-value store \u2014 sending only the keys you want to change is safe; omitted keys are left untouched.\n\nThe response envelope is always `{ \"data\": { ...all settings... }, \"missing_required\": [...] }`. `missing_required` lists the human-readable labels of required settings that have no value set (`email_driver`, `authentication_idle_time`, `storage_driver`).",
       "item": [

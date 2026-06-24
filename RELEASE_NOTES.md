@@ -2,6 +2,27 @@
 
 ---
 
+## [2.10.0] — 2026-06-24
+
+### Added
+
+- **Tenant management — Phase 5.6** — full admin CRUD for tenants at `/admin/tenants` and `GET|POST|PUT|PATCH|POST|DELETE /api/v1/admin/tenants/*`:
+  - **Create tenant** — admin fills name, slug, and optional DB credentials; on create, `php artisan tenant:migrate` runs automatically to provision the tenant database
+  - **Edit tenant** — name, slug, all DB connection fields (host, port, name, username, password), and read replica settings are editable; leaving password blank preserves the existing encrypted value
+  - **Toggle `is_active`** — deactivating a tenant immediately deletes all Sanctum tokens for every user assigned to that tenant (force-logout); activating restores access without token side effects
+  - **Run migrations** — per-tenant "Migrate" button and global "Run All Migrations" button trigger `tenant:migrate` synchronously and redirect with a success flash
+  - **Delete tenant** — drops the tenant database (best-effort; connection failures do not block deletion), revokes user tokens, and removes all central records; `user_app_tenants` and `tenant_migration_versions` cascade automatically via FK constraints
+  - **`TenantData` DTO** — service-layer DTO combining DB credential fields (`dbHost`, `dbPort`, `dbName`, `dbUsername`, `isPasswordSet`, `hasReadReplica`) with health metrics (`healthStatus`, `userCount`, `migrationCount`, `pendingReports`, `failedReports`) — the `/admin/tenants` page is now the combined management + health dashboard
+  - **`TenantManagementService`** — `list()`, `create()`, `update()`, `setActive()`, `delete()`, `runMigrations()`; `setActive(false)` and `delete()` both call `UserRepository::revokeTokensForUsers()` before mutating state
+  - **`TenantRepository`** — extended with `find()`, `create()`, `update()`, `setActive()`, `delete()`, `dropDatabase()`, `getUserIdsForTenant()`
+  - **`UserRepository::revokeTokensForUsers()`** — bulk Sanctum token revocation for a collection of user IDs
+  - **Validation** — `CreateTenantRequest` and `UpdateTenantRequest` enforce slug format (`/^[a-z0-9-]+$/`) and uniqueness (update scoped to self via `Rule::unique()->ignore()`)
+  - **Vue page** — `Admin/Tenants/Index.vue` rewritten; health summary cards retained; table gains Edit, Migrate, Activate/Deactivate, and Delete action buttons per row; Add Tenant and Run All Migrations added to the header; Edit/Create modals include collapsible read replica section
+  - **28 new PHPUnit tests** across `TenantManagementWebTest`, `TenantManagementApiTest`, and `TenantManagementServiceTest`
+  - **Postman** — "Tenant Management (API)" folder added with 7 documented requests; "Create Tenant" saves `{{tenant_id}}` automatically
+
+---
+
 ## [2.9.0] — 2026-06-24
 
 ### Added

@@ -13,6 +13,9 @@ class SystemSettingsApiController extends Controller
         private readonly SystemSettingsService $systemSettingsService,
     ) {}
 
+    /**
+     * Get the system settings.
+     */
     public function index(): JsonResponse
     {
         return response()->json([
@@ -21,6 +24,9 @@ class SystemSettingsApiController extends Controller
         ]);
     }
 
+    /**
+     * Update the system settings.
+     */
     public function update(UpdateSystemSettingsRequest $request): JsonResponse
     {
         $this->systemSettingsService->updateSettings($request->validated());

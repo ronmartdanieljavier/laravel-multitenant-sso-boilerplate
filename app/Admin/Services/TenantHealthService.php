@@ -65,7 +65,11 @@ class TenantHealthService
         });
     }
 
-    /** @param Collection<int, TenantHealthData> $tenants */
+    /**
+     * Get a summary of tenant health data.
+     *
+     * @param  Collection<int, TenantHealthData>  $tenants
+     */
     public function getSummary(Collection $tenants): TenantHealthSummaryData
     {
         return new TenantHealthSummaryData(
@@ -76,6 +80,9 @@ class TenantHealthService
         );
     }
 
+    /**
+     * Compute the health status of a tenant based on various metrics.
+     */
     public function computeHealthStatus(
         bool $isActive,
         int $failedReports,

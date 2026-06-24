@@ -3,8 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Admin\Services\SystemSettingsService;
-use App\Models\Central\SystemSetting;
 use App\Models\Central\User;
+use App\Repositories\Central\SystemSettingRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
@@ -68,10 +68,10 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
             ],
             'idleTimeoutMinutes' => fn () => $request->user()
-                ? (int) SystemSetting::get('authentication_idle_time', 30)
+                ? (int) app(SystemSettingRepository::class)->get('authentication_idle_time', 30)
                 : null,
             'missingRequiredSettings' => fn () => $request->user()
-                ? app(SystemSettingsService::class)->getMissingRequiredSettings()
+                ? app(SystemSettingsService::class)->getMissingRequiredSettings()->labels
                 : [],
             'tenant' => fn () => $request->attributes->get('current_tenant'),
             'app' => fn () => $request->attributes->get('current_app'),

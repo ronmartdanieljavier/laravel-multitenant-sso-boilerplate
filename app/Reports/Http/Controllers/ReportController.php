@@ -12,9 +12,9 @@ use App\Reports\Http\Requests\StoreBatchReportRequest;
 use App\Reports\Http\Requests\StoreReportRequest;
 use App\Reports\Jobs\GenerateReportBatchJob;
 use App\Reports\Jobs\GenerateReportJob;
+use App\Repositories\Central\ReportRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -24,19 +24,20 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
-    {
-        $reports = Report::query()
-            ->where('user_id', $request->user()->id)
-            ->latest()
-            ->paginate(20);
+    public function __construct(
+        private ReportRepository $reportRepository,
+    ) {}
 
-        return ReportResource::collection($reports);
+    public function index(Request $request): JsonResponse
+    {
+        return response()->json(
+            $this->reportRepository->listForUser($request->user()->id)
+        );
     }
 
     public function store(StoreReportRequest $request): JsonResponse
     {
-        $report = Report::create([
+        $dto = $this->reportRepository->create([
             'user_id' => $request->user()->id,
             'type' => $request->input('type'),
             'format' => ReportFormat::from($request->input('format')),
@@ -45,9 +46,9 @@ class ReportController extends Controller
             'parameters' => $request->input('parameters'),
         ]);
 
-        GenerateReportJob::dispatch($report);
+        GenerateReportJob::dispatch($dto->id);
 
-        return (new ReportResource($report))->response()->setStatusCode(Response::HTTP_CREATED);
+        return response()->json(['data' => $dto], Response::HTTP_CREATED);
     }
 
     public function batch(StoreBatchReportRequest $request, GenerateReportBatchJob $batchJob): JsonResponse
@@ -57,7 +58,7 @@ class ReportController extends Controller
 
         [$reports, $batch] = DB::transaction(function () use ($request, $user, $batchId, $batchJob) {
             $reports = collect($request->input('reports'))->map(
-                fn (array $item) => Report::create([
+                fn (array $item) => $this->reportRepository->create([
                     'user_id' => $user->id,
                     'type' => $item['type'],
                     'format' => ReportFormat::from($item['format']),

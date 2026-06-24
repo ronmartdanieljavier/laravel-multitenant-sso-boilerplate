@@ -2066,6 +2066,303 @@
       ]
     },
     {
+      "name": "User Management (API)",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ]
+            },
+            "description": "Returns all users with their app and tenant permissions."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Alice\",\n      \"email\": \"alice@example.com\",\n      \"is_active\": true,\n      \"invitation_sent_at\": null,\n      \"profile_picture_url\": null,\n      \"apps\": [\n        {\n          \"app_id\": 1,\n          \"app_name\": \"Admin\",\n          \"role\": \"admin\",\n          \"tenant_ids\": [1, 2]\n        }\n      ]\n    }\n  ]\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invite User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('invited_user_id', pm.response.json().data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bob Smith\",\n  \"email\": \"bob@example.com\",\n  \"apps\": [\n    {\n      \"app_id\": 1,\n      \"role\": \"user\",\n      \"tenant_ids\": [1]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/invite",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "invite"
+              ]
+            },
+            "description": "Creates an inactive user account and sends an invitation email. The user must accept the invitation to activate their account. Saves the returned user ID to {{invited_user_id}}."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Bob Smith\",\n  \"email\": \"bob@example.com\",\n  \"apps\": [{\"app_id\": 1, \"role\": \"user\", \"tenant_ids\": [1]}]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/invite",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "invite"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Bob Smith\",\n    \"email\": \"bob@example.com\",\n    \"is_active\": false,\n    \"invitation_sent_at\": \"2026-06-24T10:00:00.000000Z\",\n    \"profile_picture_url\": null,\n    \"apps\": [\n      {\n        \"app_id\": 1,\n        \"app_name\": \"Admin\",\n        \"role\": \"user\",\n        \"tenant_ids\": [1]\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "422 \u2014 Duplicate Email",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Bob\",\n  \"email\": \"existing@example.com\",\n  \"apps\": []\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/invite",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "invite"
+                  ]
+                }
+              },
+              "status": "Unprocessable Content",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The email has already been taken.\",\n  \"errors\": {\n    \"email\": [\"The email has already been taken.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bob Smith\",\n  \"email\": \"bob@example.com\",\n  \"apps\": [\n    {\n      \"app_id\": 1,\n      \"role\": \"admin\",\n      \"tenant_ids\": [1, 2]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{invited_user_id}}",
+                  "description": "User ID"
+                }
+              ]
+            },
+            "description": "Updates a user's name, email, and app/tenant permissions. All apps not listed are removed."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Bob Smith\",\n  \"email\": \"bob@example.com\",\n  \"apps\": [{\"app_id\": 1, \"role\": \"admin\", \"tenant_ids\": [1, 2]}]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/2",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "2"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Bob Smith\",\n    \"email\": \"bob@example.com\",\n    \"is_active\": false,\n    \"invitation_sent_at\": \"2026-06-24T10:00:00.000000Z\",\n    \"profile_picture_url\": null,\n    \"apps\": [\n      {\n        \"app_id\": 1,\n        \"app_name\": \"Admin\",\n        \"role\": \"admin\",\n        \"tenant_ids\": [1, 2]\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Bob\",\n  \"email\": \"bob@example.com\",\n  \"apps\": []\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/999",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "999"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\Central\\\\User] 999.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "App Management (API)",
       "item": [
         {

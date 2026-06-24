@@ -58,9 +58,10 @@ const healthBadge = {
                 <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
                     Users
                 </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
+                <Link href="/admin/apps"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
                     Apps
-                </a>
+                </Link>
                 <Link href="/admin/tenants"
                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition bg-violet-600/20 text-violet-300">
                     Tenants

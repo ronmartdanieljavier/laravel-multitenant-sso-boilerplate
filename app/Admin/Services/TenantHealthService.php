@@ -4,7 +4,7 @@ namespace App\Admin\Services;
 
 use App\Admin\Data\TenantHealthData;
 use App\Admin\Data\TenantHealthSummaryData;
-use App\Models\Central\Tenant;
+use App\Data\Repositories\Central\TenantRepositoryData;
 use App\Repositories\Central\ReportRepository;
 use App\Repositories\Central\TenantRepository;
 use Illuminate\Support\Carbon;
@@ -20,7 +20,7 @@ class TenantHealthService
     /**
      * Get a list of tenants with their health data.
      *
-     * @return Collection<int, TenantHealthData>|\Illuminate\Database\Eloquent\Collection<int, TenantHealthData>
+     * @return Collection<int, TenantHealthData>
      */
     public function getTenants(): Collection
     {
@@ -31,13 +31,14 @@ class TenantHealthService
         $lastReportByTenant = $this->reportRepository->lastSuccessAtByTenant();
         $userCountByTenant = $this->tenantRepository->userCountByTenant();
 
-        return $tenants->map(function (Tenant $tenant) use (
+        return $tenants->map(function (TenantRepositoryData $tenant) use (
             $pendingByTenant,
             $failedByTenant,
             $lastReportByTenant,
             $userCountByTenant,
         ) {
-            $lastMigration = $tenant->migrationVersions->max('migrated_at');
+            $versions = collect($tenant->migrationVersions);
+            $lastMigration = $versions->max('migratedAt');
             $userCount = (int) ($userCountByTenant[$tenant->id] ?? 0);
             $pendingReports = (int) ($pendingByTenant[$tenant->id] ?? 0);
             $failedReports = (int) ($failedByTenant[$tenant->id] ?? 0);
@@ -46,16 +47,16 @@ class TenantHealthService
                 id: $tenant->id,
                 name: $tenant->name,
                 slug: $tenant->slug,
-                isActive: $tenant->is_active,
-                hasReadReplica: $tenant->hasReadReplica(),
+                isActive: $tenant->isActive,
+                hasReadReplica: $tenant->hasReadReplica,
                 userCount: $userCount,
-                migrationCount: $tenant->migrationVersions->count(),
+                migrationCount: $versions->count(),
                 lastMigration: $lastMigration,
                 pendingReports: $pendingReports,
                 failedReports: $failedReports,
                 lastReportAt: $lastReportByTenant[$tenant->id] ?? null,
                 healthStatus: $this->computeHealthStatus(
-                    isActive: $tenant->is_active,
+                    isActive: $tenant->isActive,
                     failedReports: $failedReports,
                     userCount: $userCount,
                     lastMigration: $lastMigration ? Carbon::parse($lastMigration) : null,
@@ -75,9 +76,6 @@ class TenantHealthService
         );
     }
 
-    /**
-     * Compute the health status of a tenant based on their data.
-     */
     public function computeHealthStatus(
         bool $isActive,
         int $failedReports,

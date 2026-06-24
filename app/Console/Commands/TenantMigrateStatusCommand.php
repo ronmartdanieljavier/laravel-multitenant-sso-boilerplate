@@ -2,7 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Central\Tenant;
+use App\Data\Repositories\Central\TenantRepositoryData;
+use App\Repositories\Central\TenantRepository;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
@@ -13,9 +14,15 @@ class TenantMigrateStatusCommand extends Command
 
     protected $description = 'Show the migration version status for all tenant databases';
 
+    public function __construct(
+        private TenantRepository $tenantRepository,
+    ) {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
-        $tenants = $this->resolveTenants();
+        $tenants = $this->tenantRepository->listActiveWithMigrationVersions($this->option('tenant') ?: null);
 
         if ($tenants->isEmpty()) {
             $this->warn('No active tenants found.');
@@ -29,9 +36,10 @@ class TenantMigrateStatusCommand extends Command
         $rows = [];
 
         foreach ($tenants as $tenant) {
-            $applied = $tenant->migrationVersions()->pluck('migration');
-            $appliedCount = $applied->count();
-            $latest = $tenant->migrationVersions()->orderByDesc('batch')->orderByDesc('migration')->value('migration');
+            /** @var TenantRepositoryData $tenant */
+            $versions = collect($tenant->migrationVersions);
+            $appliedCount = $versions->count();
+            $latest = $versions->sortByDesc('batch')->sortByDesc('migration')->first()?->migration;
             $upToDate = $appliedCount === $totalMigrations;
 
             $rows[] = [
@@ -49,17 +57,6 @@ class TenantMigrateStatusCommand extends Command
         );
 
         return self::SUCCESS;
-    }
-
-    private function resolveTenants()
-    {
-        $query = Tenant::with('migrationVersions')->where('is_active', true);
-
-        if ($slug = $this->option('tenant')) {
-            $query->where('slug', $slug);
-        }
-
-        return $query->get();
     }
 
     /** @return string[] */

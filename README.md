@@ -103,23 +103,48 @@ laravel-multitenant-sso-boilerplate/
 ├── app/
 │   ├── Admin/
 │   │   ├── Data/
+│   │   │   ├── InviteUserData.php              # Spatie Data — invite payload (name, email, apps DataCollection)
+│   │   │   ├── MissingSystemSettingsData.php   # Spatie Data — list of unset required setting labels
+│   │   │   ├── SystemSettingsData.php          # Spatie Data — all 85 system settings (camelCase → snake_case JSON)
 │   │   │   ├── TenantHealthData.php            # Spatie Data — per-tenant health snapshot (13 fields)
-│   │   │   └── TenantHealthSummaryData.php     # Spatie Data — healthy/warning/critical totals
+│   │   │   ├── TenantHealthSummaryData.php     # Spatie Data — healthy/warning/critical totals
+│   │   │   ├── UpdateAppData.php               # Spatie Data — app update payload (name, description)
+│   │   │   ├── UpdateUserData.php              # Spatie Data — user update payload (name, email, apps)
+│   │   │   ├── UserAppData.php                 # Spatie Data — app permission entry (appId, role, tenantIds)
+│   │   │   ├── UserAppPermissionData.php       # Spatie Data — invite/update app permission input
+│   │   │   └── UserData.php                    # Spatie Data — user with permissions (id, name, email, isActive, apps)
 │   │   ├── Http/Controllers/
-│   │   │   ├── TenantHealthController.php      # GET /admin/tenants — delegates to TenantHealthService
+│   │   │   ├── AppManagementApiController.php  # GET|PUT /api/v1/admin/apps — REST API surface
+│   │   │   ├── AppManagementController.php     # GET|PUT /admin/apps — Inertia web surface
+│   │   │   ├── InvitationController.php        # GET|POST /invitation/{token} — accept invitation
+│   │   │   ├── SystemSettingsApiController.php # GET|PUT /api/v1/admin/settings — REST API surface
 │   │   │   ├── SystemSettingsController.php    # GET|PUT /admin/settings — Inertia web surface
-│   │   │   └── SystemSettingsApiController.php # GET|PUT /api/v1/admin/settings — REST API surface
+│   │   │   ├── TenantHealthController.php      # GET /admin/tenants — delegates to TenantHealthService
+│   │   │   ├── UserManagementApiController.php # GET|POST|PUT /api/v1/admin/users — REST API surface
+│   │   │   └── UserManagementController.php    # GET|POST|PUT /admin/users — Inertia web surface
+│   │   ├── Http/Requests/
+│   │   │   ├── InviteUserRequest.php           # name, email (unique), apps array validation
+│   │   │   └── UpdateUserRequest.php           # name, email, apps array validation
+│   │   ├── Mail/
+│   │   │   └── UserInvitationMail.php          # Invitation email — accepts UserRepositoryData DTO
 │   │   ├── Routes/
 │   │   │   ├── web_admin.php                   # Admin web routes
 │   │   │   └── api_admin.php                   # Admin API routes
 │   │   ├── Services/
+│   │   │   ├── SystemSettingsService.php       # getSettings()→SystemSettingsData, updateSettings(), getMissingRequiredSettings()→MissingSystemSettingsData
 │   │   │   ├── TenantHealthService.php         # getTenants(), getSummary(), computeHealthStatus()
-│   │   │   └── SystemSettingsService.php       # getSettings(), updateSettings(), getMissingRequiredSettings()
+│   │   │   └── UserManagementService.php       # list()→Collection<UserData>, invite(), update(), acceptInvitation()
 │   │   └── Tests/
+│   │       ├── AppManagementApiTest.php        # 10 PHPUnit tests — API surface
+│   │       ├── AppManagementWebTest.php        # 12 PHPUnit tests — web surface
+│   │       ├── SystemSettingsApiTest.php       # 33 PHPUnit tests — API surface, all tabs and validation
+│   │       ├── SystemSettingsServiceTest.php   # 8 PHPUnit tests — DTO return contracts
+│   │       ├── SystemSettingsWebTest.php       # 43 PHPUnit tests — web surface, all tabs and validation
 │   │       ├── TenantHealthServiceTest.php     # 14 service-layer unit tests
 │   │       ├── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
-│   │       ├── SystemSettingsWebTest.php       # 43 PHPUnit tests — web surface, all tabs and validation
-│   │       └── SystemSettingsApiTest.php       # 33 PHPUnit tests — API surface, all tabs and validation
+│   │       ├── UserManagementApiTest.php       # PHPUnit tests — API surface (list, invite, update, validation)
+│   │       ├── UserManagementServiceTest.php   # PHPUnit tests — DTO return contracts
+│   │       └── UserManagementWebTest.php       # PHPUnit tests — web surface (list, invite, update)
 │   │
 │   ├── Auth/
 │   │   ├── Data/                               # spatie/laravel-data DTOs
@@ -250,12 +275,25 @@ laravel-multitenant-sso-boilerplate/
 │   │       ├── ProfileServiceTest.php      # 5 service-layer unit tests
 │   │       └── ProfileWebTest.php          # 16 web-surface tests (session)
 │   │
+│   ├── Data/
+│   │   └── Repositories/
+│   │       └── Central/                    # Repository-layer DTOs (DB → DTO mapping)
+│   │           ├── AppRepositoryData.php           # id, name, slug, description, isActive
+│   │           ├── ReportRepositoryData.php         # id (UUID string), userId, type, format, status, …
+│   │           ├── TenantMigrationVersionRepositoryData.php  # migration, batch, migratedAt
+│   │           ├── TenantRepositoryData.php         # id, name, slug, isActive, dbHost/Port/Name/…, hasReadReplica, migrationVersions[]
+│   │           ├── UserAppRepositoryData.php        # appId, appName, role, tenantIds[]
+│   │           ├── UserRepositoryData.php           # id, name, email, profilePicture, isActive, invitationToken, invitationSentAt
+│   │           └── UserWithPermissionsRepositoryData.php  # id, name, email, isActive, invitationSentAt, profilePictureUrl, apps[]
+│   │
 │   ├── Repositories/
 │   │   └── Central/
-│   │       ├── ReportRepository.php        # pendingCountByTenant(), failedCountByTenant(), lastSuccessAtByTenant()
-│   │       ├── TenantRepository.php        # allWithMigrationVersions(), userCountByTenant()
-│   │       ├── UserAppRepository.php       # getAppsForUser(), getTenantsByAppForUser()
-│   │       └── UserRepository.php          # find(), list(), updateName(), updatePicture(), updatePassword(), findByEmail(), verifyPassword(), createSanctumToken()
+│   │       ├── AppRepository.php           # listOrdered()→Collection<AppRepositoryData>, update()→AppRepositoryData
+│   │       ├── ReportRepository.php        # create()→ReportRepositoryData, listForUser()→LengthAwarePaginator<ReportRepositoryData>
+│   │       ├── SystemSettingRepository.php # get(), set()
+│   │       ├── TenantRepository.php        # allWithMigrationVersions(), listActive(), listOrdered() — all return TenantRepositoryData
+│   │       ├── UserAppRepository.php       # syncPermissions()
+│   │       └── UserRepository.php          # find(), listWithPermissions(), findWithPermissions(), createInvited(), updateProfile(), activateInvitation(), … — all return DTOs
 │   │
 │   └── Tenant/
 │       └── Routes/
@@ -289,6 +327,11 @@ laravel-multitenant-sso-boilerplate/
 │   │   ├── Pages/
 │   │   │   ├── Admin/Index.vue             # Admin landing page (missing-settings banner)
 │   │   │   ├── Admin/Index.test.js
+│   │   │   ├── Admin/Apps/Index.vue        # App management — inline edit rows
+│   │   │   ├── Admin/Apps/Index.test.js
+│   │   │   ├── Admin/Users/Index.vue       # User management — invite modal + edit modal with per-app/tenant permission selectors
+│   │   │   ├── Admin/Users/Index.test.js
+│   │   │   ├── Admin/Users/Accept.vue      # Invitation acceptance page — name + password form
 │   │   │   ├── Admin/Tenants/Index.vue     # Tenant health dashboard (missing-settings banner)
 │   │   │   ├── Admin/Settings/Index.vue    # System settings — 7 tabs, per-tab useForm
 │   │   │   ├── Admin/Settings/RichTextEditor.vue  # TipTap editor for email footer signature
@@ -322,6 +365,15 @@ laravel-multitenant-sso-boilerplate/
 ├── docker/
 │   ├── nginx/default.conf
 │   └── php/Dockerfile
+│
+├── tests/
+│   └── Feature/
+│       └── Repositories/
+│           └── Central/                    # Repository contract tests — verify DTO return types
+│               ├── AppRepositoryTest.php
+│               ├── ReportRepositoryTest.php
+│               ├── TenantRepositoryTest.php
+│               └── UserRepositoryTest.php
 │
 ├── postman/
 │   └── laravel-multitenant-sso.postman_collection.json
@@ -360,7 +412,7 @@ What's built:
 - **Laravel 13** — framework at repo root
 - **Laravel Boost 2.4** — starter kit scaffolding
 - **Laravel Sanctum 4.0** — API token authentication
-- **spatie/laravel-data 4.23** — DTOs under `App\Auth\Data\` and `App\Profile\Data\`
+- **spatie/laravel-data 4.23** — DTOs across all modules; repository DTOs in `App\Data\Repositories\Central\`, service/module DTOs in `App\{Module}\Data\`; global `SnakeCaseMapper` maps camelCase properties to snake_case JSON automatically
 - **SSO backend** — login, logout, and app-picker API under `App\Auth\`
 - **Central models** — `App`, `Tenant`, `User`, `UserApp`, `UserAppTenant`, `SystemSetting` under `App\Models\Central\`
 - **Central DB schema** — `users`, `apps`, `tenants`, `user_apps`, `user_app_tenants`, `system_settings` in `database/migrations/central/`
@@ -379,7 +431,10 @@ What's built:
 - **Authentication flow (Phase 5.1)** — authenticated users visiting `/login` are redirected instead of seeing the form; web logout (`POST /logout`) invalidates the session and is available on every page; configurable idle session timeout auto-logs out inactive browser sessions based on the `authentication_idle_time` system setting (default 30 min)
 - **User self-service profile (Phase 5.2)** — authenticated users can update their display name, upload/replace their profile picture, and change their password at `/profile`; profile picture stored on the `public` disk and exposed as `profile_picture_url` on the `auth.user` Inertia shared prop; Admin and Tenant pages display the avatar in the sidebar/nav with a link to the profile page
 - **RESTful API + Inertia.js combined architecture** — Inertia.js web routes (session auth) coexist with a versioned RESTful API (`/api/v1/`) under Sanctum token auth; Eloquent API Resources (`UserResource`, `ReportResource`) provide consistent `{ "data": {...} }` envelopes; `Profile` and `SystemSettings` modules expose all operations over both surfaces independently
-- **System settings (Phase 5.3)** — seven-tab admin settings page at `/admin/settings` with per-tab save; settings managed via `SystemSettingsService` as a key-value store (`system_settings` table); required settings (email driver, auth idle timeout, storage driver) trigger a persistent amber banner on all admin pages when unset; full REST API at `/api/v1/admin/settings`; email footer signature uses a TipTap rich-text editor (`RichTextEditor.vue`) outputting HTML stored as a setting value; 76 PHPUnit + 23 Vitest tests
+- **System settings (Phase 5.3)** — seven-tab admin settings page at `/admin/settings` with per-tab save; settings managed via `SystemSettingsService` returning `SystemSettingsData` DTO; required settings (email driver, auth idle timeout, storage driver) trigger a persistent amber banner on all admin pages when unset; full REST API at `/api/v1/admin/settings`; email footer signature uses a TipTap rich-text editor (`RichTextEditor.vue`) outputting HTML stored as a setting value; 76 PHPUnit + 23 Vitest tests
+- **App management (Phase 5.4)** — admin can view and edit app information (name, description) at `/admin/apps` and via `GET|PUT /api/v1/admin/apps`; Inertia inline-edit rows; `AppRepositoryData` DTO returned by the repository
+- **User management (Phase 5.5)** — admin can invite users by email with per-app and per-tenant permissions via `POST /api/v1/admin/users/invite`; admin can update user profile and permissions via `PUT /api/v1/admin/users/{user}`; invited users accept via `/invitation/{token}`; account stays inactive until accepted; `UserData` and `UserWithPermissionsRepositoryData` DTOs carry the full permission graph
+- **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
 - **Vitest unit tests** — component tests for all four page components
@@ -461,7 +516,22 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `GET` | `/admin/settings` | Session | Show the settings page (Inertia — 7 tabs) |
 | `PUT` | `/admin/settings` | Session | Save settings, redirect with flash success |
 
-The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, and "Create Subscription" saves the ID to `{{subscription_id}}`, so subsequent requests work without manual copy-paste.
+**User Management (API — Bearer token auth)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/admin/users` | Bearer | List all users with their app and tenant permissions |
+| `POST` | `/api/v1/admin/users/invite` | Bearer | Invite a new user by email and assign app/tenant permissions; account inactive until accepted |
+| `PUT` | `/api/v1/admin/users/{user}` | Bearer | Update a user's name, email, and app/tenant permissions |
+
+**Invitation acceptance (Web — unauthenticated)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/invitation/{token}` | — | Show the invitation acceptance form |
+| `POST` | `/invitation/{token}` | — | Accept the invitation — sets name, password, and activates the account |
+
+The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, "Create Subscription" saves the ID to `{{subscription_id}}`, and "Invite User" saves the new user ID to `{{invited_user_id}}`, so subsequent requests work without manual copy-paste.
 
 ---
 
@@ -813,9 +883,9 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 *5.4 — App management (admin)* *(done)*
 - [x] Admin can edit app information (name, description)
 
-*5.5 — User management (admin)*
-- [ ] Admin can invite a user by email — before sending the invitation the admin selects which apps the user can access and, if the app has tenants, which tenant(s) the user belongs to; the account is inactive until the invitation is accepted
-- [ ] Admin can edit a user's profile data and app/tenant permissions
+*5.5 — User management (admin)* *(done)*
+- [x] Admin can invite a user by email — before sending the invitation the admin selects which apps the user can access and, if the app has tenants, which tenant(s) the user belongs to; the account is inactive until the invitation is accepted
+- [x] Admin can edit a user's profile data and app/tenant permissions
 
 *5.6 — Tenant management (admin)*
 - [ ] Admin can add and edit tenant details and database connection settings

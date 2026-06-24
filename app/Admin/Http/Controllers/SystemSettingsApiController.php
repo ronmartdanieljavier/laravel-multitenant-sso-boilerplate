@@ -17,7 +17,7 @@ class SystemSettingsApiController extends Controller
     {
         return response()->json([
             'data' => $this->systemSettingsService->getSettings(),
-            'missing_required' => $this->systemSettingsService->getMissingRequiredSettings(),
+            'missing_required' => $this->systemSettingsService->getMissingRequiredSettings()->labels,
         ]);
     }
 
@@ -27,7 +27,7 @@ class SystemSettingsApiController extends Controller
 
         return response()->json([
             'data' => $this->systemSettingsService->getSettings(),
-            'missing_required' => $this->systemSettingsService->getMissingRequiredSettings(),
+            'missing_required' => $this->systemSettingsService->getMissingRequiredSettings()->labels,
         ]);
     }
 }

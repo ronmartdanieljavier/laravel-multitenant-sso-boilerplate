@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Central\Tenant;
-use App\Models\Central\TenantMigrationVersion;
+use App\Data\Repositories\Central\TenantRepositoryData;
+use App\Repositories\Central\TenantRepository;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -21,9 +21,15 @@ class TenantMigrateCommand extends Command
 
     protected $description = 'Run migrations for all tenant databases (or a specific tenant)';
 
+    public function __construct(
+        private TenantRepository $tenantRepository,
+    ) {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
-        $tenants = $this->resolveTenants();
+        $tenants = $this->tenantRepository->listActive($this->option('tenant') ?: null);
 
         if ($tenants->isEmpty()) {
             $this->warn('No active tenants found.');
@@ -34,6 +40,7 @@ class TenantMigrateCommand extends Command
         $failed = 0;
 
         foreach ($tenants as $tenant) {
+            /** @var TenantRepositoryData $tenant */
             $this->info("Migrating tenant: {$tenant->name} ({$tenant->slug})");
 
             try {
@@ -52,26 +59,15 @@ class TenantMigrateCommand extends Command
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
     }
 
-    private function resolveTenants()
-    {
-        $query = Tenant::where('is_active', true);
-
-        if ($slug = $this->option('tenant')) {
-            $query->where('slug', $slug);
-        }
-
-        return $query->get();
-    }
-
-    private function configureTenantConnection(Tenant $tenant): void
+    private function configureTenantConnection(TenantRepositoryData $tenant): void
     {
         $config = [
             'driver' => 'pgsql',
-            'host' => $tenant->db_host,
-            'port' => $tenant->db_port,
-            'database' => $tenant->db_name,
-            'username' => $tenant->db_username,
-            'password' => $tenant->db_password,
+            'host' => $tenant->dbHost,
+            'port' => $tenant->dbPort,
+            'database' => $tenant->dbName,
+            'username' => $tenant->dbUsername,
+            'password' => $tenant->dbPassword,
             'charset' => 'utf8',
             'prefix' => '',
             'schema' => 'public',
@@ -86,7 +82,10 @@ class TenantMigrateCommand extends Command
         DB::reconnect('tenant');
     }
 
-    private function ensureDatabaseExists(Tenant $tenant, array $config): void
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private function ensureDatabaseExists(TenantRepositoryData $tenant, array $config): void
     {
         // Connect to the default maintenance DB to create the tenant DB if needed
         Config::set('database.connections.tenant_admin', array_merge($config, [
@@ -95,9 +94,9 @@ class TenantMigrateCommand extends Command
 
         DB::purge('tenant_admin');
 
-        $dbName = $tenant->db_name;
+        $dbName = $tenant->dbName;
 
-        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $dbName)) {
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', (string) $dbName)) {
             throw new \RuntimeException("Invalid database name for tenant [{$tenant->slug}]: {$dbName}");
         }
 
@@ -115,7 +114,7 @@ class TenantMigrateCommand extends Command
         Config::set('database.connections.tenant_admin', null);
     }
 
-    private function syncMigrationVersions(Tenant $tenant): void
+    private function syncMigrationVersions(TenantRepositoryData $tenant): void
     {
         if (! Schema::connection('tenant')->hasTable('migrations')) {
             return;
@@ -128,10 +127,7 @@ class TenantMigrateCommand extends Command
             ->get();
 
         foreach ($rows as $row) {
-            TenantMigrationVersion::updateOrCreate(
-                ['tenant_id' => $tenant->id, 'migration' => $row->migration],
-                ['batch' => $row->batch, 'migrated_at' => now()],
-            );
+            $this->tenantRepository->syncMigrationVersion($tenant->id, $row->migration, $row->batch);
         }
     }
 

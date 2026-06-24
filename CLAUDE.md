@@ -202,4 +202,99 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 Vue components must have a single root element.
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
+
+=== project architecture rules ===
+
+# Project Architecture Standards
+
+These rules apply to every feature in this application. Follow them without exception — they exist to enforce a consistent, mobile-ready, testable codebase.
+
+## Layered Architecture
+
+The only allowed call chain is: **Controller → Service → Repository → Model**
+
+- Controllers must never call Eloquent or query the database directly.
+- Services must never import or use Eloquent models — only repository methods.
+- Repositories are the sole layer that imports and uses Eloquent models.
+- Any direct `Model::find()`, `Model::where()`, or similar calls outside a repository are a violation.
+
+## Repositories (`app/Repositories/Central/`)
+
+- Every Eloquent model interaction must live in a repository class in `app/Repositories/Central/`.
+- All public repository methods must return DTOs, never Eloquent model instances.
+- Repository method parameters must accept primitive types or DTOs — never Eloquent models.
+- Repository classes are named `{ModelName}Repository` (e.g. `UserRepository`, `TenantRepository`).
+
+## Services
+
+- All public service methods must return DTOs, never Eloquent models and never raw arrays.
+- Service-layer DTOs live in `app/{Module}/Data/` and extend `Spatie\LaravelData\Data`.
+- Services map repository DTOs to module-level DTOs before returning — controllers and API consumers must never receive repository DTOs directly.
+- Private helper methods that map models to DTOs are allowed (e.g. `private function toData(Model $m): SomeDto`).
+
+## DTOs (Data Transfer Objects)
+
+DTOs live in two places depending on their purpose:
+
+| Layer | Location | Purpose |
+|---|---|---|
+| Repository output | `app/Data/Repositories/Central/` | Shape data coming out of the database |
+| Service output / page props | `app/{Module}/Data/` | Shape data going to controllers, views, or API responses |
+
+Rules:
+- All DTOs extend `Spatie\LaravelData\Data`.
+- DTO property names are **camelCase** — never snake_case. The global `SnakeCaseMapper` in `config/data.php` handles the DB→DTO and DTO→JSON translation automatically.
+- Use `#[MapInputName('snake_case_column')]` on any property whose PHP name differs from the DB column name.
+- Repository DTOs reflect raw table data; they may include fields that services strip before exposing to clients.
+- Never add display-only or computed values to a repository DTO — those belong in the service-layer DTO.
+
+## Validation (Form Requests)
+
+- All request validation must live in a dedicated `FormRequest` class under `Http/Requests/` within the relevant module (e.g. `app/Profile/Http/Requests/UpdateNameRequest.php`).
+- Controllers must never call `$request->validate()` inline.
+- Type-hinting the FormRequest in the controller method signature is the only correct approach.
+
+## API Parity
+
+Every web (Inertia) route must have a matching REST API endpoint:
+
+- Web controllers live in `Http/Controllers/{FeatureController}.php`.
+- API controllers live in `Http/Controllers/{FeatureApiController}.php`.
+- API routes are in `Routes/api_{feature}.php`, prefixed and named (e.g. `api/profile`, `profile.*`).
+- API controllers return JSON — either a DTO (auto-serialised by Spatie Data) or `response()->json(...)`.
+- API routes are protected by `auth:sanctum`; web routes by `auth` or `auth:web` as appropriate.
+- API responses follow the pattern: single resource → `{ data: {...} }`, list → `{ data: [...] }`, mutation with no body → `{ message: '...' }`.
+
+## Module Structure
+
+Every feature is a self-contained module under `app/{ModuleName}/`. The expected directory layout (use `app/Profile/` as the canonical example):
+
+```
+app/{Module}/
+  Data/              # Service-layer DTOs
+  Http/
+    Controllers/
+      {Module}Controller.php      # Inertia / web
+      {Module}ApiController.php   # REST API
+    Requests/                     # One FormRequest per action
+  Routes/
+    web_{module}.php
+    api_{module}.php
+  Services/
+    {Module}Service.php
+  Tests/
+    {Module}WebTest.php
+    {Module}ApiTest.php
+    {Module}ServiceTest.php
+```
+
+Repository DTOs go in `app/Data/Repositories/Central/`, not inside the module.
+
+## Testing Standards
+
+- Every module must have tests for the web layer, the API layer, and the service layer.
+- Repository tests live in `tests/Feature/Repositories/Central/`.
+- Repository tests verify that public methods return the correct DTO types and persist data correctly.
+- Do not assert global table row counts — scope assertions to the specific records created in that test to avoid cross-test leakage.
+
 </laravel-boost-guidelines>

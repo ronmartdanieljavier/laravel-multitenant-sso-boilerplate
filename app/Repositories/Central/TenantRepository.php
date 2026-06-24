@@ -2,12 +2,15 @@
 
 namespace App\Repositories\Central;
 
+use App\Admin\Data\CreateTenantData;
+use App\Admin\Data\UpdateTenantData;
 use App\Data\Repositories\Central\TenantMigrationVersionRepositoryData;
 use App\Data\Repositories\Central\TenantRepositoryData;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMigrationVersion;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
 class TenantRepository
@@ -73,6 +76,118 @@ class TenantRepository
     {
         return $this->model->orderBy('name')->get()
             ->map(fn (Tenant $tenant) => $this->toData($tenant));
+    }
+
+    public function find(int $id): TenantRepositoryData
+    {
+        return $this->toData($this->model->findOrFail($id));
+    }
+
+    public function create(CreateTenantData $data): TenantRepositoryData
+    {
+        $tenant = $this->model->create([
+            'name' => $data->name,
+            'slug' => $data->slug,
+            'db_host' => $data->dbHost,
+            'db_port' => $data->dbPort,
+            'db_name' => $data->dbName,
+            'db_username' => $data->dbUsername,
+            'db_password' => $data->dbPassword,
+            'read_replica_host' => $data->readReplicaHost,
+            'read_replica_port' => $data->readReplicaPort,
+            'read_replica_username' => $data->readReplicaUsername,
+            'read_replica_password' => $data->readReplicaPassword,
+            'is_active' => true,
+        ]);
+
+        return $this->toData($tenant);
+    }
+
+    public function update(int $id, UpdateTenantData $data): TenantRepositoryData
+    {
+        $tenant = $this->model->findOrFail($id);
+
+        $updates = [
+            'name' => $data->name,
+            'slug' => $data->slug,
+            'db_host' => $data->dbHost,
+            'db_port' => $data->dbPort,
+            'db_name' => $data->dbName,
+            'db_username' => $data->dbUsername,
+            'read_replica_host' => $data->readReplicaHost,
+            'read_replica_port' => $data->readReplicaPort,
+            'read_replica_username' => $data->readReplicaUsername,
+        ];
+
+        if ($data->dbPassword !== null) {
+            $updates['db_password'] = $data->dbPassword;
+        }
+
+        if ($data->readReplicaPassword !== null) {
+            $updates['read_replica_password'] = $data->readReplicaPassword;
+        }
+
+        $tenant->update($updates);
+
+        return $this->toData($tenant->fresh());
+    }
+
+    public function setActive(int $id, bool $isActive): void
+    {
+        $this->model->findOrFail($id)->update(['is_active' => $isActive]);
+    }
+
+    public function delete(int $id): void
+    {
+        $this->model->findOrFail($id)->delete();
+    }
+
+    public function dropDatabase(TenantRepositoryData $tenant): void
+    {
+        if ($tenant->dbName === null || $tenant->dbHost === null) {
+            return;
+        }
+
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $tenant->dbName)) {
+            return;
+        }
+
+        $config = [
+            'driver' => 'pgsql',
+            'host' => $tenant->dbHost,
+            'port' => $tenant->dbPort ?? 5432,
+            'database' => 'postgres',
+            'username' => $tenant->dbUsername,
+            'password' => $tenant->dbPassword,
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ];
+
+        Config::set('database.connections.tenant_drop_admin', $config);
+        DB::purge('tenant_drop_admin');
+
+        try {
+            DB::connection('tenant_drop_admin')
+                ->statement("DROP DATABASE IF EXISTS \"{$tenant->dbName}\"");
+        } catch (\Throwable) {
+            // Best-effort: if the server is unreachable the central records are still removed.
+        } finally {
+            DB::purge('tenant_drop_admin');
+            Config::set('database.connections.tenant_drop_admin', null);
+        }
+    }
+
+    /**
+     * @return BaseCollection<int, int>
+     */
+    public function getUserIdsForTenant(int $tenantId): BaseCollection
+    {
+        return DB::table('user_app_tenants')
+            ->where('tenant_id', $tenantId)
+            ->distinct()
+            ->pluck('user_id');
     }
 
     public function syncMigrationVersion(int $tenantId, string $migration, int $batch): void

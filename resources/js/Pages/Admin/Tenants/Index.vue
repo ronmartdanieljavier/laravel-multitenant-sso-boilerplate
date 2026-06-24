@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const page = usePage();
 const missingSettings = page.props.missingRequiredSettings ?? [];
@@ -13,14 +14,7 @@ const props = defineProps({
     summary: Object,
 });
 
-function formatDate(value) {
-    if (!value) return 'Never';
-    const d = new Date(value);
-    const diff = Math.floor((Date.now() - d) / 86400000);
-    if (diff === 0) return 'Today';
-    if (diff === 1) return 'Yesterday';
-    return `${diff}d ago`;
-}
+// ── Summary cards ────────────────────────────────────────────────────────────
 
 const summaryCards = [
     { label: 'Total Tenants', key: 'total', color: 'text-white' },
@@ -34,10 +28,140 @@ const healthBadge = {
     warning: 'bg-amber-500/20 text-amber-300',
     critical: 'bg-red-500/20 text-red-400',
 };
+
+function formatDate(value) {
+    if (!value) return 'Never';
+    const d = new Date(value);
+    const diff = Math.floor((Date.now() - d) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    return `${diff}d ago`;
+}
+
+// ── Create modal ─────────────────────────────────────────────────────────────
+
+const showCreateModal = ref(false);
+const showCreateReadReplica = ref(false);
+
+const createForm = useForm({
+    name: '',
+    slug: '',
+    db_host: '',
+    db_port: 5432,
+    db_name: '',
+    db_username: '',
+    db_password: '',
+    read_replica_host: '',
+    read_replica_port: 5432,
+    read_replica_username: '',
+    read_replica_password: '',
+});
+
+function openCreate() {
+    createForm.reset();
+    createForm.clearErrors();
+    showCreateReadReplica.value = false;
+    showCreateModal.value = true;
+}
+
+function closeCreate() {
+    showCreateModal.value = false;
+}
+
+function autoSlug() {
+    createForm.slug = createForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function submitCreate() {
+    createForm.post('/admin/tenants', {
+        onSuccess: () => { showCreateModal.value = false; },
+    });
+}
+
+// ── Edit modal ────────────────────────────────────────────────────────────────
+
+const showEditModal = ref(false);
+const editingTenant = ref(null);
+const showEditReadReplica = ref(false);
+
+const editForm = useForm({
+    name: '',
+    slug: '',
+    db_host: '',
+    db_port: 5432,
+    db_name: '',
+    db_username: '',
+    db_password: '',
+    read_replica_host: '',
+    read_replica_port: 5432,
+    read_replica_username: '',
+    read_replica_password: '',
+});
+
+function openEdit(tenant) {
+    editingTenant.value = tenant;
+    editForm.name = tenant.name;
+    editForm.slug = tenant.slug;
+    editForm.db_host = tenant.db_host ?? '';
+    editForm.db_port = tenant.db_port ?? 5432;
+    editForm.db_name = tenant.db_name ?? '';
+    editForm.db_username = tenant.db_username ?? '';
+    editForm.db_password = '';
+    editForm.read_replica_host = '';
+    editForm.read_replica_port = 5432;
+    editForm.read_replica_username = '';
+    editForm.read_replica_password = '';
+    showEditReadReplica.value = tenant.has_read_replica;
+    editForm.clearErrors();
+    showEditModal.value = true;
+}
+
+function closeEdit() {
+    showEditModal.value = false;
+    editingTenant.value = null;
+}
+
+function submitEdit() {
+    editForm.put(`/admin/tenants/${editingTenant.value.id}`, {
+        onSuccess: () => { showEditModal.value = false; },
+    });
+}
+
+// ── Toggle active ─────────────────────────────────────────────────────────────
+
+function toggleActive(tenant) {
+    const newState = !tenant.is_active;
+    const confirmMsg = newState
+        ? `Activate "${tenant.name}"?`
+        : `Deactivate "${tenant.name}"? All user tokens for this tenant will be revoked.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    router.patch(`/admin/tenants/${tenant.id}/active`, { is_active: newState });
+}
+
+// ── Run migrations ────────────────────────────────────────────────────────────
+
+function migrateTenant(tenant) {
+    if (!confirm(`Run migrations for "${tenant.name}"?`)) return;
+    router.post(`/admin/tenants/${tenant.id}/migrate`);
+}
+
+function migrateAll() {
+    if (!confirm('Run migrations for ALL tenants?')) return;
+    router.post('/admin/tenants/migrate-all');
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+
+function deleteTenant(tenant) {
+    if (!confirm(`Delete "${tenant.name}"? This will DROP the tenant database and remove all related records. This cannot be undone.`)) return;
+    router.delete(`/admin/tenants/${tenant.id}`);
+}
 </script>
 
 <template>
-    <Head title="Tenant Health Dashboard" />
+    <Head title="Tenant Management" />
 
     <div class="min-h-screen bg-slate-950 text-slate-100">
         <!-- Sidebar -->
@@ -110,9 +234,28 @@ const healthBadge = {
                 </p>
             </div>
 
+            <!-- Flash success -->
+            <div v-if="page.props.flash?.success"
+                 class="bg-emerald-500/10 border-b border-emerald-500/20 px-8 py-3 flex items-center gap-3">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <p class="text-sm text-emerald-300">{{ page.props.flash.success }}</p>
+            </div>
+
             <!-- Header -->
             <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
-                <h2 class="text-lg font-semibold">Tenant Health</h2>
+                <h2 class="text-lg font-semibold">Tenant Management</h2>
+                <div class="flex items-center gap-3">
+                    <button @click="migrateAll"
+                            class="text-sm px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                        Run All Migrations
+                    </button>
+                    <button @click="openCreate"
+                            class="text-sm px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition">
+                        + Add Tenant
+                    </button>
+                </div>
             </header>
 
             <main class="p-8 space-y-8">
@@ -137,9 +280,10 @@ const healthBadge = {
                                 <th class="text-left px-6 py-3 font-medium">Status</th>
                                 <th class="text-left px-6 py-3 font-medium">Health</th>
                                 <th class="text-left px-6 py-3 font-medium">Users</th>
-                                <th class="text-left px-6 py-3 font-medium">Last Migration</th>
+                                <th class="text-left px-6 py-3 font-medium">Migrations</th>
                                 <th class="text-left px-6 py-3 font-medium">Reports (P/F)</th>
                                 <th class="text-left px-6 py-3 font-medium">Read Replica</th>
+                                <th class="text-left px-6 py-3 font-medium">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5">
@@ -161,7 +305,7 @@ const healthBadge = {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-slate-300">{{ tenant.user_count }}</td>
-                                <td class="px-6 py-4 text-slate-400">{{ formatDate(tenant.last_migration) }}</td>
+                                <td class="px-6 py-4 text-slate-400">{{ tenant.migration_count }}</td>
                                 <td class="px-6 py-4">
                                     <span class="text-slate-400">{{ tenant.pending_reports }}</span>
                                     <span class="text-slate-600 mx-1">/</span>
@@ -173,14 +317,277 @@ const healthBadge = {
                                         {{ tenant.has_read_replica ? 'Yes' : 'No' }}
                                     </span>
                                 </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <button @click="openEdit(tenant)"
+                                                class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                                            Edit
+                                        </button>
+                                        <button @click="migrateTenant(tenant)"
+                                                class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                                            Migrate
+                                        </button>
+                                        <button @click="toggleActive(tenant)"
+                                                :class="tenant.is_active
+                                                    ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+                                                    : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'"
+                                                class="text-xs px-2 py-1 rounded transition">
+                                            {{ tenant.is_active ? 'Deactivate' : 'Activate' }}
+                                        </button>
+                                        <button @click="deleteTenant(tenant)"
+                                                class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                             <tr v-if="tenants.length === 0">
-                                <td colspan="7" class="px-6 py-8 text-center text-slate-500">No tenants found.</td>
+                                <td colspan="8" class="px-6 py-8 text-center text-slate-500">No tenants found.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <!-- Create Modal -->
+    <div v-if="showCreateModal"
+         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-white/10 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                <h3 class="font-semibold text-white">Add Tenant</h3>
+                <button @click="closeCreate" class="text-slate-400 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form @submit.prevent="submitCreate" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Name *</label>
+                        <input v-model="createForm.name" @input="autoSlug"
+                               type="text" placeholder="Acme Corp"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="createForm.errors.name" class="text-red-400 text-xs mt-1">{{ createForm.errors.name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Slug *</label>
+                        <input v-model="createForm.slug"
+                               type="text" placeholder="acme-corp"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="createForm.errors.slug" class="text-red-400 text-xs mt-1">{{ createForm.errors.slug }}</p>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-500 font-medium uppercase tracking-wide pt-2">Database Connection</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-xs text-slate-400 mb-1">Host</label>
+                        <input v-model="createForm.db_host"
+                               type="text" placeholder="127.0.0.1"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="createForm.errors.db_host" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_host }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Port</label>
+                        <input v-model="createForm.db_port"
+                               type="number" placeholder="5432"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="createForm.errors.db_port" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_port }}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Database Name</label>
+                        <input v-model="createForm.db_name"
+                               type="text" placeholder="tenant_acme"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="createForm.errors.db_name" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Username</label>
+                        <input v-model="createForm.db_username"
+                               type="text"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="createForm.errors.db_username" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_username }}</p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Password</label>
+                    <input v-model="createForm.db_password"
+                           type="password"
+                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                    <p v-if="createForm.errors.db_password" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_password }}</p>
+                </div>
+
+                <!-- Read Replica toggle -->
+                <button type="button" @click="showCreateReadReplica = !showCreateReadReplica"
+                        class="text-xs text-violet-400 hover:text-violet-300 transition flex items-center gap-1">
+                    <svg :class="showCreateReadReplica ? 'rotate-90' : ''" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    {{ showCreateReadReplica ? 'Hide' : 'Add' }} Read Replica
+                </button>
+
+                <div v-if="showCreateReadReplica" class="space-y-4 border border-white/5 rounded-lg p-4">
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Read Replica</p>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-xs text-slate-400 mb-1">Host</label>
+                            <input v-model="createForm.read_replica_host" type="text"
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Port</label>
+                            <input v-model="createForm.read_replica_port" type="number"
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Username</label>
+                            <input v-model="createForm.read_replica_username" type="text"
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Password</label>
+                            <input v-model="createForm.read_replica_password" type="password"
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" @click="closeCreate"
+                            class="px-4 py-2 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="createForm.processing"
+                            class="px-4 py-2 text-sm rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition disabled:opacity-50">
+                        {{ createForm.processing ? 'Creating…' : 'Create Tenant' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div v-if="showEditModal"
+         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-white/10 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                <h3 class="font-semibold text-white">Edit Tenant</h3>
+                <button @click="closeEdit" class="text-slate-400 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form @submit.prevent="submitEdit" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Name *</label>
+                        <input v-model="editForm.name" type="text"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="editForm.errors.name" class="text-red-400 text-xs mt-1">{{ editForm.errors.name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Slug *</label>
+                        <input v-model="editForm.slug" type="text"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="editForm.errors.slug" class="text-red-400 text-xs mt-1">{{ editForm.errors.slug }}</p>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-500 font-medium uppercase tracking-wide pt-2">Database Connection</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-xs text-slate-400 mb-1">Host</label>
+                        <input v-model="editForm.db_host" type="text"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="editForm.errors.db_host" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_host }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Port</label>
+                        <input v-model="editForm.db_port" type="number"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="editForm.errors.db_port" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_port }}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Database Name</label>
+                        <input v-model="editForm.db_name" type="text"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="editForm.errors.db_name" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Username</label>
+                        <input v-model="editForm.db_username" type="text"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        <p v-if="editForm.errors.db_username" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_username }}</p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">
+                        Password
+                        <span v-if="editingTenant?.is_password_set" class="text-slate-500 ml-1">(leave blank to keep existing)</span>
+                    </label>
+                    <input v-model="editForm.db_password" type="password"
+                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                    <p v-if="editForm.errors.db_password" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_password }}</p>
+                </div>
+
+                <!-- Read Replica toggle -->
+                <button type="button" @click="showEditReadReplica = !showEditReadReplica"
+                        class="text-xs text-violet-400 hover:text-violet-300 transition flex items-center gap-1">
+                    <svg :class="showEditReadReplica ? 'rotate-90' : ''" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    {{ showEditReadReplica ? 'Hide' : 'Edit' }} Read Replica
+                </button>
+
+                <div v-if="showEditReadReplica" class="space-y-4 border border-white/5 rounded-lg p-4">
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Read Replica</p>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-xs text-slate-400 mb-1">Host</label>
+                            <input v-model="editForm.read_replica_host" type="text"
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Port</label>
+                            <input v-model="editForm.read_replica_port" type="number"
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Username</label>
+                            <input v-model="editForm.read_replica_username" type="text"
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Password <span class="text-slate-500">(blank = keep existing)</span></label>
+                            <input v-model="editForm.read_replica_password" type="password"
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" @click="closeEdit"
+                            class="px-4 py-2 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="editForm.processing"
+                            class="px-4 py-2 text-sm rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition disabled:opacity-50">
+                        {{ editForm.processing ? 'Saving…' : 'Save Changes' }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </template>

@@ -17,6 +17,9 @@ class AcceptInvitationController extends Controller
         private UserManagementService $service,
     ) {}
 
+    /**
+     * Display the invitation acceptance form.
+     */
     public function show(string $token): Response|RedirectResponse
     {
         $user = $this->userRepository->findByInvitationToken($token);
@@ -32,6 +35,9 @@ class AcceptInvitationController extends Controller
         ]);
     }
 
+    /**
+     * Accept the invitation and create a new user account.
+     */
     public function accept(AcceptInvitationRequest $request, string $token): RedirectResponse
     {
         $user = $this->userRepository->findByInvitationToken($token);

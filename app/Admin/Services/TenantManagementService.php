@@ -23,6 +23,8 @@ class TenantManagementService
     ) {}
 
     /**
+     * Get a list of all tenants with their details and health status.
+     *
      * @return Collection<int, TenantData>
      */
     public function list(): Collection
@@ -68,7 +70,11 @@ class TenantManagementService
         })->values();
     }
 
-    /** @param Collection<int, TenantData> $tenants */
+    /**
+     * Get a summary of tenant health data.
+     *
+     * @param  Collection<int, TenantData>  $tenants
+     */
     public function getSummary(Collection $tenants): TenantHealthSummaryData
     {
         return new TenantHealthSummaryData(
@@ -79,6 +85,9 @@ class TenantManagementService
         );
     }
 
+    /**
+     * Create a new tenant.
+     */
     public function create(CreateTenantData $data): TenantData
     {
         $tenant = $this->tenantRepository->create($data);
@@ -91,11 +100,17 @@ class TenantManagementService
         return $this->toData($this->tenantRepository->find($tenant->id));
     }
 
+    /**
+     * Update a tenant's information.
+     */
     public function update(int $tenantId, UpdateTenantData $data): TenantData
     {
         return $this->toData($this->tenantRepository->update($tenantId, $data));
     }
 
+    /**
+     * Set the active status of a tenant.
+     */
     public function setActive(int $tenantId, bool $isActive): void
     {
         if (! $isActive) {
@@ -106,6 +121,9 @@ class TenantManagementService
         $this->tenantRepository->setActive($tenantId, $isActive);
     }
 
+    /**
+     * Delete a tenant.
+     */
     public function delete(int $tenantId): void
     {
         $tenant = $this->tenantRepository->find($tenantId);
@@ -117,6 +135,9 @@ class TenantManagementService
         $this->tenantRepository->delete($tenantId);
     }
 
+    /**
+     * Run database migrations for a specific tenant or all tenants.
+     */
     public function runMigrations(?int $tenantId = null): void
     {
         $options = ['--force' => true];
@@ -150,6 +171,9 @@ class TenantManagementService
         );
     }
 
+    /**
+     * Compute the health status of a tenant based on various metrics.
+     */
     private function computeHealthStatus(
         bool $isActive,
         int $failedReports,

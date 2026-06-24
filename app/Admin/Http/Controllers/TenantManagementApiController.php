@@ -18,6 +18,9 @@ class TenantManagementApiController extends Controller
         private TenantManagementService $service,
     ) {}
 
+    /**
+     * Get a list of all tenants with their details and health status.
+     */
     public function index(): JsonResponse
     {
         $tenants = $this->service->list();
@@ -28,6 +31,9 @@ class TenantManagementApiController extends Controller
         ]);
     }
 
+    /**
+     * Create a new tenant.
+     */
     public function store(CreateTenantRequest $request): JsonResponse
     {
         $tenant = $this->service->create(CreateTenantData::from($request->validated()));
@@ -35,6 +41,9 @@ class TenantManagementApiController extends Controller
         return response()->json(['data' => $tenant], 201);
     }
 
+    /**
+     * Update a tenant's information.
+     */
     public function update(UpdateTenantRequest $request, Tenant $tenant): JsonResponse
     {
         $updated = $this->service->update($tenant->id, UpdateTenantData::from($request->validated()));
@@ -42,6 +51,9 @@ class TenantManagementApiController extends Controller
         return response()->json(['data' => $updated]);
     }
 
+    /**
+     * Set a tenant's active status.
+     */
     public function setActive(Request $request, Tenant $tenant): JsonResponse
     {
         $isActive = (bool) $request->input('is_active');
@@ -52,6 +64,9 @@ class TenantManagementApiController extends Controller
         return response()->json(['message' => $message]);
     }
 
+    /**
+     * Delete a tenant.
+     */
     public function destroy(Tenant $tenant): JsonResponse
     {
         $this->service->delete($tenant->id);
@@ -59,6 +74,9 @@ class TenantManagementApiController extends Controller
         return response()->json(['message' => 'Tenant deleted.']);
     }
 
+    /**
+     * Run migrations for a specific tenant.
+     */
     public function migrate(Tenant $tenant): JsonResponse
     {
         $this->service->runMigrations($tenant->id);
@@ -66,6 +84,9 @@ class TenantManagementApiController extends Controller
         return response()->json(['message' => "Migrations run for {$tenant->name}."]);
     }
 
+    /**
+     * Run migrations for all tenants.
+     */
     public function migrateAll(): JsonResponse
     {
         $this->service->runMigrations();

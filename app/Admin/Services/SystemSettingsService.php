@@ -17,6 +17,9 @@ class SystemSettingsService
         'storage_driver' => 'Default storage provider',
     ];
 
+    /**
+     * Get all system settings as a structured data object.
+     */
     public function getSettings(): SystemSettingsData
     {
         $keys = [
@@ -56,6 +59,8 @@ class SystemSettingsService
     }
 
     /**
+     * Update system settings.
+     *
      * @param  array<string, mixed>  $data
      */
     public function updateSettings(array $data): void
@@ -65,6 +70,9 @@ class SystemSettingsService
         }
     }
 
+    /**
+     * Check for missing required settings and return their labels.
+     */
     public function getMissingRequiredSettings(): MissingSystemSettingsData
     {
         $keys = array_keys(self::REQUIRED_SETTINGS);

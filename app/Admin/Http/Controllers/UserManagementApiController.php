@@ -17,6 +17,9 @@ class UserManagementApiController extends Controller
         private UserManagementService $service,
     ) {}
 
+    /**
+     * List all users.
+     */
     public function index(): JsonResponse
     {
         return response()->json([
@@ -24,6 +27,9 @@ class UserManagementApiController extends Controller
         ]);
     }
 
+    /**
+     * Invite a new user.
+     */
     public function invite(InviteUserRequest $request): JsonResponse
     {
         $userData = $this->service->invite(InviteUserData::from($request->validated()));
@@ -31,6 +37,9 @@ class UserManagementApiController extends Controller
         return response()->json(['data' => $userData], 201);
     }
 
+    /**
+     * Update a user's information.
+     */
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
         $userData = $this->service->update($user->id, UpdateUserData::from($request->validated()));

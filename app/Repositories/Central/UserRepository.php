@@ -124,6 +124,18 @@ class UserRepository
         return $user ? UserRepositoryData::from($user) : null;
     }
 
+    /** @param Collection<int, int> $userIds */
+    public function revokeTokensForUsers(Collection $userIds): void
+    {
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        $this->model->whereIn('id', $userIds)->each(function (User $user): void {
+            $user->tokens()->delete();
+        });
+    }
+
     public function verifyPassword(int $id, string $password): bool
     {
         $user = $this->model->findOrFail($id);

@@ -810,8 +810,8 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Persistent amber banner on all admin pages when required settings (email driver, auth idle timeout, storage driver) are unset
 - [x] Full REST API at `/api/v1/admin/settings` (GET + PUT) for mobile / external clients
 
-*5.4 — App management (admin)*
-- [ ] Admin can edit app information (name, description)
+*5.4 — App management (admin)* *(done)*
+- [x] Admin can edit app information (name, description)
 
 *5.5 — User management (admin)*
 - [ ] Admin can invite a user by email — before sending the invitation the admin selects which apps the user can access and, if the app has tenants, which tenant(s) the user belongs to; the account is inactive until the invitation is accepted

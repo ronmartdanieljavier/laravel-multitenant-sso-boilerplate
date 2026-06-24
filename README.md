@@ -103,27 +103,34 @@ laravel-multitenant-sso-boilerplate/
 ├── app/
 │   ├── Admin/
 │   │   ├── Data/
+│   │   │   ├── CreateTenantData.php            # Spatie Data — new tenant payload (name, slug, db_*, read_replica_*)
 │   │   │   ├── InviteUserData.php              # Spatie Data — invite payload (name, email, apps DataCollection)
 │   │   │   ├── MissingSystemSettingsData.php   # Spatie Data — list of unset required setting labels
 │   │   │   ├── SystemSettingsData.php          # Spatie Data — all 85 system settings (camelCase → snake_case JSON)
+│   │   │   ├── TenantData.php                  # Spatie Data — tenant with credentials + health fields (15 fields)
 │   │   │   ├── TenantHealthData.php            # Spatie Data — per-tenant health snapshot (13 fields)
 │   │   │   ├── TenantHealthSummaryData.php     # Spatie Data — healthy/warning/critical totals
 │   │   │   ├── UpdateAppData.php               # Spatie Data — app update payload (name, description)
+│   │   │   ├── UpdateTenantData.php            # Spatie Data — tenant update payload (same as create; null password = keep existing)
 │   │   │   ├── UpdateUserData.php              # Spatie Data — user update payload (name, email, apps)
 │   │   │   ├── UserAppData.php                 # Spatie Data — app permission entry (appId, role, tenantIds)
 │   │   │   ├── UserAppPermissionData.php       # Spatie Data — invite/update app permission input
 │   │   │   └── UserData.php                    # Spatie Data — user with permissions (id, name, email, isActive, apps)
 │   │   ├── Http/Controllers/
-│   │   │   ├── AppManagementApiController.php  # GET|PUT /api/v1/admin/apps — REST API surface
-│   │   │   ├── AppManagementController.php     # GET|PUT /admin/apps — Inertia web surface
-│   │   │   ├── InvitationController.php        # GET|POST /invitation/{token} — accept invitation
-│   │   │   ├── SystemSettingsApiController.php # GET|PUT /api/v1/admin/settings — REST API surface
-│   │   │   ├── SystemSettingsController.php    # GET|PUT /admin/settings — Inertia web surface
-│   │   │   ├── TenantHealthController.php      # GET /admin/tenants — delegates to TenantHealthService
-│   │   │   ├── UserManagementApiController.php # GET|POST|PUT /api/v1/admin/users — REST API surface
-│   │   │   └── UserManagementController.php    # GET|POST|PUT /admin/users — Inertia web surface
+│   │   │   ├── AppManagementApiController.php      # GET|PUT /api/v1/admin/apps — REST API surface
+│   │   │   ├── AppManagementController.php         # GET|PUT /admin/apps — Inertia web surface
+│   │   │   ├── InvitationController.php            # GET|POST /invitation/{token} — accept invitation
+│   │   │   ├── SystemSettingsApiController.php     # GET|PUT /api/v1/admin/settings — REST API surface
+│   │   │   ├── SystemSettingsController.php        # GET|PUT /admin/settings — Inertia web surface
+│   │   │   ├── TenantHealthController.php          # (health service only — superseded by TenantManagementController for web)
+│   │   │   ├── TenantManagementApiController.php   # GET|POST|PUT|PATCH|POST|DELETE /api/v1/admin/tenants — REST API surface
+│   │   │   ├── TenantManagementController.php      # GET|POST|PUT|PATCH|POST|DELETE /admin/tenants — Inertia web surface
+│   │   │   ├── UserManagementApiController.php     # GET|POST|PUT /api/v1/admin/users — REST API surface
+│   │   │   └── UserManagementController.php        # GET|POST|PUT /admin/users — Inertia web surface
 │   │   ├── Http/Requests/
+│   │   │   ├── CreateTenantRequest.php         # name, slug (unique, regex), db_* fields, read_replica_* fields
 │   │   │   ├── InviteUserRequest.php           # name, email (unique), apps array validation
+│   │   │   ├── UpdateTenantRequest.php         # same as create with slug uniqueness scoped to self
 │   │   │   └── UpdateUserRequest.php           # name, email, apps array validation
 │   │   ├── Mail/
 │   │   │   └── UserInvitationMail.php          # Invitation email — accepts UserRepositoryData DTO
@@ -133,6 +140,7 @@ laravel-multitenant-sso-boilerplate/
 │   │   ├── Services/
 │   │   │   ├── SystemSettingsService.php       # getSettings()→SystemSettingsData, updateSettings(), getMissingRequiredSettings()→MissingSystemSettingsData
 │   │   │   ├── TenantHealthService.php         # getTenants(), getSummary(), computeHealthStatus()
+│   │   │   ├── TenantManagementService.php     # list()→Collection<TenantData>, create(), update(), setActive(), delete(), runMigrations()
 │   │   │   └── UserManagementService.php       # list()→Collection<UserData>, invite(), update(), acceptInvitation()
 │   │   └── Tests/
 │   │       ├── AppManagementApiTest.php        # 10 PHPUnit tests — API surface
@@ -142,6 +150,9 @@ laravel-multitenant-sso-boilerplate/
 │   │       ├── SystemSettingsWebTest.php       # 43 PHPUnit tests — web surface, all tabs and validation
 │   │       ├── TenantHealthServiceTest.php     # 14 service-layer unit tests
 │   │       ├── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
+│   │       ├── TenantManagementApiTest.php     # 9 PHPUnit tests — API surface (list, create, update, toggle, migrate, delete)
+│   │       ├── TenantManagementServiceTest.php # 8 PHPUnit tests — DTO return contracts, token revocation
+│   │       ├── TenantManagementWebTest.php     # 11 PHPUnit tests — web surface (list, CRUD, toggle, delete)
 │   │       ├── UserManagementApiTest.php       # PHPUnit tests — API surface (list, invite, update, validation)
 │   │       ├── UserManagementServiceTest.php   # PHPUnit tests — DTO return contracts
 │   │       └── UserManagementWebTest.php       # PHPUnit tests — web surface (list, invite, update)
@@ -291,7 +302,7 @@ laravel-multitenant-sso-boilerplate/
 │   │       ├── AppRepository.php           # listOrdered()→Collection<AppRepositoryData>, update()→AppRepositoryData
 │   │       ├── ReportRepository.php        # create()→ReportRepositoryData, listForUser()→LengthAwarePaginator<ReportRepositoryData>
 │   │       ├── SystemSettingRepository.php # get(), set()
-│   │       ├── TenantRepository.php        # allWithMigrationVersions(), listActive(), listOrdered() — all return TenantRepositoryData
+│   │       ├── TenantRepository.php        # allWithMigrationVersions(), listActive(), listOrdered(), find(), create(), update(), setActive(), delete(), dropDatabase(), getUserIdsForTenant() — all return TenantRepositoryData or void
 │   │       ├── UserAppRepository.php       # syncPermissions()
 │   │       └── UserRepository.php          # find(), listWithPermissions(), findWithPermissions(), createInvited(), updateProfile(), activateInvitation(), … — all return DTOs
 │   │
@@ -434,6 +445,7 @@ What's built:
 - **System settings (Phase 5.3)** — seven-tab admin settings page at `/admin/settings` with per-tab save; settings managed via `SystemSettingsService` returning `SystemSettingsData` DTO; required settings (email driver, auth idle timeout, storage driver) trigger a persistent amber banner on all admin pages when unset; full REST API at `/api/v1/admin/settings`; email footer signature uses a TipTap rich-text editor (`RichTextEditor.vue`) outputting HTML stored as a setting value; 76 PHPUnit + 23 Vitest tests
 - **App management (Phase 5.4)** — admin can view and edit app information (name, description) at `/admin/apps` and via `GET|PUT /api/v1/admin/apps`; Inertia inline-edit rows; `AppRepositoryData` DTO returned by the repository
 - **User management (Phase 5.5)** — admin can invite users by email with per-app and per-tenant permissions via `POST /api/v1/admin/users/invite`; admin can update user profile and permissions via `PUT /api/v1/admin/users/{user}`; invited users accept via `/invitation/{token}`; account stays inactive until accepted; `UserData` and `UserWithPermissionsRepositoryData` DTOs carry the full permission graph
+- **Tenant management (Phase 5.6)** — admin can create, edit, and delete tenants from `/admin/tenants`; creating a tenant automatically runs its DB migrations; admin can run migrations per-tenant or across all tenants; toggling `is_active` to false immediately revokes all Sanctum tokens for users on that tenant; deleting a tenant drops its database (best-effort), revokes user tokens, and cascades central record removal; full REST API under `/api/v1/admin/tenants`; `TenantData` DTO combines management fields (DB credentials, `isPasswordSet`) with health metrics for the combined management+health page
 - **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
@@ -531,7 +543,19 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `GET` | `/invitation/{token}` | — | Show the invitation acceptance form |
 | `POST` | `/invitation/{token}` | — | Accept the invitation — sets name, password, and activates the account |
 
-The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, "Create Subscription" saves the ID to `{{subscription_id}}`, and "Invite User" saves the new user ID to `{{invited_user_id}}`, so subsequent requests work without manual copy-paste.
+**Tenant Management (API — Bearer token auth)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/admin/tenants` | Bearer | List all tenants with health metrics and DB connection info |
+| `POST` | `/api/v1/admin/tenants` | Bearer | Create a new tenant and automatically run its DB migrations |
+| `PUT` | `/api/v1/admin/tenants/{tenant}` | Bearer | Update tenant details and DB connection settings |
+| `PATCH` | `/api/v1/admin/tenants/{tenant}/active` | Bearer | Activate or deactivate a tenant; deactivating revokes all user tokens |
+| `POST` | `/api/v1/admin/tenants/{tenant}/migrate` | Bearer | Run pending migrations for a single tenant |
+| `POST` | `/api/v1/admin/tenants/migrate-all` | Bearer | Run pending migrations across all tenant databases |
+| `DELETE` | `/api/v1/admin/tenants/{tenant}` | Bearer | Delete a tenant — revokes tokens, drops DB, removes all central records |
+
+The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, "Create Subscription" saves the ID to `{{subscription_id}}`, "Invite User" saves the new user ID to `{{invited_user_id}}`, and "Create Tenant" saves the ID to `{{tenant_id}}`, so subsequent requests work without manual copy-paste.
 
 ---
 
@@ -887,12 +911,12 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Admin can invite a user by email — before sending the invitation the admin selects which apps the user can access and, if the app has tenants, which tenant(s) the user belongs to; the account is inactive until the invitation is accepted
 - [x] Admin can edit a user's profile data and app/tenant permissions
 
-*5.6 — Tenant management (admin)*
-- [ ] Admin can add and edit tenant details and database connection settings
-- [ ] When a new tenant is created, its tenant database migrations run automatically
-- [ ] Admin can trigger migrations on a selected tenant or across all tenants from the UI
-- [ ] Admin can toggle a tenant's `is_active` flag — when deactivated, all users with a tenant role on that tenant are force-logged out (tokens revoked)
-- [ ] Admin can delete a tenant — the tenant's database is dropped and all related central records are removed
+*5.6 — Tenant management (admin)* *(done)*
+- [x] Admin can add and edit tenant details and database connection settings
+- [x] When a new tenant is created, its tenant database migrations run automatically
+- [x] Admin can trigger migrations on a selected tenant or across all tenants from the UI
+- [x] Admin can toggle a tenant's `is_active` flag — when deactivated, all users with a tenant role on that tenant are force-logged out (tokens revoked)
+- [x] Admin can delete a tenant — the tenant's database is dropped and all related central records are removed
 
 *5.7 — Tenant settings (admin)*
 - [ ] Admin can add, update, and delete per-tenant settings:

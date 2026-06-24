@@ -2,6 +2,8 @@
 
 namespace App\Admin\Services;
 
+use App\Admin\Data\MissingSystemSettingsData;
+use App\Admin\Data\SystemSettingsData;
 use App\Models\Central\SystemSetting;
 
 class SystemSettingsService
@@ -15,10 +17,7 @@ class SystemSettingsService
         'storage_driver' => 'Default storage provider',
     ];
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function getSettings(): array
+    public function getSettings(): SystemSettingsData
     {
         $keys = [
             'email_driver',
@@ -51,8 +50,9 @@ class SystemSettingsService
         ];
 
         $rows = SystemSetting::whereIn('key', $keys)->pluck('value', 'key');
+        $map = array_combine($keys, array_map(fn ($key) => $rows[$key] ?? null, $keys));
 
-        return array_combine($keys, array_map(fn ($key) => $rows[$key] ?? null, $keys));
+        return SystemSettingsData::from($map);
     }
 
     /**
@@ -65,12 +65,7 @@ class SystemSettingsService
         }
     }
 
-    /**
-     * Returns labels of required settings that have no value set.
-     *
-     * @return list<string>
-     */
-    public function getMissingRequiredSettings(): array
+    public function getMissingRequiredSettings(): MissingSystemSettingsData
     {
         $keys = array_keys(self::REQUIRED_SETTINGS);
         $existing = SystemSetting::whereIn('key', $keys)
@@ -78,13 +73,13 @@ class SystemSettingsService
             ->where('value', '!=', '')
             ->pluck('value', 'key');
 
-        $missing = [];
+        $labels = [];
         foreach (self::REQUIRED_SETTINGS as $key => $label) {
             if (! isset($existing[$key])) {
-                $missing[] = $label;
+                $labels[] = $label;
             }
         }
 
-        return $missing;
+        return new MissingSystemSettingsData(labels: $labels);
     }
 }

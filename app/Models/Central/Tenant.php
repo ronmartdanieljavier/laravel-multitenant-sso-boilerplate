@@ -63,6 +63,7 @@ class Tenant extends Model
         return $this->hasMany(UserAppTenant::class);
     }
 
+    /** @return HasMany<TenantMigrationVersion, $this> */
     public function migrationVersions(): HasMany
     {
         return $this->hasMany(TenantMigrationVersion::class);

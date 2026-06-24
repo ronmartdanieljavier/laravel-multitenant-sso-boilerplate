@@ -3,6 +3,7 @@
 namespace App\Models\Central;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -15,7 +16,11 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'profile_picture'])]
+/**
+ * @property Carbon|null $invitation_sent_at
+ * @property string|null $profile_picture_url
+ */
+#[Fillable(['name', 'email', 'password', 'profile_picture', 'is_active', 'invitation_token', 'invitation_sent_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -65,6 +70,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'invitation_sent_at' => 'datetime',
         ];
     }
 }

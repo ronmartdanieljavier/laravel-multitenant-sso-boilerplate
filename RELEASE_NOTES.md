@@ -2,6 +2,89 @@
 
 ---
 
+## [2.9.0] — 2026-06-24
+
+### Added
+
+- **Architecture standards enforced via CLAUDE.md** — project-specific rules codified so every future Claude Code session follows the same layered architecture automatically:
+  - **Repository pattern** — all Eloquent access must live in `App\Repositories\Central\`; repositories return DTOs, never models; parameters accept primitives or DTOs, never Eloquent instances
+  - **DTO contracts** — repository DTOs in `App\Data\Repositories\Central\`; service/module DTOs in `App\{Module}\Data\`; all properties camelCase (global `SnakeCaseMapper` handles DB ↔ JSON); `#[MapInputName]` used where column name differs
+  - **Service DTO return rule** — all public service methods must return DTOs or typed Collections of DTOs, never raw arrays or Eloquent models
+  - **Validation** — all request validation in dedicated `FormRequest` classes; no inline `$request->validate()`
+  - **API parity** — every web route must have a matching REST API endpoint (`{Feature}ApiController`, `auth:sanctum`, `{ data: ... }` responses)
+  - **Module structure** — `app/{Module}/Data/`, `Http/Controllers/`, `Http/Requests/`, `Routes/`, `Services/`, `Tests/` — `app/Profile/` is the canonical template
+
+- **Repository DTOs (`app/Data/Repositories/Central/`)** — full set of typed DTOs replacing raw Eloquent model returns:
+  - `AppRepositoryData` — id, name, slug, description, isActive
+  - `ReportRepositoryData` — id (`string`, UUID), userId, tenantId, type, format, delivery, status, parameters, filePath, errorMessage, batchId, startedAt, completedAt, createdAt
+  - `TenantRepositoryData` — id, name, slug, isActive, dbHost, dbPort, dbName, dbUsername, dbPassword, hasReadReplica, migrationVersions (embedded)
+  - `TenantMigrationVersionRepositoryData` — migration, batch, migratedAt
+  - `UserRepositoryData` — id, name, email, profilePicture, isActive, invitationToken, invitationSentAt
+  - `UserWithPermissionsRepositoryData` — id, name, email, isActive, invitationSentAt, profilePictureUrl, apps[]
+  - `UserAppRepositoryData` — appId, appName, role, tenantIds[]
+
+- **All repositories refactored** — every public method returns a DTO or typed Collection/Paginator:
+  - `AppRepository` — `listOrdered()→Collection<AppRepositoryData>`, `update()→AppRepositoryData`; column-selection removed (fixed-shape DTO requires all columns)
+  - `TenantRepository` — `allWithMigrationVersions()`, `listActive()`, `listActiveWithMigrationVersions()`, `listOrdered()` all return `Collection<TenantRepositoryData>`; migration versions embedded as `TenantMigrationVersionRepositoryData[]`
+  - `ReportRepository` — `create()→ReportRepositoryData`, `listForUser()→LengthAwarePaginator<ReportRepositoryData>`; uses `->through()` to map paginator items to DTOs
+  - `UserRepository` — `find()`, `listWithPermissions()`, `findWithPermissions()`, `findByInvitationToken()`, `createInvited()` all return DTOs; `updateProfile()` and `activateInvitation()` return void
+
+- **Service DTO returns fixed**:
+  - `SystemSettingsService::getSettings()` now returns `SystemSettingsData` (new DTO, 85 camelCase properties); `getMissingRequiredSettings()` now returns `MissingSystemSettingsData` (wraps `list<string>` of labels)
+  - `UserManagementService::list()` return type changed from `array<int, UserData>` to `Collection<int, UserData>`
+  - `HandleInertiaRequests` and `SystemSettingsApiController` updated to unwrap `.labels` for backward-compatible JSON shape
+
+- **`GenerateReportJob` serialization fix** — replaced `SerializesModels` + `Report $report` constructor parameter with `string $reportId` (UUID); model reloaded fresh in `handle()` and `failed()`; eliminates model serialization in queue payload
+
+- **`UserInvitationMail` serialization fix** — replaced `SerializesModels` + `User $user` with `UserRepositoryData $user`; token URL built from `$user->invitationToken` in constructor
+
+- **Repository contract tests** (`tests/Feature/Repositories/Central/`) — four new test files verifying DTO return types end-to-end:
+  - `AppRepositoryTest` — `listOrdered()` returns `Collection<AppRepositoryData>`, `update()` returns `AppRepositoryData` with updated values
+  - `TenantRepositoryTest` — `listOrdered()` includes DB config fields and `hasReadReplica` flag, `allWithMigrationVersions()` embeds `TenantMigrationVersionRepositoryData[]`, `listActive()` filters inactive tenants and supports slug scoping
+  - `ReportRepositoryTest` — `create()` returns `ReportRepositoryData` with UUID string `id`, `listForUser()` returns `LengthAwarePaginator<ReportRepositoryData>` scoped to user, respects `perPage`
+  - `UserRepositoryTest` — `findWithPermissions()` returns `UserWithPermissionsRepositoryData` with embedded apps, `createInvited()` returns inactive DTO with token, `activateInvitation()` activates user and clears token
+
+- **Service layer tests**:
+  - `UserManagementServiceTest` — verifies `list()→Collection<UserData>`, `invite()→UserData`, `update()→UserData`, `acceptInvitation()→UserData`
+  - `SystemSettingsServiceTest` — verifies `getSettings()→SystemSettingsData`, `getMissingRequiredSettings()→MissingSystemSettingsData`, `updateSettings()` persists and is reflected through the DTO
+
+- **Bug fix — `route()` not defined** — `route()` (Ziggy) was used in Vue pages without being installed or wired up; replaced all four occurrences with inline URL strings:
+  - `Admin/Users/Index.vue` — `route('admin.users.invite')` → `'/admin/users/invite'`; `route('admin.users.update', id)` → `` `/admin/users/${id}` ``
+  - `Admin/Apps/Index.vue` — `route('admin.apps.update', id)` → `` `/admin/apps/${id}` ``
+  - `Admin/Users/Accept.vue` — `route('invitation.accept.submit', {token})` → `` `/invitation/${token}` ``
+
+---
+
+## [2.8.0] — 2026-06-24
+
+### Added
+
+- **User management — Phase 5.5** — admin can invite users by email and edit user profiles + permissions over both the Inertia web interface and a versioned REST API:
+
+  **Web**
+  - `App\Admin\Http\Controllers\UserManagementController` — `GET /admin/users` renders `Admin/Users/Index` via Inertia with all users, apps, tenants, and roles as props; `POST /admin/users/invite` sends an invitation email and redirects; `PUT /admin/users/{user}` updates profile and permissions and redirects
+  - `App\Admin\Http\Controllers\InvitationController` — `GET /invitation/{token}` renders `Admin/Users/Accept` for inactive users; `POST /invitation/{token}` accepts the invitation, sets name/password, activates the account, and redirects to login
+  - `resources/js/Pages/Admin/Users/Index.vue` — user table with status badges (Active / Invited); Invite modal with name, email, and dynamic per-app / per-tenant permission selectors; Edit modal pre-filled from existing data with same permission selectors; Cancel reverts without page reload
+  - `resources/js/Pages/Admin/Users/Accept.vue` — invitation acceptance form (name, password, password confirmation) rendered at `/invitation/{token}`
+  - Users nav link wired in all admin sidebar pages
+
+  **API**
+  - `App\Admin\Http\Controllers\UserManagementApiController` — `GET /api/v1/admin/users` returns `{ "data": [...] }` with all users and their permissions; `POST /api/v1/admin/users/invite` creates an inactive user, assigns permissions, sends email, returns `{ "data": {...} }` with 201; `PUT /api/v1/admin/users/{user}` updates profile and permissions, returns `{ "data": {...} }`; all require Sanctum Bearer auth
+  - `App\Admin\Data\InviteUserData` — name, email, apps (`DataCollection<UserAppPermissionData>`)
+  - `App\Admin\Data\UpdateUserData` — name, email, apps (`DataCollection<UserAppPermissionData>`)
+  - `App\Admin\Data\UserData` — id, name, email, isActive, invitationSentAt, profilePictureUrl, apps (`UserAppData[]`)
+  - `App\Admin\Mail\UserInvitationMail` — queued mailable that accepts `UserRepositoryData` (no `SerializesModels`); acceptance URL built from `invitationToken`
+
+  **Tests**
+  - `App\Admin\Tests\UserManagementWebTest` — PHPUnit tests: list page, invite happy path, edit happy path, validation, invitation acceptance flow, duplicate email, inactive user guard
+  - `App\Admin\Tests\UserManagementApiTest` — PHPUnit tests: 401, list structure, invite, update, validation, duplicate email, 404
+  - `resources/js/Pages/Admin/Users/Index.test.js` — Vitest tests: table rendering, status badges, invite modal toggle, edit modal pre-fill, permission selectors
+
+  **Postman**
+  - New **User Management (API)** folder: `GET /api/v1/admin/users` (List Users), `POST /api/v1/admin/users/invite` (Invite User — saves `{{invited_user_id}}`), `PUT /api/v1/admin/users/:id` (Update User) with 200/201, 401, 404, and 422 example responses
+
+---
+
 ## [2.7.0] — 2026-06-24
 
 ### Added
@@ -24,13 +107,6 @@
 
   **Postman**
   - New **App Management (API)** folder: `GET /api/v1/admin/apps` (List Apps) and `PUT /api/v1/admin/apps/:id` (Update App) with 200, 401, 404, and 422 example responses
-
----
-
-## [Unreleased] — In Progress
-
-### Planned
-- PHPStan level raised beyond 5
 
 ---
 

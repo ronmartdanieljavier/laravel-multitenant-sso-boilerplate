@@ -2,8 +2,10 @@
 
 namespace App\Repositories\Central;
 
+use App\Data\Repositories\Central\ReportRepositoryData;
 use App\Models\Central\Report;
 use App\Reports\Enums\ReportStatus;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 class ReportRepository
@@ -52,5 +54,25 @@ class ReportRepository
             ->selectRaw('tenant_id, MAX(completed_at) as last_report_at')
             ->groupBy('tenant_id')
             ->pluck('last_report_at', 'tenant_id');
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, ReportRepositoryData>
+     */
+    public function listForUser(int $userId, int $perPage = 20): LengthAwarePaginator
+    {
+        return $this->model->query()
+            ->where('user_id', $userId)
+            ->latest()
+            ->paginate($perPage)
+            ->through(fn (Report $report) => ReportRepositoryData::from($report));
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function create(array $data): ReportRepositoryData
+    {
+        return ReportRepositoryData::from($this->model->create($data));
     }
 }

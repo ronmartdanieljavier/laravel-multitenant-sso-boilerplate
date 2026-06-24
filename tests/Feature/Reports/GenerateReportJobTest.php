@@ -24,7 +24,7 @@ class GenerateReportJobTest extends TestCase
             'status' => ReportStatus::Pending->value,
         ]);
 
-        $job = new GenerateReportJob($report);
+        $job = new GenerateReportJob($report->id);
         $job->handle(new ReportGeneratorFactory($this->app->make(ReportFileService::class)));
 
         $report->refresh();
@@ -42,7 +42,7 @@ class GenerateReportJobTest extends TestCase
             'status' => ReportStatus::Pending->value,
         ]);
 
-        $job = new GenerateReportJob($report);
+        $job = new GenerateReportJob($report->id);
         $job->failed(new Exception('Test failure message'));
 
         $report->refresh();
@@ -61,7 +61,7 @@ class GenerateReportJobTest extends TestCase
             'parameters' => ['from' => '2026-01-01', 'to' => '2026-06-20'],
         ]);
 
-        $job = new GenerateReportJob($report);
+        $job = new GenerateReportJob($report->id);
         $job->handle(new ReportGeneratorFactory($this->app->make(ReportFileService::class)));
 
         $report->refresh();

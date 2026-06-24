@@ -13,13 +13,12 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class GenerateReportJob implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable;
 
     public int $tries = 3;
 
@@ -27,15 +26,17 @@ class GenerateReportJob implements ShouldQueue
 
     public int $backoff = 30;
 
-    public function __construct(public readonly Report $report)
+    public function __construct(public readonly string $reportId)
     {
         $this->onQueue('reports');
     }
 
     public function handle(ReportGeneratorFactory $factory): void
     {
+        $report = Report::findOrFail($this->reportId);
+
         if ($this->batch()?->cancelled()) {
-            $this->report->update([
+            $report->update([
                 'status' => ReportStatus::Failed,
                 'error_message' => 'Batch was cancelled.',
                 'completed_at' => now(),
@@ -44,53 +45,56 @@ class GenerateReportJob implements ShouldQueue
             return;
         }
 
-        $this->report->update([
+        $report->update([
             'status' => ReportStatus::Processing,
             'started_at' => now(),
         ]);
 
-        $generator = $factory->make($this->report);
+        $generator = $factory->make($report);
         $result = $generator->generate();
 
-        $this->report->update([
+        $report->update([
             'status' => ReportStatus::Success,
             'file_path' => $result->filePath,
             'completed_at' => now(),
         ]);
 
-        $this->deliver(app(ReportDeliveryService::class));
+        $this->deliver($report, app(ReportDeliveryService::class));
     }
 
-    private function deliver(ReportDeliveryService $deliveryService): void
+    private function deliver(Report $report, ReportDeliveryService $deliveryService): void
     {
-        $parameters = $this->report->parameters ?? [];
+        $parameters = $report->parameters ?? [];
         $isSubscriptionReport = isset($parameters['subscription_id']);
 
-        match ($this->report->delivery) {
+        match ($report->delivery) {
             ReportDelivery::Email => $isSubscriptionReport
-                ? $deliveryService->sendToRecipients($this->report, $parameters['recipients'] ?? [])
-                : $this->sendToReportUser(),
-            ReportDelivery::S3 => $deliveryService->uploadToS3($this->report, $parameters['s3_path'] ?? null),
-            ReportDelivery::EmailAndS3 => $this->handleEmailAndS3($deliveryService, $parameters),
+                ? $deliveryService->sendToRecipients($report, $parameters['recipients'] ?? [])
+                : $this->sendToReportUser($report),
+            ReportDelivery::S3 => $deliveryService->uploadToS3($report, $parameters['s3_path'] ?? null),
+            ReportDelivery::EmailAndS3 => $this->handleEmailAndS3($report, $deliveryService, $parameters),
             default => null,
         };
     }
 
-    private function sendToReportUser(): void
+    private function sendToReportUser(Report $report): void
     {
-        $this->report->loadMissing('user');
-        Mail::to($this->report->user)->queue(new ReportReadyMail($this->report));
+        $report->loadMissing('user');
+        Mail::to($report->user)->queue(new ReportReadyMail($report));
     }
 
-    private function handleEmailAndS3(ReportDeliveryService $deliveryService, array $parameters): void
+    /**
+     * @param  array<string, mixed>  $parameters
+     */
+    private function handleEmailAndS3(Report $report, ReportDeliveryService $deliveryService, array $parameters): void
     {
-        $deliveryService->sendToRecipients($this->report, $parameters['recipients'] ?? []);
-        $deliveryService->uploadToS3($this->report, $parameters['s3_path'] ?? null);
+        $deliveryService->sendToRecipients($report, $parameters['recipients'] ?? []);
+        $deliveryService->uploadToS3($report, $parameters['s3_path'] ?? null);
     }
 
     public function failed(Throwable $e): void
     {
-        $this->report->update([
+        Report::find($this->reportId)?->update([
             'status' => ReportStatus::Failed,
             'error_message' => $e->getMessage(),
             'completed_at' => now(),

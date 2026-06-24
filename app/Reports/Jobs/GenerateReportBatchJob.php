@@ -2,6 +2,7 @@
 
 namespace App\Reports\Jobs;
 
+use App\Data\Repositories\Central\ReportRepositoryData;
 use App\Models\Central\Report;
 use App\Reports\Enums\ReportDelivery;
 use App\Reports\Enums\ReportFormat;
@@ -17,11 +18,11 @@ class GenerateReportBatchJob
     ) {}
 
     /**
-     * @param  Collection<int, Report>  $reports
+     * @param  Collection<int, ReportRepositoryData>  $reports
      */
     public function dispatch(Collection $reports, string $batchId): Batch
     {
-        $jobs = $reports->map(fn (Report $report) => new GenerateReportJob($report))->all();
+        $jobs = $reports->map(fn (ReportRepositoryData $dto) => new GenerateReportJob($dto->id))->all();
 
         return Bus::batch($jobs)
             ->then(function (Batch $batch) use ($reports, $batchId) {
@@ -33,19 +34,18 @@ class GenerateReportBatchJob
     }
 
     /**
-     * @param  Collection<int, Report>  $reports
+     * @param  Collection<int, ReportRepositoryData>  $reports
      */
     private function handleBatchCompletion(Collection $reports, string $batchId): void
     {
-        $successfulReports = $reports->filter(
-            fn (Report $r) => $r->fresh()?->file_path !== null
-        );
+        $ids = $reports->pluck('id')->all();
+        $freshReports = Report::whereIn('id', $ids)->whereNotNull('file_path')->get();
 
-        if ($successfulReports->isEmpty()) {
+        if ($freshReports->isEmpty()) {
             return;
         }
 
-        $successfulReports
+        $freshReports
             ->groupBy(fn (Report $r) => $r->format->value.'|'.$r->delivery->value)
             ->each(function (Collection $group) use ($batchId): void {
                 $format = $group->first()->format;
@@ -60,7 +60,7 @@ class GenerateReportBatchJob
                     $zipPath = $this->fileService->zipFiles($paths, "batch_{$batchId}.zip");
 
                     // Store the ZIP path on the first report so the batch download is retrievable via the API.
-                    $group->first()->fresh()?->update(['file_path' => $zipPath]);
+                    $group->first()->update(['file_path' => $zipPath]);
                 }
             });
     }

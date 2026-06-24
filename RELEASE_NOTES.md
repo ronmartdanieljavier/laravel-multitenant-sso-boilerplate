@@ -2,6 +2,31 @@
 
 ---
 
+## [2.7.0] — 2026-06-24
+
+### Added
+
+- **App management — Phase 5.4** — admin can view and edit app information (name, description) over both the Inertia web interface and a versioned REST API:
+
+  **Web**
+  - `App\Admin\Http\Controllers\AppManagementController` — `GET /admin/apps` renders `Admin/Apps/Index` via Inertia with all apps as props (id, name, slug, description, is_active, ordered by name); `PUT /admin/apps/{app}` saves name/description and redirects with a flash success message
+  - `resources/js/Pages/Admin/Apps/Index.vue` — table listing all apps with inline edit rows; clicking Edit expands the row with pre-filled name and description inputs; Cancel reverts without a page reload
+  - Apps nav link wired in all admin sidebar pages (Dashboard, Tenants, Settings)
+
+  **API**
+  - `App\Admin\Http\Controllers\AppManagementApiController` — `GET /api/v1/admin/apps` returns `{ "data": [...] }` with all apps; `PUT /api/v1/admin/apps/{app}` updates and returns `{ "data": {...} }` for the affected app; both require Sanctum Bearer auth
+  - `App\Http\Requests\Admin\UpdateAppRequest` — validates `name` (required, max 255) and `description` (nullable, max 1000); shared by web and API controllers
+
+  **Tests**
+  - `App\Admin\Tests\AppManagementWebTest` — 12 PHPUnit tests: auth redirects, listing, payload fields, update happy path, clear description, name required, max-length validation, 404, slug/URL immutability
+  - `App\Admin\Tests\AppManagementApiTest` — 10 PHPUnit tests: 401 on unauthenticated GET/PUT, list structure, update, clear description, validation errors, 404, slug/URL immutability
+  - `resources/js/Pages/Admin/Apps/Index.test.js` — 12 Vitest tests: heading, row-per-app, name/slug display, null description fallback, status badges, Edit button count, empty state, edit form toggle, form pre-fill, cancel, missing-settings banner, active nav item
+
+  **Postman**
+  - New **App Management (API)** folder: `GET /api/v1/admin/apps` (List Apps) and `PUT /api/v1/admin/apps/:id` (Update App) with 200, 401, 404, and 422 example responses
+
+---
+
 ## [Unreleased] — In Progress
 
 ### Planned

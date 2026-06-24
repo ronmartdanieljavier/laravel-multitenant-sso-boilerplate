@@ -2,11 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Central\Report;
-use App\Models\Central\Tenant;
+use App\Data\Repositories\Central\TenantRepositoryData;
 use App\Models\Tenant\ReportSubscription;
 use App\Reports\Enums\ReportStatus;
 use App\Reports\Jobs\GenerateReportJob;
+use App\Repositories\Central\ReportRepository;
+use App\Repositories\Central\TenantRepository;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +19,16 @@ class DispatchScheduledReportsCommand extends Command
 
     protected $description = 'Dispatch report generation jobs for due subscription schedules across all tenants';
 
+    public function __construct(
+        private TenantRepository $tenantRepository,
+        private ReportRepository $reportRepository,
+    ) {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
-        $tenants = $this->resolveTenants();
+        $tenants = $this->tenantRepository->listActive($this->option('tenant') ?: null);
 
         if ($tenants->isEmpty()) {
             $this->info('No active tenants found.');
@@ -31,6 +39,7 @@ class DispatchScheduledReportsCommand extends Command
         $dispatched = 0;
 
         foreach ($tenants as $tenant) {
+            /** @var TenantRepositoryData $tenant */
             try {
                 $this->configureTenantConnection($tenant);
 
@@ -52,26 +61,15 @@ class DispatchScheduledReportsCommand extends Command
         return self::SUCCESS;
     }
 
-    private function resolveTenants()
-    {
-        $query = Tenant::query()->where('is_active', true);
-
-        if ($slug = $this->option('tenant')) {
-            $query->where('slug', $slug);
-        }
-
-        return $query->get();
-    }
-
-    private function configureTenantConnection(Tenant $tenant): void
+    private function configureTenantConnection(TenantRepositoryData $tenant): void
     {
         Config::set('database.connections.tenant', [
             'driver' => 'pgsql',
-            'host' => $tenant->db_host,
-            'port' => $tenant->db_port,
-            'database' => $tenant->db_name,
-            'username' => $tenant->db_username,
-            'password' => $tenant->db_password,
+            'host' => $tenant->dbHost,
+            'port' => $tenant->dbPort,
+            'database' => $tenant->dbName,
+            'username' => $tenant->dbUsername,
+            'password' => $tenant->dbPassword,
             'charset' => 'utf8',
             'prefix' => '',
             'schema' => 'public',
@@ -82,7 +80,7 @@ class DispatchScheduledReportsCommand extends Command
         DB::reconnect('tenant');
     }
 
-    private function dispatchForTenant(Tenant $tenant): int
+    private function dispatchForTenant(TenantRepositoryData $tenant): int
     {
         $subscriptions = ReportSubscription::on('tenant')
             ->where('is_active', true)
@@ -90,7 +88,7 @@ class DispatchScheduledReportsCommand extends Command
             ->filter(fn (ReportSubscription $s) => $s->isDue());
 
         foreach ($subscriptions as $subscription) {
-            $report = Report::create([
+            $dto = $this->reportRepository->create([
                 'tenant_id' => $tenant->id,
                 'type' => $subscription->type,
                 'format' => $subscription->format,
@@ -103,7 +101,7 @@ class DispatchScheduledReportsCommand extends Command
                 ],
             ]);
 
-            GenerateReportJob::dispatch($report);
+            GenerateReportJob::dispatch($dto->id);
 
             $subscription->update(['last_dispatched_at' => now()]);
         }

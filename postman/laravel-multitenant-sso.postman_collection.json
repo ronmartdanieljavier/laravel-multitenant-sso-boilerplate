@@ -30,13 +30,13 @@
       "key": "admin_email",
       "value": "admin@example.com",
       "type": "string",
-      "description": "Default admin email — matches ADMIN_EMAIL in .env"
+      "description": "Default admin email \u2014 matches ADMIN_EMAIL in .env"
     },
     {
       "key": "admin_password",
       "value": "password",
       "type": "string",
-      "description": "Default admin password — matches ADMIN_PASSWORD in .env"
+      "description": "Default admin password \u2014 matches ADMIN_PASSWORD in .env"
     },
     {
       "key": "report_id",
@@ -52,7 +52,7 @@
   "item": [
     {
       "name": "Auth",
-      "description": "Authentication endpoints.\n\n**API auth** (`/api/login`, `/api/logout`) — stateless Sanctum token flow used by mobile clients and SPAs that manage their own token storage.\n\n**Web auth** (`/login`, `/logout`) — session-based flow for the browser frontend (Inertia.js). After login the server redirects: users with one app go directly to that app's dashboard; users with multiple apps are sent to `/apps` to choose. An idle session timeout (configurable via the `authentication_idle_time` system setting, default 30 min) automatically logs out inactive browser sessions. The web logout endpoint invalidates the session and redirects to `/login`.\n\nNote: web endpoints use Laravel session cookies and require a valid CSRF token (`X-XSRF-TOKEN` header or `_token` form field). They are documented here for reference — use the API endpoints for token-based integrations.",
+      "description": "Authentication endpoints.\n\n**API auth** (`/api/login`, `/api/logout`) \u2014 stateless Sanctum token flow used by mobile clients and SPAs that manage their own token storage.\n\n**Web auth** (`/login`, `/logout`) \u2014 session-based flow for the browser frontend (Inertia.js). After login the server redirects: users with one app go directly to that app's dashboard; users with multiple apps are sent to `/apps` to choose. An idle session timeout (configurable via the `authentication_idle_time` system setting, default 30 min) automatically logs out inactive browser sessions. The web logout endpoint invalidates the session and redirects to `/login`.\n\nNote: web endpoints use Laravel session cookies and require a valid CSRF token (`X-XSRF-TOKEN` header or `_token` form field). They are documented here for reference \u2014 use the API endpoints for token-based integrations.",
       "item": [
         {
           "name": "Login",
@@ -76,18 +76,34 @@
             },
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/api/v1/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
             },
             "description": "Authenticate with email and password. Returns a Bearer token, user info, and accessible apps with their tenants.\n\nDefault admin credentials are pre-filled via `admin_email` and `admin_password` collection variables (set from `ADMIN_EMAIL` / `ADMIN_PASSWORD` in your `.env`).\n\nThe test script automatically saves the returned token to the `token` collection variable."
           },
@@ -97,8 +113,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -106,8 +128,14 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/login",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "login"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
                 }
               },
               "status": "OK",
@@ -120,8 +148,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -129,8 +163,14 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/login",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "login"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
                 }
               },
               "status": "Unauthorized",
@@ -145,12 +185,21 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "logout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "logout"
+              ]
             },
             "description": "Revokes the current Sanctum access token. Requires a valid Bearer token (inherited from collection auth). Use this for token-based (mobile / SPA) clients."
           },
@@ -159,11 +208,22 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/logout",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "logout"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "logout"
+                  ]
                 }
               },
               "status": "OK",
@@ -181,15 +241,26 @@
             },
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "text/html" },
-              { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}", "description": "Required CSRF token. Obtain from the XSRF-TOKEN cookie set by GET /login." }
+              {
+                "key": "Accept",
+                "value": "text/html"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Required CSRF token. Obtain from the XSRF-TOKEN cookie set by GET /login."
+              }
             ],
             "url": {
               "raw": "{{base_url}}/logout",
-              "host": ["{{base_url}}"],
-              "path": ["logout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout"
+              ]
             },
-            "description": "Session-based web logout. Invalidates the Laravel session and regenerates the CSRF token, then redirects to `/login`.\n\nRequires an active browser session (session cookie) and a valid CSRF token in the `X-XSRF-TOKEN` header.\n\nThis is the endpoint the browser frontend calls — it is not a JSON API and does not use a Bearer token. The response is a `302` redirect to `/login`."
+            "description": "Session-based web logout. Invalidates the Laravel session and regenerates the CSRF token, then redirects to `/login`.\n\nRequires an active browser session (session cookie) and a valid CSRF token in the `X-XSRF-TOKEN` header.\n\nThis is the endpoint the browser frontend calls \u2014 it is not a JSON API and does not use a Bearer token. The response is a `302` redirect to `/login`."
           },
           "response": [
             {
@@ -197,19 +268,34 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "text/html" },
-                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                  {
+                    "key": "Accept",
+                    "value": "text/html"
+                  },
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{xsrf_token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/logout",
-                  "host": ["{{base_url}}"],
-                  "path": ["logout"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "logout"
+                  ]
                 }
               },
               "status": "Found",
               "code": 302,
               "_postman_previewlanguage": "text",
-              "header": [{ "key": "Location", "value": "http://localhost/login" }],
+              "header": [
+                {
+                  "key": "Location",
+                  "value": "http://localhost/login"
+                }
+              ],
               "body": ""
             }
           ]
@@ -219,12 +305,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/apps",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "apps"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "apps"
+              ]
             },
             "description": "Returns the list of apps and tenants the authenticated user has access to, along with their roles."
           },
@@ -233,11 +328,22 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/apps",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "apps"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "apps"
+                  ]
                 }
               },
               "status": "OK",
@@ -258,12 +364,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reports",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports"
+              ]
             },
             "description": "Returns a paginated list of reports belonging to the authenticated user, ordered by most recent."
           },
@@ -272,11 +387,22 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports"
+                  ]
                 }
               },
               "status": "OK",
@@ -305,20 +431,36 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"delivery\": \"none\",\n  \"parameters\": {\n    \"from\": \"2026-01-01\",\n    \"to\": \"2026-06-20\"\n  }\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/api/v1/reports",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports"
+              ]
             },
-            "description": "Dispatches a single report job to the `reports` Redis queue. Status transitions: `pending → processing → success | failed`.\n\nValid `format` values: `screen`, `pdf`, `excel`.\nValid `delivery` values: `download`, `email`, `none`.\n\nThe test script auto-saves the returned report UUID to the `report_id` collection variable."
+            "description": "Dispatches a single report job to the `reports` Redis queue. Status transitions: `pending \u2192 processing \u2192 success | failed`.\n\nValid `format` values: `screen`, `pdf`, `excel`.\nValid `delivery` values: `download`, `email`, `none`.\n\nThe test script auto-saves the returned report UUID to the `report_id` collection variable."
           },
           "response": [
             {
@@ -326,8 +468,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -335,8 +483,14 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports"
+                  ]
                 }
               },
               "status": "Created",
@@ -349,8 +503,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -358,8 +518,14 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -374,18 +540,35 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reports\": [\n    {\n      \"type\": \"user_activity\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\",\n      \"parameters\": { \"from\": \"2026-01-01\", \"to\": \"2026-06-20\" }\n    },\n    {\n      \"type\": \"app_access\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\"\n    }\n  ]\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/api/v1/reports/batch",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "batch"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "batch"
+              ]
             },
             "description": "Dispatches up to 50 report jobs as a single Laravel Bus batch. All reports in the batch must share the same `format` and `delivery` values.\n\nOn completion, if `delivery` is `download` and multiple reports succeed, a ZIP archive is created and its path stored on the first report record (retrievable via `GET /api/reports/{reports[0].id}/download`)."
           },
@@ -395,8 +578,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -404,8 +593,15 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/batch",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "batch"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "batch"
+                  ]
                 }
               },
               "status": "Created",
@@ -418,8 +614,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -427,8 +629,15 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/batch",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "batch"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "batch"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -443,25 +652,47 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reports/{{report_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "{{report_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "{{report_id}}"
+              ]
             },
             "description": "Returns the current status and result of a report. Poll this endpoint after dispatching until `status` is `success` or `failed`."
           },
           "response": [
             {
-              "name": "200 OK — success",
+              "name": "200 OK \u2014 success",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/{{report_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "{{report_id}}"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}"
+                  ]
                 }
               },
               "status": "OK",
@@ -470,14 +701,26 @@
               "body": "{\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"type\": \"user_activity\",\n    \"format\": \"screen\",\n    \"delivery\": \"none\",\n    \"status\": \"success\",\n    \"parameters\": { \"from\": \"2026-01-01\", \"to\": \"2026-06-20\" },\n    \"batch_id\": null,\n    \"error_message\": null,\n    \"started_at\": \"2026-06-20T03:00:00.000000Z\",\n    \"completed_at\": \"2026-06-20T03:00:01.000000Z\",\n    \"created_at\": \"2026-06-20T03:00:00.000000Z\"\n  }\n}"
             },
             {
-              "name": "200 OK — failed",
+              "name": "200 OK \u2014 failed",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/{{report_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "{{report_id}}"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}"
+                  ]
                 }
               },
               "status": "OK",
@@ -489,11 +732,23 @@
               "name": "403 Forbidden",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/{{report_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "{{report_id}}"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}"
+                  ]
                 }
               },
               "status": "Forbidden",
@@ -508,25 +763,49 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/octet-stream" }
+              {
+                "key": "Accept",
+                "value": "application/octet-stream"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reports/{{report_id}}/download",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "{{report_id}}", "download"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "{{report_id}}",
+                "download"
+              ]
             },
-            "description": "Streams the generated report file. Only available when `status` is `success` and a `file_path` is set.\n\nFor download-delivery batches the ZIP archive is stored on the first report record — use that report's ID here."
+            "description": "Streams the generated report file. Only available when `status` is `success` and a `file_path` is set.\n\nFor download-delivery batches the ZIP archive is stored on the first report record \u2014 use that report's ID here."
           },
           "response": [
             {
-              "name": "200 OK — file stream",
+              "name": "200 OK \u2014 file stream",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/octet-stream" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/octet-stream"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/{{report_id}}/download",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "{{report_id}}", "download"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}",
+                    "download"
+                  ]
                 }
               },
               "status": "OK",
@@ -538,11 +817,24 @@
               "name": "422 Not Ready",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/octet-stream" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/octet-stream"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/{{report_id}}/download",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "{{report_id}}", "download"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}",
+                    "download"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -557,25 +849,47 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reports/{{report_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "{{report_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "{{report_id}}"
+              ]
             },
-            "description": "Deletes a report record and its associated file from storage. Owner-only — returns 403 for reports belonging to other users."
+            "description": "Deletes a report record and its associated file from storage. Owner-only \u2014 returns 403 for reports belonging to other users."
           },
           "response": [
             {
               "name": "204 No Content",
               "originalRequest": {
                 "method": "DELETE",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/{{report_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "{{report_id}}"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}"
+                  ]
                 }
               },
               "status": "No Content",
@@ -596,12 +910,22 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reports/subscriptions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "subscriptions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "subscriptions"
+              ]
             },
             "description": "Returns a paginated list of report subscriptions for the current tenant."
           },
@@ -610,11 +934,23 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/subscriptions",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "subscriptions"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "subscriptions"
+                  ]
                 }
               },
               "status": "OK",
@@ -643,18 +979,35 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"type\": \"user_activity\",\n  \"format\": \"screen\",\n  \"frequency\": \"daily\",\n  \"delivery\": \"email\",\n  \"recipients\": [\"admin@acme.com\", \"reports@acme.com\"]\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/api/v1/reports/subscriptions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "subscriptions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "subscriptions"
+              ]
             },
             "description": "Creates a new report subscription for the current tenant.\n\nValid `frequency` values: `daily`, `weekly`, `monthly`.\nValid `delivery` values: `email`, `s3`, `email_and_s3`.\n\n`recipients` is required when delivery is `email` or `email_and_s3`.\n`s3_path` is the S3 key prefix (e.g. `tenant-reports/`) used when delivery is `s3` or `email_and_s3`.\n\nThe test script auto-saves the returned ID to the `subscription_id` collection variable."
           },
@@ -664,8 +1017,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -673,8 +1032,15 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/subscriptions",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "subscriptions"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "subscriptions"
+                  ]
                 }
               },
               "status": "Created",
@@ -687,8 +1053,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -696,8 +1068,15 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/subscriptions",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "subscriptions"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "subscriptions"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -712,12 +1091,23 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reports/subscriptions/{{subscription_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "subscriptions", "{{subscription_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "subscriptions",
+                "{{subscription_id}}"
+              ]
             },
             "description": "Returns a single report subscription by ID."
           },
@@ -726,11 +1116,24 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/subscriptions/{{subscription_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "subscriptions", "{{subscription_id}}"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "subscriptions",
+                    "{{subscription_id}}"
+                  ]
                 }
               },
               "status": "OK",
@@ -745,20 +1148,38 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"frequency\": \"weekly\",\n  \"is_active\": false\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/api/v1/reports/subscriptions/{{subscription_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "subscriptions", "{{subscription_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "subscriptions",
+                "{{subscription_id}}"
+              ]
             },
-            "description": "Partially updates a subscription. All fields are optional — only send the ones you want to change.\n\nUse `is_active: false` to pause a subscription without deleting it."
+            "description": "Partially updates a subscription. All fields are optional \u2014 only send the ones you want to change.\n\nUse `is_active: false` to pause a subscription without deleting it."
           },
           "response": [
             {
@@ -766,8 +1187,14 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -775,8 +1202,16 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/subscriptions/{{subscription_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "subscriptions", "{{subscription_id}}"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "subscriptions",
+                    "{{subscription_id}}"
+                  ]
                 }
               },
               "status": "OK",
@@ -791,12 +1226,23 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/reports/subscriptions/{{subscription_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reports", "subscriptions", "{{subscription_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "subscriptions",
+                "{{subscription_id}}"
+              ]
             },
             "description": "Permanently deletes a subscription. Use `is_active: false` via the update endpoint to pause without deleting."
           },
@@ -805,11 +1251,24 @@
               "name": "204 No Content",
               "originalRequest": {
                 "method": "DELETE",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/reports/subscriptions/{{subscription_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "reports", "subscriptions", "{{subscription_id}}"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "subscriptions",
+                    "{{subscription_id}}"
+                  ]
                 }
               },
               "status": "No Content",
@@ -823,17 +1282,28 @@
     },
     {
       "name": "Profile (API)",
-      "description": "User self-service profile endpoints — stateless Bearer token auth. All responses use the `UserResource` envelope `{ \"data\": { ... } }`. Requires a valid Sanctum token (inherited from collection auth).",
+      "description": "User self-service profile endpoints \u2014 stateless Bearer token auth. All responses use the `UserResource` envelope `{ \"data\": { ... } }`. Requires a valid Sanctum token (inherited from collection auth).",
       "item": [
         {
           "name": "Get Profile",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profile"
+              ]
             },
             "description": "Returns the authenticated user's profile wrapped in a `UserResource` envelope."
           },
@@ -842,11 +1312,22 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/profile",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "profile"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profile"
+                  ]
                 }
               },
               "status": "OK",
@@ -861,18 +1342,35 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Jane Doe\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/api/v1/profile/name",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "profile", "name"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profile",
+                "name"
+              ]
             },
             "description": "Updates the authenticated user's display name. Returns the updated `UserResource`.\n\nValidation: required, string, max 255 characters."
           },
@@ -882,14 +1380,30 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
-                "body": { "mode": "raw", "raw": "{\n  \"name\": \"Jane Doe\"\n}" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Doe\"\n}"
+                },
                 "url": {
                   "raw": "{{base_url}}/api/v1/profile/name",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "profile", "name"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profile",
+                    "name"
+                  ]
                 }
               },
               "status": "OK",
@@ -902,14 +1416,30 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
-                "body": { "mode": "raw", "raw": "{\n  \"name\": \"\"\n}" },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"\"\n}"
+                },
                 "url": {
                   "raw": "{{base_url}}/api/v1/profile/name",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "profile", "name"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profile",
+                    "name"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -923,7 +1453,12 @@
           "name": "Upload Profile Picture",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Accept", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -936,8 +1471,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/profile/picture",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "profile", "picture"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profile",
+                "picture"
+              ]
             },
             "description": "Uploads or replaces the authenticated user's profile picture. Returns the updated `UserResource` with a populated `profile_picture_url`.\n\nValidation: required, must be an image (jpg/png/gif/bmp/svg/webp), max 2048 KB (2 MB). The old picture is deleted on replacement."
           },
@@ -946,15 +1488,32 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "body": {
                   "mode": "formdata",
-                  "formdata": [{ "key": "profile_picture", "type": "file" }]
+                  "formdata": [
+                    {
+                      "key": "profile_picture",
+                      "type": "file"
+                    }
+                  ]
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/profile/picture",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "profile", "picture"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profile",
+                    "picture"
+                  ]
                 }
               },
               "status": "OK",
@@ -966,15 +1525,33 @@
               "name": "422 Validation Error (not an image)",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Accept", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
                 "body": {
                   "mode": "formdata",
-                  "formdata": [{ "key": "profile_picture", "type": "file", "description": "A non-image file" }]
+                  "formdata": [
+                    {
+                      "key": "profile_picture",
+                      "type": "file",
+                      "description": "A non-image file"
+                    }
+                  ]
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/profile/picture",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "profile", "picture"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profile",
+                    "picture"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -989,18 +1566,35 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"current_password\": \"old-password\",\n  \"password\": \"new-password123\",\n  \"password_confirmation\": \"new-password123\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/api/v1/profile/password",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "profile", "password"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profile",
+                "password"
+              ]
             },
             "description": "Changes the authenticated user's password. Returns `200` with a success message.\n\nValidation: `current_password` must match the existing password; `password` is required, confirmed, and at least 8 characters."
           },
@@ -1010,8 +1604,14 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -1019,8 +1619,15 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/profile/password",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "profile", "password"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profile",
+                    "password"
+                  ]
                 }
               },
               "status": "OK",
@@ -1033,8 +1640,14 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -1042,8 +1655,15 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/profile/password",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "profile", "password"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profile",
+                    "password"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -1057,27 +1677,48 @@
     },
     {
       "name": "Profile (Web)",
-      "description": "User self-service profile endpoints. All three use the browser session (cookie + CSRF token) — they are not JSON API endpoints and do not use a Bearer token.\n\nRequires an active browser session (session cookie) and a valid CSRF token in the `X-XSRF-TOKEN` header. Each endpoint returns a `302` redirect back to `/profile` on success with a `flash.success` message.",
+      "description": "User self-service profile endpoints. All three use the browser session (cookie + CSRF token) \u2014 they are not JSON API endpoints and do not use a Bearer token.\n\nRequires an active browser session (session cookie) and a valid CSRF token in the `X-XSRF-TOKEN` header. Each endpoint returns a `302` redirect back to `/profile` on success with a `flash.success` message.",
       "item": [
         {
           "name": "Update Display Name",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}", "description": "Required CSRF token. Obtain from the XSRF-TOKEN cookie set by any authenticated page load." }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Required CSRF token. Obtain from the XSRF-TOKEN cookie set by any authenticated page load."
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Jane Doe\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/profile/name",
-              "host": ["{{base_url}}"],
-              "path": ["profile", "name"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                "name"
+              ]
             },
             "description": "Updates the authenticated user's display name. Validation: required, string, max 255 characters. Returns `302` back to `/profile` with a `flash.success` session value of `\"Display name updated.\"`."
           },
@@ -1087,9 +1728,18 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{xsrf_token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -1097,14 +1747,24 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/profile/name",
-                  "host": ["{{base_url}}"],
-                  "path": ["profile", "name"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile",
+                    "name"
+                  ]
                 }
               },
               "status": "Found",
               "code": 302,
               "_postman_previewlanguage": "text",
-              "header": [{ "key": "Location", "value": "http://localhost/profile" }],
+              "header": [
+                {
+                  "key": "Location",
+                  "value": "http://localhost/profile"
+                }
+              ],
               "body": ""
             },
             {
@@ -1112,9 +1772,18 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{xsrf_token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -1122,8 +1791,13 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/profile/name",
-                  "host": ["{{base_url}}"],
-                  "path": ["profile", "name"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile",
+                    "name"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -1136,11 +1810,20 @@
         {
           "name": "Upload Profile Picture",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}", "description": "Required CSRF token." }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Required CSRF token."
+              }
             ],
             "body": {
               "mode": "formdata",
@@ -1154,8 +1837,13 @@
             },
             "url": {
               "raw": "{{base_url}}/profile/picture",
-              "host": ["{{base_url}}"],
-              "path": ["profile", "picture"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                "picture"
+              ]
             },
             "description": "Uploads or replaces the authenticated user's profile picture. The file is stored on the `public` disk under `profile-pictures/` and the path is saved to `users.profile_picture`. Any previously uploaded picture is deleted. The public URL is exposed as `profile_picture_url` on the `auth.user` Inertia shared prop.\n\nValidation: required, must be an image (jpg/png/gif/bmp/svg/webp), max 2048 KB (2 MB).\n\nReturns `302` back to `/profile` with `flash.success = \"Profile picture updated.\"`."
           },
@@ -1165,23 +1853,44 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{xsrf_token}}"
+                  }
                 ],
                 "body": {
                   "mode": "formdata",
-                  "formdata": [{ "key": "profile_picture", "type": "file" }]
+                  "formdata": [
+                    {
+                      "key": "profile_picture",
+                      "type": "file"
+                    }
+                  ]
                 },
                 "url": {
                   "raw": "{{base_url}}/profile/picture",
-                  "host": ["{{base_url}}"],
-                  "path": ["profile", "picture"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile",
+                    "picture"
+                  ]
                 }
               },
               "status": "Found",
               "code": 302,
               "_postman_previewlanguage": "text",
-              "header": [{ "key": "Location", "value": "http://localhost/profile" }],
+              "header": [
+                {
+                  "key": "Location",
+                  "value": "http://localhost/profile"
+                }
+              ],
               "body": ""
             },
             {
@@ -1189,17 +1898,34 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{xsrf_token}}"
+                  }
                 ],
                 "body": {
                   "mode": "formdata",
-                  "formdata": [{ "key": "profile_picture", "type": "file", "description": "A non-image file, e.g. document.pdf" }]
+                  "formdata": [
+                    {
+                      "key": "profile_picture",
+                      "type": "file",
+                      "description": "A non-image file, e.g. document.pdf"
+                    }
+                  ]
                 },
                 "url": {
                   "raw": "{{base_url}}/profile/picture",
-                  "host": ["{{base_url}}"],
-                  "path": ["profile", "picture"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile",
+                    "picture"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -1212,22 +1938,43 @@
         {
           "name": "Update Password",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}", "description": "Required CSRF token." }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Required CSRF token."
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"current_password\": \"old-password\",\n  \"password\": \"new-password123\",\n  \"password_confirmation\": \"new-password123\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/profile/password",
-              "host": ["{{base_url}}"],
-              "path": ["profile", "password"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                "password"
+              ]
             },
             "description": "Changes the authenticated user's password. Validation: `current_password` must match the user's existing password; `password` is required, confirmed, and must be at least 8 characters.\n\nReturns `302` back to `/profile` with `flash.success = \"Password updated.\"`."
           },
@@ -1237,9 +1984,18 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{xsrf_token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -1247,14 +2003,24 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/profile/password",
-                  "host": ["{{base_url}}"],
-                  "path": ["profile", "password"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile",
+                    "password"
+                  ]
                 }
               },
               "status": "Found",
               "code": 302,
               "_postman_previewlanguage": "text",
-              "header": [{ "key": "Location", "value": "http://localhost/profile" }],
+              "header": [
+                {
+                  "key": "Location",
+                  "value": "http://localhost/profile"
+                }
+              ],
               "body": ""
             },
             {
@@ -1262,9 +2028,18 @@
               "originalRequest": {
                 "method": "PUT",
                 "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{xsrf_token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -1272,8 +2047,13 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/profile/password",
-                  "host": ["{{base_url}}"],
-                  "path": ["profile", "password"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile",
+                    "password"
+                  ]
                 }
               },
               "status": "Unprocessable Entity",
@@ -1286,8 +2066,223 @@
       ]
     },
     {
+      "name": "App Management (API)",
+      "item": [
+        {
+          "name": "List Apps",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/apps",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "apps"
+              ]
+            },
+            "description": "Returns all registered apps ordered by name."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/apps",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "apps"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Admin\",\n      \"slug\": \"admin\",\n      \"description\": \"Central administration portal\",\n      \"is_active\": true\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Tenant\",\n      \"slug\": \"tenant\",\n      \"description\": \"Tenant portal\",\n      \"is_active\": true\n    }\n  ]\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/apps",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "apps"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update App",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin Portal\",\n  \"description\": \"Central administration \\u2014 manage users, apps, tenants, and system settings\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/apps/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "apps",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "App ID"
+                }
+              ]
+            },
+            "description": "Updates the name and/or description of an app. Slug and URL are not affected."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Admin Portal\",\n  \"description\": \"Updated description\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/apps/1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "apps",
+                    "1"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Admin Portal\",\n    \"slug\": \"admin\",\n    \"description\": \"Updated description\",\n    \"is_active\": true\n  }\n}"
+            },
+            {
+              "name": "422 \u2014 Validation Error",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/apps/1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "apps",
+                    "1"
+                  ]
+                }
+              },
+              "status": "Unprocessable Content",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The name field is required.\",\n  \"errors\": {\n    \"name\": [\n      \"The name field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/apps/999",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "apps",
+                    "999"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\Central\\\\App] 999.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "System Settings (API)",
-      "description": "Manage system-wide settings over the REST API using Sanctum Bearer token auth.\n\nAll settings are stored as a flat key-value store — sending only the keys you want to change is safe; omitted keys are left untouched.\n\nThe response envelope is always `{ \"data\": { ...all settings... }, \"missing_required\": [...] }`. `missing_required` lists the human-readable labels of required settings that have no value set (`email_driver`, `authentication_idle_time`, `storage_driver`).",
+      "description": "Manage system-wide settings over the REST API using Sanctum Bearer token auth.\n\nAll settings are stored as a flat key-value store \u2014 sending only the keys you want to change is safe; omitted keys are left untouched.\n\nThe response envelope is always `{ \"data\": { ...all settings... }, \"missing_required\": [...] }`. `missing_required` lists the human-readable labels of required settings that have no value set (`email_driver`, `authentication_idle_time`, `storage_driver`).",
       "item": [
         {
           "name": "Get All Settings",
@@ -1296,8 +2291,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
             "description": "Returns all system settings and a list of required settings that are not yet configured."
           },
@@ -1309,8 +2311,15 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/api/v1/admin/settings",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "admin", "settings"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "settings"
+                  ]
                 }
               },
               "status": "OK",
@@ -1319,14 +2328,21 @@
               "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"postmark_token\": \"pm-token-abc\",\n    \"postmark_from_address\": \"hello@example.com\",\n    \"postmark_from_name\": \"MyApp\",\n    \"email_footer_signature\": \"<p><strong>\\u00a9 2025 My SaaS.</strong></p>\",\n    \"email_footer_unsubscribe_url\": \"https://example.com/unsubscribe\",\n    \"authentication_idle_time\": \"30\",\n    \"max_login_attempts\": \"5\",\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKID\",\n    \"s3_bucket\": \"app-bucket\",\n    \"sms_driver\": null,\n    \"push_driver\": null,\n    \"two_factor_auth\": \"off\",\n    \"app_name\": \"My SaaS\",\n    \"support_email\": \"support@example.com\"\n  },\n  \"missing_required\": []\n}"
             },
             {
-              "name": "200 OK — missing required settings",
+              "name": "200 OK \u2014 missing required settings",
               "originalRequest": {
                 "method": "GET",
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/api/v1/admin/settings",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "admin", "settings"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "settings"
+                  ]
                 }
               },
               "status": "OK",
@@ -1341,8 +2357,15 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/api/v1/admin/settings",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "admin", "settings"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "settings"
+                  ]
                 }
               },
               "status": "Unauthorized",
@@ -1357,8 +2380,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1366,8 +2395,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
             "description": "Activate Postmark as the email driver. Only the supplied keys are updated."
           },
@@ -1376,9 +2412,28 @@
               "name": "200 OK",
               "originalRequest": {
                 "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "body": { "mode": "raw", "raw": "{\n  \"email_driver\": \"postmark\",\n  \"postmark_token\": \"pm-token-abc\",\n  \"postmark_from_address\": \"hello@example.com\",\n  \"postmark_from_name\": \"MyApp\"\n}" },
-                "url": { "raw": "{{base_url}}/api/v1/admin/settings", "host": ["{{base_url}}"], "path": ["api", "v1", "admin", "settings"] }
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email_driver\": \"postmark\",\n  \"postmark_token\": \"pm-token-abc\",\n  \"postmark_from_address\": \"hello@example.com\",\n  \"postmark_from_name\": \"MyApp\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/settings",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "settings"
+                  ]
+                }
               },
               "status": "OK",
               "code": 200,
@@ -1392,8 +2447,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1401,8 +2462,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1412,8 +2480,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1421,8 +2495,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1432,8 +2513,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1441,8 +2528,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1452,8 +2546,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1461,19 +2561,45 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
-            "description": "Set the global email footer signature (HTML, max 2000 chars) and CAN-SPAM/GDPR unsubscribe URL. Both fields are nullable — send null to clear."
+            "description": "Set the global email footer signature (HTML, max 2000 chars) and CAN-SPAM/GDPR unsubscribe URL. Both fields are nullable \u2014 send null to clear."
           },
           "response": [
             {
-              "name": "422 — signature too long",
+              "name": "422 \u2014 signature too long",
               "originalRequest": {
                 "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "body": { "mode": "raw", "raw": "{\n  \"email_footer_signature\": \"(2001 character string)\"\n}" },
-                "url": { "raw": "{{base_url}}/api/v1/admin/settings", "host": ["{{base_url}}"], "path": ["api", "v1", "admin", "settings"] }
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email_footer_signature\": \"(2001 character string)\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/settings",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "settings"
+                  ]
+                }
               },
               "status": "Unprocessable Entity",
               "code": 422,
@@ -1487,8 +2613,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1496,8 +2628,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1507,8 +2646,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1516,8 +2661,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1527,8 +2679,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1536,8 +2694,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
             "description": "SNS Sender ID must be 11 characters or fewer."
           },
@@ -1548,8 +2713,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1557,8 +2728,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1568,8 +2746,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1577,8 +2761,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
             "description": "`apns_environment` must be `sandbox` or `production`."
           },
@@ -1589,8 +2780,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1598,8 +2795,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1609,8 +2813,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1618,8 +2828,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1629,8 +2846,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1638,8 +2861,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -1649,8 +2879,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1658,8 +2894,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
             "description": "`gcs_key_json` accepts the raw JSON string of a GCP service account key file."
           },
@@ -1670,8 +2913,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1679,10 +2928,17 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
-            "description": "Set `storage_driver` to `local` for server filesystem storage. Use `ftp` or `sftp` for remote filesystem storage — add the corresponding `ftp_*` or `sftp_*` fields."
+            "description": "Set `storage_driver` to `local` for server filesystem storage. Use `ftp` or `sftp` for remote filesystem storage \u2014 add the corresponding `ftp_*` or `sftp_*` fields."
           },
           "response": []
         },
@@ -1691,8 +2947,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1700,10 +2962,17 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
-            "description": "`authentication_idle_time` is in minutes (1–1440). `max_login_attempts` is 1–100."
+            "description": "`authentication_idle_time` is in minutes (1\u20131440). `max_login_attempts` is 1\u2013100."
           },
           "response": []
         },
@@ -1712,8 +2981,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1721,19 +2996,45 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
             "description": "`two_factor_auth` must be `off`, `optional`, or `required`. `password_expiry_days` 0 means never. `session_concurrency_limit` 0 means unlimited."
           },
           "response": [
             {
-              "name": "422 — invalid 2FA value",
+              "name": "422 \u2014 invalid 2FA value",
               "originalRequest": {
                 "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "body": { "mode": "raw", "raw": "{\n  \"two_factor_auth\": \"mandatory\"\n}" },
-                "url": { "raw": "{{base_url}}/api/v1/admin/settings", "host": ["{{base_url}}"], "path": ["api", "v1", "admin", "settings"] }
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"two_factor_auth\": \"mandatory\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/settings",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "settings"
+                  ]
+                }
               },
               "status": "Unprocessable Entity",
               "code": 422,
@@ -1747,8 +3048,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1756,19 +3063,32 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             }
           },
           "response": []
         },
         {
-          "name": "422 — Invalid Driver",
+          "name": "422 \u2014 Invalid Driver",
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1776,19 +3096,45 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "admin", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
             },
-            "description": "Example of a validation failure — `sendgrid` is not an accepted email driver."
+            "description": "Example of a validation failure \u2014 `sendgrid` is not an accepted email driver."
           },
           "response": [
             {
               "name": "422 Unprocessable",
               "originalRequest": {
                 "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "body": { "mode": "raw", "raw": "{\n  \"email_driver\": \"sendgrid\"\n}" },
-                "url": { "raw": "{{base_url}}/api/v1/admin/settings", "host": ["{{base_url}}"], "path": ["api", "v1", "admin", "settings"] }
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email_driver\": \"sendgrid\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/settings",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "settings"
+                  ]
+                }
               },
               "status": "Unprocessable Entity",
               "code": 422,

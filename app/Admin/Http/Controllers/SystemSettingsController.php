@@ -15,6 +15,9 @@ class SystemSettingsController extends Controller
         private readonly SystemSettingsService $systemSettingsService,
     ) {}
 
+    /**
+     * Display the system settings.
+     */
     public function index(): Response
     {
         return Inertia::render('Admin/Settings/Index', [
@@ -22,6 +25,9 @@ class SystemSettingsController extends Controller
         ]);
     }
 
+    /**
+     * Update the system settings.
+     */
     public function update(UpdateSystemSettingsRequest $request): RedirectResponse
     {
         $this->systemSettingsService->updateSettings($request->validated());

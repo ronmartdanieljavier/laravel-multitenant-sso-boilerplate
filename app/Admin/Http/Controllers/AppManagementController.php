@@ -17,6 +17,9 @@ class AppManagementController extends Controller
         private AppRepository $appRepository,
     ) {}
 
+    /**
+     * Display a list of all apps.
+     */
     public function index(): Response
     {
         return Inertia::render('Admin/Apps/Index', [
@@ -24,6 +27,9 @@ class AppManagementController extends Controller
         ]);
     }
 
+    /**
+     * Update an existing app.
+     */
     public function update(UpdateAppRequest $request, App $app): RedirectResponse
     {
         $this->appRepository->update($app->id, UpdateAppData::from($request->validated()));

@@ -23,6 +23,8 @@ class UserManagementService
     ) {}
 
     /**
+     * Get a list of all users with their permissions.
+     *
      * @return Collection<int, UserData>
      */
     public function list(): Collection
@@ -32,6 +34,9 @@ class UserManagementService
             ->values();
     }
 
+    /**
+     * Invite a new user.
+     */
     public function invite(InviteUserData $data): UserData
     {
         $created = DB::transaction(function () use ($data) {
@@ -47,6 +52,9 @@ class UserManagementService
         return $this->toData($this->userRepository->findWithPermissions($created->id));
     }
 
+    /**
+     * Update a user's information.
+     */
     public function update(int $userId, UpdateUserData $data): UserData
     {
         DB::transaction(function () use ($userId, $data) {
@@ -58,6 +66,9 @@ class UserManagementService
         return $this->toData($this->userRepository->findWithPermissions($userId));
     }
 
+    /**
+     * Accept a user's invitation.
+     */
     public function acceptInvitation(int $userId, string $name, string $password): UserData
     {
         $this->userRepository->activateInvitation($userId, $name, $password);
@@ -65,6 +76,9 @@ class UserManagementService
         return $this->toData($this->userRepository->findWithPermissions($userId));
     }
 
+    /**
+     * Delete a user.
+     */
     private function toData(UserWithPermissionsRepositoryData $dto): UserData
     {
         return new UserData(

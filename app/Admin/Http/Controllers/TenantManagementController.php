@@ -20,6 +20,9 @@ class TenantManagementController extends Controller
         private TenantManagementService $service,
     ) {}
 
+    /**
+     * Get a list of all tenants with their details and health status.
+     */
     public function index(): Response
     {
         $tenants = $this->service->list();
@@ -30,6 +33,9 @@ class TenantManagementController extends Controller
         ]);
     }
 
+    /**
+     * Create a new tenant.
+     */
     public function store(CreateTenantRequest $request): RedirectResponse
     {
         $this->service->create(CreateTenantData::from($request->validated()));
@@ -37,6 +43,9 @@ class TenantManagementController extends Controller
         return redirect()->route('admin.tenants')->with('success', 'Tenant created and migrations run.');
     }
 
+    /**
+     * Update a tenant's information.
+     */
     public function update(UpdateTenantRequest $request, Tenant $tenant): RedirectResponse
     {
         $this->service->update($tenant->id, UpdateTenantData::from($request->validated()));
@@ -44,6 +53,9 @@ class TenantManagementController extends Controller
         return redirect()->route('admin.tenants')->with('success', 'Tenant updated.');
     }
 
+    /**
+     * Set a tenant's active status.
+     */
     public function setActive(Request $request, Tenant $tenant): RedirectResponse
     {
         $isActive = (bool) $request->input('is_active');
@@ -54,6 +66,9 @@ class TenantManagementController extends Controller
         return redirect()->route('admin.tenants')->with('success', $message);
     }
 
+    /**
+     * Delete a tenant.
+     */
     public function destroy(Tenant $tenant): RedirectResponse
     {
         $this->service->delete($tenant->id);
@@ -61,6 +76,9 @@ class TenantManagementController extends Controller
         return redirect()->route('admin.tenants')->with('success', 'Tenant deleted.');
     }
 
+    /**
+     * Run migrations for a specific tenant.
+     */
     public function migrate(Tenant $tenant): RedirectResponse
     {
         $this->service->runMigrations($tenant->id);
@@ -68,6 +86,9 @@ class TenantManagementController extends Controller
         return redirect()->route('admin.tenants')->with('success', "Migrations run for {$tenant->name}.");
     }
 
+    /**
+     * Run migrations for all tenants.
+     */
     public function migrateAll(): RedirectResponse
     {
         $this->service->runMigrations();

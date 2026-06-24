@@ -15,6 +15,9 @@ class AppManagementApiController extends Controller
         private AppRepository $appRepository,
     ) {}
 
+    /**
+     * Display a list of all apps.
+     */
     public function index(): JsonResponse
     {
         return response()->json([
@@ -22,6 +25,9 @@ class AppManagementApiController extends Controller
         ]);
     }
 
+    /**
+     * Update an existing app.
+     */
     public function update(UpdateAppRequest $request, App $app): JsonResponse
     {
         $updated = $this->appRepository->update($app->id, UpdateAppData::from($request->validated()));

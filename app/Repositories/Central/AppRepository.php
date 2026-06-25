@@ -21,6 +21,11 @@ class AppRepository
         return $this->model->orderBy('name')->get()->map(fn (App $app) => AppRepositoryData::from($app));
     }
 
+    public function countActive(): int
+    {
+        return $this->model->where('is_active', true)->count();
+    }
+
     public function update(int $id, UpdateAppData $data): AppRepositoryData
     {
         $app = $this->model->findOrFail($id);

@@ -3,6 +3,8 @@
 namespace App\Admin\Services;
 
 use App\Admin\Data\TenantErrorLogData;
+use App\Admin\Data\UnresolvedErrorSummaryData;
+use App\Admin\Data\UnresolvedErrorTenantData;
 use App\Data\Repositories\Central\TenantErrorLogRepositoryData;
 use App\Models\Central\Tenant;
 use App\Repositories\Central\TenantErrorLogRepository;
@@ -15,6 +17,40 @@ class TenantErrorLogService
     public function __construct(
         private readonly TenantErrorLogRepository $repository,
     ) {}
+
+    public function getUnresolvedSummary(): UnresolvedErrorSummaryData
+    {
+        $bySeverity = $this->repository->countUnresolvedBySeverity();
+
+        $byTenantRows = $this->repository->countUnresolvedByTenant();
+
+        $byTenant = $byTenantRows
+            ->groupBy('tenant_id')
+            ->map(function (Collection $rows): UnresolvedErrorTenantData {
+                $counts = $rows->pluck('count', 'severity')->map(fn ($v) => (int) $v);
+
+                return new UnresolvedErrorTenantData(
+                    tenantId: (int) $rows->value('tenant_id'),
+                    tenantName: (string) $rows->value('tenant_name'),
+                    tenantSlug: (string) $rows->value('tenant_slug'),
+                    total: $counts->sum(),
+                    error: $counts->get('error', 0),
+                    warning: $counts->get('warning', 0),
+                    critical: $counts->get('critical', 0),
+                );
+            })
+            ->sortByDesc(fn (UnresolvedErrorTenantData $d) => $d->total)
+            ->values()
+            ->all();
+
+        return new UnresolvedErrorSummaryData(
+            total: array_sum($bySeverity),
+            error: $bySeverity['error'] ?? 0,
+            warning: $bySeverity['warning'] ?? 0,
+            critical: $bySeverity['critical'] ?? 0,
+            byTenant: $byTenant,
+        );
+    }
 
     /**
      * Record an exception that occurred in a tenant request context.

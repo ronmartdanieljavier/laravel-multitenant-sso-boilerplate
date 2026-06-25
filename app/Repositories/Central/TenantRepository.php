@@ -12,6 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class TenantRepository
 {
@@ -76,6 +77,16 @@ class TenantRepository
     {
         return $this->model->orderBy('name')->get()
             ->map(fn (Tenant $tenant) => $this->toData($tenant));
+    }
+
+    public function countAvailableMigrations(): int
+    {
+        return count(File::files(database_path('migrations/tenant')));
+    }
+
+    public function countActive(): int
+    {
+        return $this->model->where('is_active', true)->count();
     }
 
     public function find(int $id): TenantRepositoryData

@@ -2359,6 +2359,173 @@
               "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\Central\\\\User] 999.\"\n}"
             }
           ]
+        },
+        {
+          "name": "Resend Invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/:id/resend-invitation",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                ":id",
+                "resend-invitation"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{invited_user_id}}",
+                  "description": "ID of the user whose invitation should be resent"
+                }
+              ]
+            },
+            "description": "Generates a fresh invitation token, stamps `invitation_sent_at`, and re-sends the invitation email to the user.\n\nOnly valid for users who have `is_active = false` and an existing `invitation_token`. Returns 404 for unknown user IDs."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/:id/resend-invitation",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    ":id",
+                    "resend-invitation"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{invited_user_id}}"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Invitation resent.\"\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/:id/resend-invitation",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    ":id",
+                    "resend-invitation"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "99999"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\Central\\\\User] 99999\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin Dashboard (API)",
+      "description": "Aggregated admin dashboard snapshot \u2014 same data powering the Inertia Admin/Index page, served as a single JSON response for mobile and external consumers.",
+      "item": [
+        {
+          "name": "Get Dashboard Snapshot",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "Returns the full admin dashboard snapshot in one request:\n\n- `data` \u2014 stat counters: `total_users`, `active_users`, `pending_invitation_users`, `active_apps`, `active_tenants`, `active_sso_sessions`\n- `health_summary` \u2014 tenant health counts: `total`, `healthy`, `warning`, `critical`\n- `recent_users` \u2014 latest 5 users ordered by `created_at` desc; each entry includes `id`, `name`, `email`, `is_active`\n- `pending_users` \u2014 users with an unsent invitation (`invitation_token` set, `is_active` false)\n- `unresolved_errors` \u2014 cross-tenant unresolved error log aggregate: `total`, `error`, `warning`, `critical`, `by_tenant[]`\n- `report_queue` \u2014 pending/processing/failed report counts: `pending`, `processing`, `failed`, `by_tenant[]`\n- `migration_compliance` \u2014 tenant migration state: `total`, `up_to_date`, `behind_count`, `available_migrations`, `behind[]`\n\nRequires Sanctum Bearer token."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/dashboard",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "dashboard"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"total_users\": 12,\n    \"active_users\": 9,\n    \"pending_invitation_users\": 3,\n    \"active_apps\": 2,\n    \"active_tenants\": 4,\n    \"active_sso_sessions\": 7\n  },\n  \"health_summary\": {\n    \"total\": 4,\n    \"healthy\": 2,\n    \"warning\": 1,\n    \"critical\": 1\n  },\n  \"recent_users\": [\n    {\n      \"id\": 12,\n      \"name\": \"Carol Tan\",\n      \"email\": \"carol@example.com\",\n      \"is_active\": true,\n      \"invitation_sent_at\": null,\n      \"profile_picture_url\": null,\n      \"apps\": []\n    },\n    {\n      \"id\": 11,\n      \"name\": \"Bob Santos\",\n      \"email\": \"bob@example.com\",\n      \"is_active\": false,\n      \"invitation_sent_at\": \"2026-06-24T10:00:00Z\",\n      \"profile_picture_url\": null,\n      \"apps\": []\n    }\n  ],\n  \"pending_users\": [\n    {\n      \"id\": 11,\n      \"name\": \"Bob Santos\",\n      \"email\": \"bob@example.com\",\n      \"is_active\": false,\n      \"invitation_sent_at\": \"2026-06-24T10:00:00Z\",\n      \"profile_picture_url\": null,\n      \"apps\": []\n    }\n  ],\n  \"unresolved_errors\": {\n    \"total\": 5,\n    \"error\": 2,\n    \"warning\": 2,\n    \"critical\": 1,\n    \"by_tenant\": [\n      {\n        \"tenant_id\": 1,\n        \"tenant_name\": \"Acme Corp\",\n        \"tenant_slug\": \"acme\",\n        \"total\": 3,\n        \"error\": 2,\n        \"warning\": 1,\n        \"critical\": 0\n      },\n      {\n        \"tenant_id\": 2,\n        \"tenant_name\": \"Globex\",\n        \"tenant_slug\": \"globex\",\n        \"total\": 2,\n        \"error\": 0,\n        \"warning\": 1,\n        \"critical\": 1\n      }\n    ]\n  },\n  \"report_queue\": {\n    \"pending\": 4,\n    \"processing\": 1,\n    \"failed\": 2,\n    \"by_tenant\": [\n      {\n        \"tenant_id\": 1,\n        \"tenant_name\": \"Acme Corp\",\n        \"tenant_slug\": \"acme\",\n        \"pending\": 3,\n        \"processing\": 1,\n        \"failed\": 2\n      },\n      {\n        \"tenant_id\": 2,\n        \"tenant_name\": \"Globex\",\n        \"tenant_slug\": \"globex\",\n        \"pending\": 1,\n        \"processing\": 0,\n        \"failed\": 0\n      }\n    ]\n  },\n  \"migration_compliance\": {\n    \"total\": 4,\n    \"up_to_date\": 3,\n    \"behind_count\": 1,\n    \"available_migrations\": 10,\n    \"behind\": [\n      {\n        \"id\": 3,\n        \"name\": \"Initech\",\n        \"slug\": \"initech\",\n        \"applied\": 8,\n        \"available\": 10\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/dashboard",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "dashboard"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+            }
+          ]
         }
       ]
     },

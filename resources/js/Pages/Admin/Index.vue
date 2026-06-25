@@ -1,6 +1,71 @@
 <script setup>
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { useIdleTimeout } from '../../composables/useIdleTimeout';
+
+const props = defineProps({
+    stats: {
+        type: Object,
+        required: true,
+    },
+    healthSummary: {
+        type: Object,
+        required: true,
+    },
+    recentUsers: {
+        type: Array,
+        required: true,
+    },
+    pendingUsers: {
+        type: Array,
+        required: true,
+    },
+    unresolvedErrors: {
+        type: Object,
+        required: true,
+    },
+    reportQueue: {
+        type: Object,
+        required: true,
+    },
+    migrationCompliance: {
+        type: Object,
+        required: true,
+    },
+});
+
+const errorsOpen = ref(props.unresolvedErrors.total > 0);
+const reportQueueOpen = ref(
+    props.reportQueue.pending > 0 || props.reportQueue.processing > 0 || props.reportQueue.failed > 0,
+);
+const migrationOpen = ref(props.migrationCompliance.behind_count > 0);
+const migrating = ref(null);
+
+function runMigration(tenant) {
+    migrating.value = tenant.id;
+    router.post(`/admin/tenants/${tenant.id}/migrate`, {}, {
+        onFinish: () => { migrating.value = null; },
+    });
+}
+
+const pendingOpen = ref(props.pendingUsers.length > 0);
+const resending = ref(null);
+
+function resendInvitation(user) {
+    resending.value = user.id;
+    router.post(`/admin/users/${user.id}/resend-invitation`, {}, {
+        onFinish: () => { resending.value = null; },
+    });
+}
+
+function formatSentAt(value) {
+    if (!value) return '—';
+    const d = new Date(value);
+    const diff = Math.floor((Date.now() - d) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    return `${diff}d ago`;
+}
 
 const page = usePage();
 useIdleTimeout(page.props.idleTimeoutMinutes);
@@ -11,18 +76,27 @@ function logout() {
 
 const missingSettings = page.props.missingRequiredSettings ?? [];
 
-const stats = [
-    { label: 'Total Users', value: '4,291', change: '+12%', up: true },
-    { label: 'Active Apps', value: '18', change: '+2', up: true },
-    { label: 'Active Tenants', value: '134', change: '-3', up: false },
-    { label: 'SSO Sessions', value: '9,820', change: '+8%', up: true },
-];
-
-const recentUsers = [
-    { name: 'Alice Reyes', email: 'alice@acme.com', role: 'Admin', status: 'Active' },
-    { name: 'Bob Santos', email: 'bob@globex.com', role: 'Tenant', status: 'Active' },
-    { name: 'Carol Tan', email: 'carol@initech.com', role: 'Reports', status: 'Inactive' },
-    { name: 'Dan Cruz', email: 'dan@umbrella.com', role: 'Admin', status: 'Active' },
+const statCards = [
+    {
+        label: 'Total Users',
+        value: props.stats.total_users,
+        sub: `${props.stats.active_users} active · ${props.stats.pending_invitation_users} pending`,
+    },
+    {
+        label: 'Active Apps',
+        value: props.stats.active_apps,
+        sub: null,
+    },
+    {
+        label: 'Active Tenants',
+        value: props.stats.active_tenants,
+        sub: null,
+    },
+    {
+        label: 'SSO Sessions',
+        value: props.stats.active_sso_sessions,
+        sub: 'live Sanctum tokens',
+    },
 ];
 </script>
 
@@ -102,58 +176,411 @@ const recentUsers = [
             <!-- Header -->
             <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
                 <h2 class="text-lg font-semibold">Dashboard</h2>
-                <button class="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition">
-                    + Invite User
-                </button>
+                <div class="flex items-center gap-2">
+                    <Link href="/admin/settings"
+                          class="text-slate-400 hover:text-slate-200 hover:bg-white/5 text-sm font-medium px-4 py-1.5 rounded-lg transition border border-white/10">
+                        Settings
+                    </Link>
+                    <Link href="/admin/tenants?add=1"
+                          class="text-slate-400 hover:text-slate-200 hover:bg-white/5 text-sm font-medium px-4 py-1.5 rounded-lg transition border border-white/10">
+                        + Add Tenant
+                    </Link>
+                    <Link href="/admin/users?invite=1"
+                          class="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition">
+                        + Invite User
+                    </Link>
+                </div>
             </header>
 
             <main class="p-8 space-y-8">
                 <!-- Stats -->
                 <div class="grid grid-cols-4 gap-4">
-                    <div v-for="stat in stats" :key="stat.label"
-                         class="bg-slate-900 border border-white/5 rounded-xl p-5">
-                        <p class="text-slate-400 text-sm">{{ stat.label }}</p>
-                        <p class="text-2xl font-bold text-white mt-1">{{ stat.value }}</p>
-                        <p :class="stat.up ? 'text-emerald-400' : 'text-red-400'" class="text-xs mt-1 font-medium">
-                            {{ stat.change }} from last month
+                    <div v-for="card in statCards" :key="card.label"
+                         :class="card.label === 'Total Users' && stats.pending_invitation_users > 0
+                             ? 'bg-slate-900 border border-amber-500/30 rounded-xl p-5'
+                             : 'bg-slate-900 border border-white/5 rounded-xl p-5'">
+                        <p class="text-slate-400 text-sm">{{ card.label }}</p>
+                        <p class="text-2xl font-bold text-white mt-1">{{ card.value.toLocaleString() }}</p>
+                        <p v-if="card.sub"
+                           :class="card.label === 'Total Users' && stats.pending_invitation_users > 0
+                               ? 'text-amber-400 text-xs mt-1 font-medium'
+                               : 'text-slate-500 text-xs mt-1'">
+                            {{ card.sub }}
                         </p>
                     </div>
                 </div>
 
-                <!-- Recent Users Table -->
+                <!-- Pending Invitations -->
+                <div v-if="pendingUsers.length > 0" class="bg-slate-900 border border-amber-500/20 rounded-xl overflow-hidden">
+                    <button @click="pendingOpen = !pendingOpen"
+                            class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/2 transition">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block" />
+                            <h3 class="font-semibold text-amber-300">Pending Invitations</h3>
+                            <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full">
+                                {{ pendingUsers.length }}
+                            </span>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform"
+                             :class="pendingOpen ? 'rotate-180' : ''"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div v-if="pendingOpen" class="border-t border-white/5">
+                        <table class="w-full text-sm">
+                            <thead class="text-slate-400 border-b border-white/5">
+                                <tr>
+                                    <th class="text-left px-6 py-3 font-medium">Name</th>
+                                    <th class="text-left px-6 py-3 font-medium">Email</th>
+                                    <th class="text-left px-6 py-3 font-medium">Invited</th>
+                                    <th class="text-left px-6 py-3 font-medium">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <tr v-for="user in pendingUsers" :key="user.id" class="hover:bg-white/2 transition">
+                                    <td class="px-6 py-4 font-medium text-white">{{ user.name }}</td>
+                                    <td class="px-6 py-4 text-slate-400">{{ user.email }}</td>
+                                    <td class="px-6 py-4 text-slate-500 text-xs">
+                                        {{ formatSentAt(user.invitation_sent_at) }}
+                                    </td>
+                                    <td class="px-6 py-4 flex items-center gap-3">
+                                        <button @click="resendInvitation(user)"
+                                                :disabled="resending === user.id"
+                                                class="text-xs font-medium text-amber-400 hover:text-amber-300 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                                            {{ resending === user.id ? 'Sending…' : 'Resend' }}
+                                        </button>
+                                        <Link :href="`/admin/users?edit=${user.id}`"
+                                              class="text-xs text-violet-400 hover:text-violet-300 transition">
+                                            Edit
+                                        </Link>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tenant Health Summary -->
+                <div class="bg-slate-900 border border-white/5 rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-white">Tenant Health</h3>
+                        <Link href="/admin/tenants" class="text-xs text-slate-400 hover:text-violet-300 transition">
+                            View all {{ healthSummary.total }} tenants →
+                        </Link>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <!-- Proportional bar -->
+                        <div class="flex-1 flex h-2 rounded-full overflow-hidden bg-slate-800">
+                            <div v-if="healthSummary.healthy"
+                                 :style="{ width: (healthSummary.healthy / healthSummary.total * 100) + '%' }"
+                                 class="bg-emerald-500 transition-all" />
+                            <div v-if="healthSummary.warning"
+                                 :style="{ width: (healthSummary.warning / healthSummary.total * 100) + '%' }"
+                                 class="bg-amber-400 transition-all" />
+                            <div v-if="healthSummary.critical"
+                                 :style="{ width: (healthSummary.critical / healthSummary.total * 100) + '%' }"
+                                 class="bg-red-500 transition-all" />
+                        </div>
+                        <!-- Status badges -->
+                        <div class="flex items-center gap-2 shrink-0">
+                            <Link :href="`/admin/tenants?health=healthy`"
+                                  class="flex items-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-medium px-3 py-1 rounded-full transition">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                                {{ healthSummary.healthy }} Healthy
+                            </Link>
+                            <Link :href="`/admin/tenants?health=warning`"
+                                  class="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-medium px-3 py-1 rounded-full transition">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                                {{ healthSummary.warning }} Warning
+                            </Link>
+                            <Link :href="`/admin/tenants?health=critical`"
+                                  class="flex items-center gap-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-medium px-3 py-1 rounded-full transition">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                                {{ healthSummary.critical }} Critical
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Users -->
                 <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
-                    <div class="px-6 py-4 border-b border-white/5">
+                    <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
                         <h3 class="font-semibold text-white">Recent Users</h3>
+                        <Link href="/admin/users" class="text-xs text-slate-400 hover:text-violet-300 transition">
+                            View all →
+                        </Link>
                     </div>
                     <table class="w-full text-sm">
                         <thead class="text-slate-400 border-b border-white/5">
                             <tr>
                                 <th class="text-left px-6 py-3 font-medium">Name</th>
                                 <th class="text-left px-6 py-3 font-medium">Email</th>
-                                <th class="text-left px-6 py-3 font-medium">Role</th>
                                 <th class="text-left px-6 py-3 font-medium">Status</th>
                                 <th class="text-left px-6 py-3 font-medium">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5">
-                            <tr v-for="user in recentUsers" :key="user.email" class="hover:bg-white/2 transition">
+                            <tr v-for="user in recentUsers" :key="user.id" class="hover:bg-white/2 transition">
                                 <td class="px-6 py-4 font-medium text-white">{{ user.name }}</td>
                                 <td class="px-6 py-4 text-slate-400">{{ user.email }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="bg-violet-500/20 text-violet-300 text-xs px-2 py-0.5 rounded-full">{{ user.role }}</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span :class="user.status === 'Active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-500/20 text-slate-400'"
-                                          class="text-xs px-2 py-0.5 rounded-full">
-                                        {{ user.status }}
+                                    <span v-if="user.is_active"
+                                          class="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-0.5 rounded-full">
+                                        Active
+                                    </span>
+                                    <span v-else
+                                          class="bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full">
+                                        Pending Invitation
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <a href="#" class="text-violet-400 hover:text-violet-300 text-xs transition">Edit</a>
+                                    <Link :href="`/admin/users?edit=${user.id}`"
+                                          class="text-violet-400 hover:text-violet-300 text-xs transition">
+                                        Edit
+                                    </Link>
                                 </td>
+                            </tr>
+                            <tr v-if="recentUsers.length === 0">
+                                <td colspan="4" class="px-6 py-8 text-center text-slate-500 text-sm">No users yet.</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Unresolved Error Logs -->
+                <div :class="unresolvedErrors.total > 0 ? 'border-red-500/20' : 'border-white/5'"
+                     class="bg-slate-900 border rounded-xl overflow-hidden">
+                    <button @click="errorsOpen = !errorsOpen"
+                            class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/2 transition">
+                        <div class="flex items-center gap-3">
+                            <h3 class="font-semibold text-white">Unresolved Error Logs</h3>
+                            <span v-if="unresolvedErrors.total > 0"
+                                  class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                                {{ unresolvedErrors.total }}
+                            </span>
+                            <span v-else class="text-slate-500 text-xs">All clear</span>
+                            <!-- Severity pills (always visible) -->
+                            <template v-if="unresolvedErrors.total > 0">
+                                <span v-if="unresolvedErrors.critical"
+                                      class="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded-full">
+                                    {{ unresolvedErrors.critical }} critical
+                                </span>
+                                <span v-if="unresolvedErrors.error"
+                                      class="bg-orange-500/20 text-orange-300 text-xs px-2 py-0.5 rounded-full">
+                                    {{ unresolvedErrors.error }} error
+                                </span>
+                                <span v-if="unresolvedErrors.warning"
+                                      class="bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full">
+                                    {{ unresolvedErrors.warning }} warning
+                                </span>
+                            </template>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform"
+                             :class="errorsOpen ? 'rotate-180' : ''"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div v-if="errorsOpen" class="border-t border-white/5">
+                        <div v-if="unresolvedErrors.total === 0"
+                             class="px-6 py-8 text-center text-slate-500 text-sm">
+                            No unresolved errors across any tenant.
+                        </div>
+                        <table v-else class="w-full text-sm">
+                            <thead class="text-slate-400 border-b border-white/5">
+                                <tr>
+                                    <th class="text-left px-6 py-3 font-medium">Tenant</th>
+                                    <th class="text-left px-6 py-3 font-medium">Critical</th>
+                                    <th class="text-left px-6 py-3 font-medium">Error</th>
+                                    <th class="text-left px-6 py-3 font-medium">Warning</th>
+                                    <th class="text-left px-6 py-3 font-medium">Total</th>
+                                    <th class="text-left px-6 py-3 font-medium"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <tr v-for="t in unresolvedErrors.by_tenant" :key="t.tenant_id"
+                                    class="hover:bg-white/2 transition">
+                                    <td class="px-6 py-4 font-medium text-white">{{ t.tenant_name }}</td>
+                                    <td class="px-6 py-4">
+                                        <span v-if="t.critical"
+                                              class="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded-full">
+                                            {{ t.critical }}
+                                        </span>
+                                        <span v-else class="text-slate-600">—</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span v-if="t.error"
+                                              class="bg-orange-500/20 text-orange-300 text-xs px-2 py-0.5 rounded-full">
+                                            {{ t.error }}
+                                        </span>
+                                        <span v-else class="text-slate-600">—</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span v-if="t.warning"
+                                              class="bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full">
+                                            {{ t.warning }}
+                                        </span>
+                                        <span v-else class="text-slate-600">—</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-300 font-medium">{{ t.total }}</td>
+                                    <td class="px-6 py-4">
+                                        <Link :href="`/admin/tenants/${t.tenant_id}/errors`"
+                                              class="text-violet-400 hover:text-violet-300 text-xs transition">
+                                            View errors →
+                                        </Link>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Report Queue Health -->
+                <div :class="reportQueue.failed > 0 ? 'border-red-500/20' : 'border-white/5'"
+                     class="bg-slate-900 border rounded-xl overflow-hidden">
+                    <button @click="reportQueueOpen = !reportQueueOpen"
+                            class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/2 transition">
+                        <div class="flex items-center gap-3">
+                            <h3 class="font-semibold text-white">Report Queue</h3>
+                            <span v-if="reportQueue.pending > 0"
+                                  class="bg-violet-500/20 text-violet-300 text-xs px-2 py-0.5 rounded-full">
+                                {{ reportQueue.pending }} pending
+                            </span>
+                            <span v-if="reportQueue.processing > 0"
+                                  class="bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full">
+                                {{ reportQueue.processing }} processing
+                            </span>
+                            <span v-if="reportQueue.failed > 0"
+                                  class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                                {{ reportQueue.failed }} failed
+                            </span>
+                            <span v-if="reportQueue.pending === 0 && reportQueue.processing === 0 && reportQueue.failed === 0"
+                                  class="text-slate-500 text-xs">Queue empty</span>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform"
+                             :class="reportQueueOpen ? 'rotate-180' : ''"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div v-if="reportQueueOpen" class="border-t border-white/5">
+                        <div v-if="reportQueue.by_tenant.length === 0"
+                             class="px-6 py-8 text-center text-slate-500 text-sm">
+                            No pending, processing, or failed reports.
+                        </div>
+                        <table v-else class="w-full text-sm">
+                            <thead class="text-slate-400 border-b border-white/5">
+                                <tr>
+                                    <th class="text-left px-6 py-3 font-medium">Tenant</th>
+                                    <th class="text-left px-6 py-3 font-medium">Pending</th>
+                                    <th class="text-left px-6 py-3 font-medium">Processing</th>
+                                    <th class="text-left px-6 py-3 font-medium text-red-400">Failed</th>
+                                    <th class="text-left px-6 py-3 font-medium"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <tr v-for="t in reportQueue.by_tenant" :key="t.tenant_id"
+                                    class="hover:bg-white/2 transition">
+                                    <td class="px-6 py-4 font-medium text-white">{{ t.tenant_name }}</td>
+                                    <td class="px-6 py-4">
+                                        <span v-if="t.pending"
+                                              class="bg-violet-500/20 text-violet-300 text-xs px-2 py-0.5 rounded-full">
+                                            {{ t.pending }}
+                                        </span>
+                                        <span v-else class="text-slate-600">—</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span v-if="t.processing"
+                                              class="bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full">
+                                            {{ t.processing }}
+                                        </span>
+                                        <span v-else class="text-slate-600">—</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span v-if="t.failed"
+                                              class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                                            {{ t.failed }}
+                                        </span>
+                                        <span v-else class="text-slate-600">—</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <Link :href="`/admin/tenants/${t.tenant_id}/reports`"
+                                              class="text-violet-400 hover:text-violet-300 text-xs transition">
+                                            View reports →
+                                        </Link>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tenant Migration Compliance -->
+                <div :class="migrationCompliance.behind_count > 0 ? 'border-amber-500/20' : 'border-white/5'"
+                     class="bg-slate-900 border rounded-xl overflow-hidden">
+                    <button @click="migrationOpen = !migrationOpen"
+                            class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/2 transition">
+                        <div class="flex items-center gap-3">
+                            <h3 class="font-semibold text-white">Migration Compliance</h3>
+                            <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-0.5 rounded-full">
+                                {{ migrationCompliance.up_to_date }} up-to-date
+                            </span>
+                            <span v-if="migrationCompliance.behind_count > 0"
+                                  class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full">
+                                {{ migrationCompliance.behind_count }} behind
+                            </span>
+                            <span v-if="migrationCompliance.behind_count === 0" class="text-slate-500 text-xs">
+                                All tenants up-to-date
+                            </span>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform"
+                             :class="migrationOpen ? 'rotate-180' : ''"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div v-if="migrationOpen" class="border-t border-white/5">
+                        <div v-if="migrationCompliance.behind.length === 0"
+                             class="px-6 py-8 text-center text-slate-500 text-sm">
+                            All {{ migrationCompliance.total }} tenants are fully migrated
+                            ({{ migrationCompliance.available_migrations }} migrations applied).
+                        </div>
+                        <table v-else class="w-full text-sm">
+                            <thead class="text-slate-400 border-b border-white/5">
+                                <tr>
+                                    <th class="text-left px-6 py-3 font-medium">Tenant</th>
+                                    <th class="text-left px-6 py-3 font-medium">Applied</th>
+                                    <th class="text-left px-6 py-3 font-medium">Available</th>
+                                    <th class="text-left px-6 py-3 font-medium">Behind by</th>
+                                    <th class="text-left px-6 py-3 font-medium"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <tr v-for="t in migrationCompliance.behind" :key="t.id"
+                                    class="hover:bg-white/2 transition">
+                                    <td class="px-6 py-4 font-medium text-white">{{ t.name }}</td>
+                                    <td class="px-6 py-4 text-slate-300">{{ t.applied }}</td>
+                                    <td class="px-6 py-4 text-slate-300">{{ t.available }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full">
+                                            {{ t.available - t.applied }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <button @click="runMigration(t)"
+                                                :disabled="migrating === t.id"
+                                                class="text-xs font-medium text-violet-400 hover:text-violet-300 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                                            {{ migrating === t.id ? 'Running…' : 'Run migrations' }}
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </main>
         </div>

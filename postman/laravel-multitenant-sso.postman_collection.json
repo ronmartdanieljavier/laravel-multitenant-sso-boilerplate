@@ -3003,6 +3003,51 @@
               "body": "{\n  \"message\": \"Tenant deleted.\"\n}"
             }
           ]
+        },
+        {
+          "name": "List Report Jobs (Admin View)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "reports"
+              ]
+            },
+            "description": "Returns a paginated list of all report jobs for a specific tenant, ordered latest-first. Visible to admin users only \u2014 does not require the tenant\u2019s `X-Tenant` header. Includes the requesting user\u2019s name for context."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"018f1a2b-3c4d-7e5f-6a7b-8c9d0e1f2a3b\",\n      \"type\": \"user_activity\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\",\n      \"status\": \"success\",\n      \"user\": {\n        \"id\": 1,\n        \"name\": \"Alice\"\n      },\n      \"created_at\": \"2026-06-25T10:00:00.000000Z\",\n      \"started_at\": \"2026-06-25T10:00:01.000000Z\",\n      \"completed_at\": \"2026-06-25T10:00:03.000000Z\",\n      \"file_path\": \"reports/018f1a2b.json\",\n      \"error_message\": null\n    },\n    {\n      \"id\": \"028f1a2b-3c4d-7e5f-6a7b-8c9d0e1f2a3b\",\n      \"type\": \"user_activity\",\n      \"format\": \"pdf\",\n      \"delivery\": \"none\",\n      \"status\": \"pending\",\n      \"user\": {\n        \"id\": 2,\n        \"name\": \"Bob\"\n      },\n      \"created_at\": \"2026-06-25T10:01:00.000000Z\",\n      \"started_at\": null,\n      \"completed_at\": null,\n      \"file_path\": null,\n      \"error_message\": null\n    }\n  ],\n  \"total\": 2,\n  \"current_page\": 1,\n  \"last_page\": 1,\n  \"per_page\": 25,\n  \"prev_page_url\": null,\n  \"next_page_url\": null\n}"
+            }
+          ]
         }
       ]
     },
@@ -3866,6 +3911,917 @@
               "code": 422,
               "_postman_previewlanguage": "json",
               "body": "{\n  \"message\": \"The selected email driver is invalid.\",\n  \"errors\": {\n    \"email_driver\": [\"The selected email driver is invalid.\"]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tenant Settings (API)",
+      "item": [
+        {
+          "name": "Get Tenant Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings"
+              ]
+            },
+            "description": "Returns all settings for the tenant. Fields that are unset (`null`) fall back to the corresponding system-wide setting at runtime. Includes `effective_email_driver` and `effective_storage_driver` showing the resolved value (tenant override ?? system default)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"smtp_username\": null,\n    \"smtp_password\": null,\n    \"smtp_encryption\": null,\n    \"smtp_from_address\": null,\n    \"smtp_from_name\": null,\n    \"postmark_token\": \"abc123\",\n    \"postmark_from_address\": \"noreply@acme.com\",\n    \"postmark_from_name\": \"Acme\",\n    \"mailgun_domain\": null,\n    \"mailgun_secret\": null,\n    \"mailgun_endpoint\": null,\n    \"mailgun_from_address\": null,\n    \"mailgun_from_name\": null,\n    \"ses_key\": null,\n    \"ses_secret\": null,\n    \"ses_region\": null,\n    \"ses_from_address\": null,\n    \"ses_from_name\": null,\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKIA...\",\n    \"s3_secret\": \"[REDACTED]\",\n    \"s3_region\": \"us-east-1\",\n    \"s3_bucket\": \"acme-uploads\",\n    \"s3_url\": null,\n    \"r2_account_id\": null,\n    \"r2_access_key\": null,\n    \"r2_secret\": null,\n    \"r2_bucket\": null,\n    \"r2_url\": null,\n    \"report_pdf_header_text\": \"<strong>Acme Corp</strong> \\u2014 Confidential\",\n    \"report_pdf_footer_text\": \"Page {page}\",\n    \"report_logo_path\": \"tenant-logos/1/logo.png\",\n    \"report_queue\": \"tenant-reports\",\n    \"report_timeout\": 120,\n    \"report_connection\": \"redis\",\n    \"app_name\": \"Acme Portal\",\n    \"support_email\": \"support@acme.com\",\n    \"support_url\": \"https://help.acme.com\",\n    \"effective_email_driver\": \"postmark\",\n    \"effective_storage_driver\": \"s3\"\n  },\n  \"redis_connections\": [\n    \"redis\",\n    \"redis-acme\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Email Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_driver\": \"postmark\",\n  \"postmark_token\": \"abc123\",\n  \"postmark_from_address\": \"noreply@acme.com\",\n  \"postmark_from_name\": \"Acme Corp\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings"
+              ]
+            },
+            "description": "Set the tenant's email driver and credentials. Any field set to `null` or omitted removes the tenant override, falling back to the system setting. Supported drivers: `smtp`, `postmark`, `mailgun`, `ses`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"smtp_username\": null,\n    \"smtp_password\": null,\n    \"smtp_encryption\": null,\n    \"smtp_from_address\": null,\n    \"smtp_from_name\": null,\n    \"postmark_token\": \"abc123\",\n    \"postmark_from_address\": \"noreply@acme.com\",\n    \"postmark_from_name\": \"Acme\",\n    \"mailgun_domain\": null,\n    \"mailgun_secret\": null,\n    \"mailgun_endpoint\": null,\n    \"mailgun_from_address\": null,\n    \"mailgun_from_name\": null,\n    \"ses_key\": null,\n    \"ses_secret\": null,\n    \"ses_region\": null,\n    \"ses_from_address\": null,\n    \"ses_from_name\": null,\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKIA...\",\n    \"s3_secret\": \"[REDACTED]\",\n    \"s3_region\": \"us-east-1\",\n    \"s3_bucket\": \"acme-uploads\",\n    \"s3_url\": null,\n    \"r2_account_id\": null,\n    \"r2_access_key\": null,\n    \"r2_secret\": null,\n    \"r2_bucket\": null,\n    \"r2_url\": null,\n    \"report_pdf_header_text\": \"<strong>Acme Corp</strong> \\u2014 Confidential\",\n    \"report_pdf_footer_text\": \"Page {page}\",\n    \"report_logo_path\": \"tenant-logos/1/logo.png\",\n    \"report_queue\": \"tenant-reports\",\n    \"report_timeout\": 120,\n    \"app_name\": \"Acme Portal\",\n    \"support_email\": \"support@acme.com\",\n    \"support_url\": \"https://help.acme.com\",\n    \"effective_email_driver\": \"postmark\",\n    \"effective_storage_driver\": \"s3\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Storage Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storage_driver\": \"s3\",\n  \"s3_key\": \"AKIAIOSFODNN7EXAMPLE\",\n  \"s3_secret\": \"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\",\n  \"s3_region\": \"us-east-1\",\n  \"s3_bucket\": \"acme-tenant-bucket\",\n  \"s3_url\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings"
+              ]
+            },
+            "description": "Override the tenant's file storage with its own S3 or R2 bucket. Supported drivers: `s3`, `r2`. All uploads and report file storage from this tenant's context will use these credentials."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"smtp_username\": null,\n    \"smtp_password\": null,\n    \"smtp_encryption\": null,\n    \"smtp_from_address\": null,\n    \"smtp_from_name\": null,\n    \"postmark_token\": \"abc123\",\n    \"postmark_from_address\": \"noreply@acme.com\",\n    \"postmark_from_name\": \"Acme\",\n    \"mailgun_domain\": null,\n    \"mailgun_secret\": null,\n    \"mailgun_endpoint\": null,\n    \"mailgun_from_address\": null,\n    \"mailgun_from_name\": null,\n    \"ses_key\": null,\n    \"ses_secret\": null,\n    \"ses_region\": null,\n    \"ses_from_address\": null,\n    \"ses_from_name\": null,\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKIA...\",\n    \"s3_secret\": \"[REDACTED]\",\n    \"s3_region\": \"us-east-1\",\n    \"s3_bucket\": \"acme-uploads\",\n    \"s3_url\": null,\n    \"r2_account_id\": null,\n    \"r2_access_key\": null,\n    \"r2_secret\": null,\n    \"r2_bucket\": null,\n    \"r2_url\": null,\n    \"report_pdf_header_text\": \"<strong>Acme Corp</strong> \\u2014 Confidential\",\n    \"report_pdf_footer_text\": \"Page {page}\",\n    \"report_logo_path\": \"tenant-logos/1/logo.png\",\n    \"report_queue\": \"tenant-reports\",\n    \"report_timeout\": 120,\n    \"app_name\": \"Acme Portal\",\n    \"support_email\": \"support@acme.com\",\n    \"support_url\": \"https://help.acme.com\",\n    \"effective_email_driver\": \"postmark\",\n    \"effective_storage_driver\": \"s3\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Report PDF Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"report_pdf_header_text\": \"<strong>Acme Corp</strong> \\u2014 Confidential\",\n  \"report_pdf_footer_text\": \"Page {page} \\u00b7 Generated {date}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings"
+              ]
+            },
+            "description": "Configure the tenant\u2019s PDF report header and footer text (both support HTML from the rich-text editor with a live A4 preview in the UI). Queue, timeout, and Redis connection overrides are configured separately via \u201cUpdate Report Server Settings\u201d. The logo is uploaded separately via the logo endpoint."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"smtp_username\": null,\n    \"smtp_password\": null,\n    \"smtp_encryption\": null,\n    \"smtp_from_address\": null,\n    \"smtp_from_name\": null,\n    \"postmark_token\": \"abc123\",\n    \"postmark_from_address\": \"noreply@acme.com\",\n    \"postmark_from_name\": \"Acme\",\n    \"mailgun_domain\": null,\n    \"mailgun_secret\": null,\n    \"mailgun_endpoint\": null,\n    \"mailgun_from_address\": null,\n    \"mailgun_from_name\": null,\n    \"ses_key\": null,\n    \"ses_secret\": null,\n    \"ses_region\": null,\n    \"ses_from_address\": null,\n    \"ses_from_name\": null,\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKIA...\",\n    \"s3_secret\": \"[REDACTED]\",\n    \"s3_region\": \"us-east-1\",\n    \"s3_bucket\": \"acme-uploads\",\n    \"s3_url\": null,\n    \"r2_account_id\": null,\n    \"r2_access_key\": null,\n    \"r2_secret\": null,\n    \"r2_bucket\": null,\n    \"r2_url\": null,\n    \"report_pdf_header_text\": \"<strong>Acme Corp</strong> \\u2014 Confidential\",\n    \"report_pdf_footer_text\": \"Page {page}\",\n    \"report_logo_path\": \"tenant-logos/1/logo.png\",\n    \"report_queue\": \"tenant-reports\",\n    \"report_timeout\": 120,\n    \"report_connection\": \"redis\",\n    \"app_name\": \"Acme Portal\",\n    \"support_email\": \"support@acme.com\",\n    \"support_url\": \"https://help.acme.com\",\n    \"effective_email_driver\": \"postmark\",\n    \"effective_storage_driver\": \"s3\"\n  },\n  \"redis_connections\": [\n    \"redis\",\n    \"redis-acme\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Report Server Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"report_queue\": \"tenant-reports\",\n  \"report_timeout\": 120,\n  \"report_connection\": \"redis\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings"
+              ]
+            },
+            "description": "Override the report job queue name, per-job timeout (seconds, 10\u20133600), and Redis connection key for this tenant. `report_connection` must match a key under `queue.connections` in `config/queue.php` whose driver is `redis` (e.g. `\"redis\"` or `\"redis-acme\"`). Set any field to `null` or omit it to revert to the system default. Available Redis connection names are returned by `GET \u2026/settings` as `redis_connections`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"smtp_username\": null,\n    \"smtp_password\": null,\n    \"smtp_encryption\": null,\n    \"smtp_from_address\": null,\n    \"smtp_from_name\": null,\n    \"postmark_token\": \"abc123\",\n    \"postmark_from_address\": \"noreply@acme.com\",\n    \"postmark_from_name\": \"Acme\",\n    \"mailgun_domain\": null,\n    \"mailgun_secret\": null,\n    \"mailgun_endpoint\": null,\n    \"mailgun_from_address\": null,\n    \"mailgun_from_name\": null,\n    \"ses_key\": null,\n    \"ses_secret\": null,\n    \"ses_region\": null,\n    \"ses_from_address\": null,\n    \"ses_from_name\": null,\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKIA...\",\n    \"s3_secret\": \"[REDACTED]\",\n    \"s3_region\": \"us-east-1\",\n    \"s3_bucket\": \"acme-uploads\",\n    \"s3_url\": null,\n    \"r2_account_id\": null,\n    \"r2_access_key\": null,\n    \"r2_secret\": null,\n    \"r2_bucket\": null,\n    \"r2_url\": null,\n    \"report_pdf_header_text\": \"<strong>Acme Corp</strong> \\u2014 Confidential\",\n    \"report_pdf_footer_text\": \"Page {page}\",\n    \"report_logo_path\": \"tenant-logos/1/logo.png\",\n    \"report_queue\": \"tenant-reports\",\n    \"report_timeout\": 120,\n    \"report_connection\": \"redis\",\n    \"app_name\": \"Acme Portal\",\n    \"support_email\": \"support@acme.com\",\n    \"support_url\": \"https://help.acme.com\",\n    \"effective_email_driver\": \"postmark\",\n    \"effective_storage_driver\": \"s3\"\n  },\n  \"redis_connections\": [\n    \"redis\",\n    \"redis-acme\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload Report Logo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "logo",
+                  "type": "file",
+                  "src": "",
+                  "description": "PNG, JPG, SVG, or WebP \u2014 max 2 MB"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings/logo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings",
+                "logo"
+              ]
+            },
+            "description": "Upload a logo image used in the tenant's PDF report header. Accepted formats: PNG, JPG, JPEG, SVG, WebP (max 2 MB). Stored under `public/tenant-logos/{tenant_id}/`. Returns the storage path."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"report_logo_path\": \"tenant-logos/1/logo.png\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Report Logo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings/logo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings",
+                "logo"
+              ]
+            },
+            "description": "Removes the tenant's uploaded report logo from storage and clears the `report_logo_path` setting."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Logo removed.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Branding Overrides",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"app_name\": \"Acme Portal\",\n  \"support_email\": \"support@acme.com\",\n  \"support_url\": \"https://help.acme.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings"
+              ]
+            },
+            "description": "Override branding values for this tenant \u2014 app name, support email, and support URL. These override system-wide branding in all tenant-context responses."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"smtp_username\": null,\n    \"smtp_password\": null,\n    \"smtp_encryption\": null,\n    \"smtp_from_address\": null,\n    \"smtp_from_name\": null,\n    \"postmark_token\": \"abc123\",\n    \"postmark_from_address\": \"noreply@acme.com\",\n    \"postmark_from_name\": \"Acme\",\n    \"mailgun_domain\": null,\n    \"mailgun_secret\": null,\n    \"mailgun_endpoint\": null,\n    \"mailgun_from_address\": null,\n    \"mailgun_from_name\": null,\n    \"ses_key\": null,\n    \"ses_secret\": null,\n    \"ses_region\": null,\n    \"ses_from_address\": null,\n    \"ses_from_name\": null,\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKIA...\",\n    \"s3_secret\": \"[REDACTED]\",\n    \"s3_region\": \"us-east-1\",\n    \"s3_bucket\": \"acme-uploads\",\n    \"s3_url\": null,\n    \"r2_account_id\": null,\n    \"r2_access_key\": null,\n    \"r2_secret\": null,\n    \"r2_bucket\": null,\n    \"r2_url\": null,\n    \"report_pdf_header_text\": \"<strong>Acme Corp</strong> \\u2014 Confidential\",\n    \"report_pdf_footer_text\": \"Page {page}\",\n    \"report_logo_path\": \"tenant-logos/1/logo.png\",\n    \"report_queue\": \"tenant-reports\",\n    \"report_timeout\": 120,\n    \"app_name\": \"Acme Portal\",\n    \"support_email\": \"support@acme.com\",\n    \"support_url\": \"https://help.acme.com\",\n    \"effective_email_driver\": \"postmark\",\n    \"effective_storage_driver\": \"s3\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Clear a Setting (revert to system default)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_driver\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings"
+              ]
+            },
+            "description": "Passing `null` for any field deletes the tenant override row so the system setting becomes the effective value again."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"email_driver\": \"postmark\",\n    \"smtp_host\": null,\n    \"smtp_port\": null,\n    \"smtp_username\": null,\n    \"smtp_password\": null,\n    \"smtp_encryption\": null,\n    \"smtp_from_address\": null,\n    \"smtp_from_name\": null,\n    \"postmark_token\": \"abc123\",\n    \"postmark_from_address\": \"noreply@acme.com\",\n    \"postmark_from_name\": \"Acme\",\n    \"mailgun_domain\": null,\n    \"mailgun_secret\": null,\n    \"mailgun_endpoint\": null,\n    \"mailgun_from_address\": null,\n    \"mailgun_from_name\": null,\n    \"ses_key\": null,\n    \"ses_secret\": null,\n    \"ses_region\": null,\n    \"ses_from_address\": null,\n    \"ses_from_name\": null,\n    \"storage_driver\": \"s3\",\n    \"s3_key\": \"AKIA...\",\n    \"s3_secret\": \"[REDACTED]\",\n    \"s3_region\": \"us-east-1\",\n    \"s3_bucket\": \"acme-uploads\",\n    \"s3_url\": null,\n    \"r2_account_id\": null,\n    \"r2_access_key\": null,\n    \"r2_secret\": null,\n    \"r2_bucket\": null,\n    \"r2_url\": null,\n    \"report_pdf_header_text\": \"<strong>Acme Corp</strong> \\u2014 Confidential\",\n    \"report_pdf_footer_text\": \"Page {page}\",\n    \"report_logo_path\": \"tenant-logos/1/logo.png\",\n    \"report_queue\": \"tenant-reports\",\n    \"report_timeout\": 120,\n    \"app_name\": \"Acme Portal\",\n    \"support_email\": \"support@acme.com\",\n    \"support_url\": \"https://help.acme.com\",\n    \"effective_email_driver\": \"postmark\",\n    \"effective_storage_driver\": \"s3\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tenant Users (API)",
+      "item": [
+        {
+          "name": "List Users in Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "users"
+              ]
+            },
+            "description": "Returns all users who have access to this tenant (at least one entry in `user_app_tenants` for this tenant ID). Includes each user's app permissions and tenant assignments."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 3,\n      \"name\": \"Alice Smith\",\n      \"email\": \"alice@acme.com\",\n      \"is_active\": true,\n      \"invitation_sent_at\": null,\n      \"profile_picture_url\": null,\n      \"apps\": [\n        {\n          \"app_id\": 1,\n          \"app_name\": \"Main App\",\n          \"role\": \"admin\",\n          \"tenant_ids\": [\n            1\n          ]\n        }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tenant Report Queue (API)",
+      "description": "Endpoints for tenants to view their own report job queue. Requires both `X-App: tenant` and `X-Tenant: {slug}` headers alongside a Bearer token. Jobs auto-refresh every 4 s in the Inertia UI via `usePoll`.",
+      "item": [
+        {
+          "name": "List Tenant Report Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tenant/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "reports"
+              ]
+            },
+            "description": "Returns a paginated list of all report jobs for the authenticated tenant, ordered latest-first. Includes the requesting user\u2019s name. Poll this endpoint to track live job status (`pending`, `processing`, `success`, `failed`). Requires `X-App: tenant` and `X-Tenant: {slug}` headers."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"018f1a2b-3c4d-7e5f-6a7b-8c9d0e1f2a3b\",\n      \"type\": \"user_activity\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\",\n      \"status\": \"success\",\n      \"user\": {\n        \"id\": 1,\n        \"name\": \"Alice\"\n      },\n      \"created_at\": \"2026-06-25T10:00:00.000000Z\",\n      \"started_at\": \"2026-06-25T10:00:01.000000Z\",\n      \"completed_at\": \"2026-06-25T10:00:03.000000Z\",\n      \"file_path\": \"reports/018f1a2b.json\",\n      \"error_message\": null\n    },\n    {\n      \"id\": \"028f1a2b-3c4d-7e5f-6a7b-8c9d0e1f2a3b\",\n      \"type\": \"user_activity\",\n      \"format\": \"pdf\",\n      \"delivery\": \"none\",\n      \"status\": \"pending\",\n      \"user\": {\n        \"id\": 2,\n        \"name\": \"Bob\"\n      },\n      \"created_at\": \"2026-06-25T10:01:00.000000Z\",\n      \"started_at\": null,\n      \"completed_at\": null,\n      \"file_path\": null,\n      \"error_message\": null\n    }\n  ],\n  \"total\": 2,\n  \"current_page\": 1,\n  \"last_page\": 1,\n  \"per_page\": 25,\n  \"prev_page_url\": null,\n  \"next_page_url\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tenant Error Logs (API)",
+      "item": [
+        {
+          "name": "List Error Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/errors?severity=error&unresolved=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "errors"
+              ],
+              "query": [
+                {
+                  "key": "severity",
+                  "value": "error"
+                },
+                {
+                  "key": "unresolved",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Returns all recorded exceptions for the tenant, newest first. Optional query params:\n- `severity` \u2014 filter by `error`, `warning`, or `critical`\n- `unresolved=1` \u2014 only show errors without a `resolved_at` timestamp"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 42,\n      \"tenant_id\": 1,\n      \"user_id\": 3,\n      \"error_code\": \"E-ACME-A3F9B12C\",\n      \"exception_class\": \"Illuminate\\\\Database\\\\QueryException\",\n      \"message\": \"SQLSTATE[23000]: Integrity constraint violation\",\n      \"file\": \"/app/Services/OrderService.php\",\n      \"line\": 87,\n      \"trace\": [\n        {\n          \"function\": \"App\\\\Services\\\\OrderService::create\",\n          \"file\": \"/app/Services/OrderService.php\",\n          \"line\": 87\n        },\n        {\n          \"function\": \"App\\\\Http\\\\Controllers\\\\OrderController::store\",\n          \"file\": \"/app/Http/Controllers/OrderController.php\",\n          \"line\": 34\n        }\n      ],\n      \"request_url\": \"http://localhost/api/v1/tenant/orders\",\n      \"request_method\": \"POST\",\n      \"request_params\": {\n        \"product_id\": 5,\n        \"qty\": 2,\n        \"password\": \"[REDACTED]\"\n      },\n      \"request_headers\": {\n        \"accept\": \"application/json\",\n        \"x-app\": \"myapp\",\n        \"x-tenant\": \"acme\",\n        \"authorization\": \"[REDACTED]\"\n      },\n      \"severity\": \"error\",\n      \"context\": {\n        \"app_slug\": \"myapp\",\n        \"tenant_slug\": \"acme\",\n        \"ip\": \"127.0.0.1\",\n        \"user_agent\": \"PostmanRuntime/7.x\"\n      },\n      \"resolved\": false,\n      \"resolved_at\": null,\n      \"created_at\": \"2026-06-25T09:14:22.000000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Error Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/errors/{{error_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "errors",
+                "{{error_id}}"
+              ]
+            },
+            "description": "Returns the full error log entry including exception class, message, file, line, stack trace (30 frames), sanitized request params, sanitized headers, context (app slug, tenant slug, IP, user agent), and resolution status."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 42,\n    \"tenant_id\": 1,\n    \"user_id\": 3,\n    \"error_code\": \"E-ACME-A3F9B12C\",\n    \"exception_class\": \"Illuminate\\\\Database\\\\QueryException\",\n    \"message\": \"SQLSTATE[23000]: Integrity constraint violation\",\n    \"file\": \"/app/Services/OrderService.php\",\n    \"line\": 87,\n    \"trace\": [\n      {\n        \"function\": \"App\\\\Services\\\\OrderService::create\",\n        \"file\": \"/app/Services/OrderService.php\",\n        \"line\": 87\n      },\n      {\n        \"function\": \"App\\\\Http\\\\Controllers\\\\OrderController::store\",\n        \"file\": \"/app/Http/Controllers/OrderController.php\",\n        \"line\": 34\n      }\n    ],\n    \"request_url\": \"http://localhost/api/v1/tenant/orders\",\n    \"request_method\": \"POST\",\n    \"request_params\": {\n      \"product_id\": 5,\n      \"qty\": 2,\n      \"password\": \"[REDACTED]\"\n    },\n    \"request_headers\": {\n      \"accept\": \"application/json\",\n      \"x-app\": \"myapp\",\n      \"x-tenant\": \"acme\",\n      \"authorization\": \"[REDACTED]\"\n    },\n    \"severity\": \"error\",\n    \"context\": {\n      \"app_slug\": \"myapp\",\n      \"tenant_slug\": \"acme\",\n      \"ip\": \"127.0.0.1\",\n      \"user_agent\": \"PostmanRuntime/7.x\"\n    },\n    \"resolved\": false,\n    \"resolved_at\": null,\n    \"created_at\": \"2026-06-25T09:14:22.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Look Up Error by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/errors/E-ACME-A3F9B12C",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "errors",
+                "E-ACME-A3F9B12C"
+              ]
+            },
+            "description": "Cross-tenant lookup by error code \u2014 useful for support teams when a user quotes their error code. Returns 404 if the code doesn't exist."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 42,\n    \"tenant_id\": 1,\n    \"user_id\": 3,\n    \"error_code\": \"E-ACME-A3F9B12C\",\n    \"exception_class\": \"Illuminate\\\\Database\\\\QueryException\",\n    \"message\": \"SQLSTATE[23000]: Integrity constraint violation\",\n    \"file\": \"/app/Services/OrderService.php\",\n    \"line\": 87,\n    \"trace\": [\n      {\n        \"function\": \"App\\\\Services\\\\OrderService::create\",\n        \"file\": \"/app/Services/OrderService.php\",\n        \"line\": 87\n      },\n      {\n        \"function\": \"App\\\\Http\\\\Controllers\\\\OrderController::store\",\n        \"file\": \"/app/Http/Controllers/OrderController.php\",\n        \"line\": 34\n      }\n    ],\n    \"request_url\": \"http://localhost/api/v1/tenant/orders\",\n    \"request_method\": \"POST\",\n    \"request_params\": {\n      \"product_id\": 5,\n      \"qty\": 2,\n      \"password\": \"[REDACTED]\"\n    },\n    \"request_headers\": {\n      \"accept\": \"application/json\",\n      \"x-app\": \"myapp\",\n      \"x-tenant\": \"acme\",\n      \"authorization\": \"[REDACTED]\"\n    },\n    \"severity\": \"error\",\n    \"context\": {\n      \"app_slug\": \"myapp\",\n      \"tenant_slug\": \"acme\",\n      \"ip\": \"127.0.0.1\",\n      \"user_agent\": \"PostmanRuntime/7.x\"\n    },\n    \"resolved\": false,\n    \"resolved_at\": null,\n    \"created_at\": \"2026-06-25T09:14:22.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Mark as Resolved",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Sets resolved_at timestamp on the error log"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/errors/{{error_id}}/resolve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "errors",
+                "{{error_id}}",
+                "resolve"
+              ]
+            },
+            "description": "Marks the error log as resolved by setting `resolved_at` to the current timestamp. Resolved errors are visually dimmed in the admin UI and can be filtered out."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Marked as resolved.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reopen (Mark as Unresolved)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/errors/{{error_id}}/unresolve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "errors",
+                "{{error_id}}",
+                "unresolve"
+              ]
+            },
+            "description": "Clears `resolved_at`, reopening the error for investigation."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Reopened.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Error Log",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/errors/{{error_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "errors",
+                "{{error_id}}"
+              ]
+            },
+            "description": "Permanently deletes the error log entry. This action cannot be undone."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Error log deleted.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "403 \u2014 Wrong Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/99/errors/{{error_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "99",
+                "errors",
+                "{{error_id}}"
+              ]
+            },
+            "description": "Returns 404 when the error log belongs to a different tenant than the URL parameter."
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Not Found\"\n}"
             }
           ]
         }

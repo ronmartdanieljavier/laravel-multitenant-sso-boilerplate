@@ -2,6 +2,7 @@
 
 namespace App\Reports\Http\Controllers;
 
+use App\Admin\Services\TenantSettingsService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Reports\ReportResource;
 use App\Models\Central\Report;
@@ -26,6 +27,7 @@ class ReportController extends Controller
 {
     public function __construct(
         private ReportRepository $reportRepository,
+        private TenantSettingsService $tenantSettingsService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -46,7 +48,9 @@ class ReportController extends Controller
             'parameters' => $request->input('parameters'),
         ]);
 
-        GenerateReportJob::dispatch($dto->id);
+        [$queue, $timeout, $connection] = $this->resolveReportConfig($request);
+
+        GenerateReportJob::dispatch($dto->id, $queue, $timeout, $connection);
 
         return response()->json(['data' => $dto], Response::HTTP_CREATED);
     }
@@ -55,8 +59,9 @@ class ReportController extends Controller
     {
         $batchId = Str::uuid()->toString();
         $user = $request->user();
+        [$queue, $timeout, $connection] = $this->resolveReportConfig($request);
 
-        [$reports, $batch] = DB::transaction(function () use ($request, $user, $batchId, $batchJob) {
+        [$reports, $batch] = DB::transaction(function () use ($request, $user, $batchId, $batchJob, $queue, $timeout, $connection) {
             $reports = collect($request->input('reports'))->map(
                 fn (array $item) => $this->reportRepository->create([
                     'user_id' => $user->id,
@@ -69,7 +74,7 @@ class ReportController extends Controller
                 ])
             );
 
-            return [$reports, $batchJob->dispatch($reports, $batchId)];
+            return [$reports, $batchJob->dispatch($reports, $batchId, $queue, $timeout, $connection)];
         });
 
         return response()->json([
@@ -78,6 +83,24 @@ class ReportController extends Controller
             'report_count' => $reports->count(),
             'reports' => $reports->values(),
         ], Response::HTTP_CREATED);
+    }
+
+    /** @return array{string, int|null, string|null} */
+    private function resolveReportConfig(Request $request): array
+    {
+        $tenant = $request->attributes->get('current_tenant');
+
+        if ($tenant === null) {
+            return ['reports', null, null];
+        }
+
+        $settings = $this->tenantSettingsService->getSettings($tenant->id);
+
+        return [
+            $settings->reportQueue ?: 'reports',
+            $settings->reportTimeout ? (int) $settings->reportTimeout : null,
+            $settings->reportConnection ?: null,
+        ];
     }
 
     public function show(Request $request, Report $report): ReportResource

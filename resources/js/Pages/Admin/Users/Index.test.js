@@ -208,6 +208,35 @@ describe('Admin/Users/Index', () => {
         });
     });
 
+    describe('?invite query param deep-link', () => {
+        afterEach(() => {
+            window.history.replaceState({}, '', window.location.pathname);
+        });
+
+        it('opens the invite modal when mounted with ?invite param', async () => {
+            window.history.replaceState({}, '', '?invite=1');
+            const wrapper = mountPage();
+            await wrapper.vm.$nextTick();
+
+            expect(bodyText()).toContain('Invite User');
+        });
+
+        it('strips the ?invite param from the URL after mounting', async () => {
+            window.history.replaceState({}, '', '?invite=1');
+            const wrapper = mountPage();
+            await wrapper.vm.$nextTick();
+
+            expect(window.location.search).not.toContain('invite');
+        });
+
+        it('does not open the invite modal when mounted without ?invite param', async () => {
+            const wrapper = mountPage();
+            await wrapper.vm.$nextTick();
+
+            expect(bodyText()).not.toContain('Send Invitation');
+        });
+    });
+
     describe('Edit modal', () => {
         it('edit modal is hidden by default', () => {
             mountPage();

@@ -2,6 +2,76 @@
 
 ---
 
+## [2.16.0] — 2026-06-25
+
+### Added
+
+- **Live admin dashboard — Phase 5.8** — every widget on `Admin/Index.vue` now displays real data fetched through a strict Controller → Service → Repository → DTO pipeline:
+
+  **Stat cards**
+  - `total_users` = `active_users` + `pending_invitation_users`; `active_sso_sessions` counts live Sanctum `personal_access_tokens` rows
+  - Served by `DashboardService::getStats()` → `DashboardStatsData`
+
+  **Tenant health summary bar**
+  - Proportional bar + three clickable status badges (Healthy / Warning / Critical); clicking a badge navigates to `/admin/tenants?health={status}`, filtering the tenants table in-page via a computed ref; an `×` chip dismisses the filter
+  - Data from `DashboardService::getHealthSummary()` → `TenantHealthSummaryData`
+
+  **Pending invitations widget**
+  - Collapsible list of users with `invitation_token` set and `is_active = false`; shows name, email, and days-since-invited
+  - **Resend Invitation action** — `POST /admin/users/{user}/resend-invitation` generates a fresh 64-char token, stamps `invitation_sent_at`, and re-queues `UserInvitationMail`; matching API route `POST /api/v1/admin/users/{user}/resend-invitation` returns `{ message }` 200
+  - Data from `UserManagementService::pendingUsers()` and `::resendInvitation()`
+
+  **Recent users table**
+  - Latest 5 users by `created_at` desc; Active / Pending Invitation badge; Edit link deep-links to `/admin/users?edit={id}`, which `onMounted` reads to open the edit modal directly
+  - Data from `UserManagementService::recentUsers(int $limit = 5)`
+
+  **Unresolved error log summary**
+  - Collapsible; header shows total + per-severity pills (critical / error / warning); per-tenant table with counts and "View errors →" links to `/admin/tenants/{id}/errors`
+  - Single-query aggregation via `TenantErrorLogRepository::countUnresolvedByTenant()` (DB join + group by tenant_id × severity); `TenantErrorLogService::getUnresolvedSummary()` → `UnresolvedErrorSummaryData` + `UnresolvedErrorTenantData[]`
+
+  **Report queue health widget**
+  - Collapsible; failed count rendered in red; per-tenant table with pending / processing / failed columns and "View reports →" links
+  - Single-query aggregation via `ReportRepository::countQueueStatusByTenant()`; `DashboardService::getReportQueueSummary()` → `ReportQueueSummaryData` + `ReportQueueTenantData[]`; by-tenant list sorted by total (desc)
+
+  **Tenant migration compliance widget**
+  - Collapsible; shows up-to-date vs behind counts; behind tenants listed with applied/available/behind-by columns and a "Run migrations" button that POSTs to the existing `admin.tenants.migrate` route
+  - Available migration count from `TenantRepository::countAvailableMigrations()` (`File::files(database_path('migrations/tenant'))`); `DashboardService::getMigrationComplianceSummary()` → `MigrationComplianceSummaryData` + `MigrationComplianceTenantData[]`
+
+  **Quick actions**
+  - `+ Invite User` header button is now `<Link href="/admin/users?invite=1">`; `Admin/Users/Index.vue` `onMounted` checks `?invite` and calls `openInvite()`, then strips the param
+  - `+ Add Tenant` links to `/admin/tenants?add=1`; `Admin/Tenants/Index.vue` `onMounted` checks `?add` and calls `openCreate()`
+  - `Settings` shortcut links to `/admin/settings`
+
+  **New DTOs** (`app/Admin/Data/`)
+  - `DashboardStatsData` — six integer counters
+  - `UnresolvedErrorSummaryData` / `UnresolvedErrorTenantData`
+  - `ReportQueueSummaryData` / `ReportQueueTenantData`
+  - `MigrationComplianceSummaryData` / `MigrationComplianceTenantData`
+
+  **Repository methods added**
+  - `UserRepository::countSsoSessions()` — `PersonalAccessToken::count()`
+  - `UserRepository::refreshInvitationToken(int $id)` — new token + `invitation_sent_at`
+  - `TenantErrorLogRepository::countUnresolvedBySeverity()` — `array<string, int>`
+  - `TenantErrorLogRepository::countUnresolvedByTenant()` — join + group-by Collection
+  - `ReportRepository::countQueueStatusByTenant()` — join + group-by Collection
+  - `TenantRepository::countAvailableMigrations()` — filesystem count
+  - `UserRepository::countPendingInvitation()` — `whereNotNull('invitation_token')`
+
+  **API parity**
+  - `GET /api/v1/admin/dashboard` (`admin.api.dashboard`) — returns the same seven keys as the Inertia page (`data`, `health_summary`, `recent_users`, `pending_users`, `unresolved_errors`, `report_queue`, `migration_compliance`); protected by `auth:sanctum`
+
+  **Tests** (53 PHPUnit, 31 Vitest)
+  - `DashboardServiceTest` — 18 tests: return types, total = active + pending, active/pending/app/tenant/tenant-inactive counts, SSO session increments and multi-user totals, pending-invitation excludes no-token users, total excludes no-token users, report queue pending/processing/failed/success-excluded/by-tenant-sorted, migration compliance type/arithmetic/behind-have-fewer/count-matches-array
+  - `DashboardWebTest` — 17 tests: auth guard, all 7 props present, unresolved errors keys, pending users includes invited/excludes no-token/excludes active, recent users ≤ 5/newest-first, stats keys, health summary keys/total=sum, migration compliance keys/arithmetic, report queue keys, unresolved errors increments/excludes resolved, SSO sessions increment
+  - `DashboardApiTest` — 18 tests: 401, full JSON structure, stat integer types, health summary integers/total=sum, pending users includes/excludes correctly, recent users ≤ 5/newest-first, unresolved errors integers/increments/excludes resolved, report queue integers, migration compliance integers/arithmetic
+  - `Admin/Index.test.js` — 31 Vitest tests covering all widgets, badge links, empty states, `migrationCompliance` rendering, quick-action hrefs
+
+  **Postman**
+  - New **Admin Dashboard (API)** folder with `GET /api/v1/admin/dashboard` — full 200 response example with all seven keys; 401 example
+  - **Resend Invitation** added to **User Management (API)** — `POST /api/v1/admin/users/:id/resend-invitation`; 200 and 404 examples
+
+---
+
 ## [2.15.0] — 2026-06-25
 
 ### Added

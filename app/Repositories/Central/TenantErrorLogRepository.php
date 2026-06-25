@@ -5,6 +5,7 @@ namespace App\Repositories\Central;
 use App\Data\Repositories\Central\TenantErrorLogRepositoryData;
 use App\Models\Central\TenantErrorLog;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TenantErrorLogRepository
@@ -50,6 +51,38 @@ class TenantErrorLogRepository
         }
 
         return $query->get()->map(fn (TenantErrorLog $log) => $this->toData($log));
+    }
+
+    /**
+     * Count unresolved logs grouped by severity across all tenants.
+     *
+     * @return array<string, int> keys: error, warning, critical
+     */
+    public function countUnresolvedBySeverity(): array
+    {
+        return $this->model
+            ->whereNull('resolved_at')
+            ->selectRaw('severity, COUNT(*) as count')
+            ->groupBy('severity')
+            ->pluck('count', 'severity')
+            ->map(fn ($v) => (int) $v)
+            ->all();
+    }
+
+    /**
+     * Count unresolved logs per tenant, broken down by severity.
+     * Each row is a stdClass with: tenant_id, tenant_name, tenant_slug, severity, count.
+     *
+     * @return Collection<int, \stdClass>
+     */
+    public function countUnresolvedByTenant(): Collection
+    {
+        return DB::table('tenant_error_logs')
+            ->join('tenants', 'tenant_error_logs.tenant_id', '=', 'tenants.id')
+            ->whereNull('tenant_error_logs.resolved_at')
+            ->selectRaw('tenant_error_logs.tenant_id, tenants.name as tenant_name, tenants.slug as tenant_slug, tenant_error_logs.severity, COUNT(*) as count')
+            ->groupBy('tenant_error_logs.tenant_id', 'tenants.name', 'tenants.slug', 'tenant_error_logs.severity')
+            ->get();
     }
 
     public function findByCode(string $errorCode): ?TenantErrorLogRepositoryData

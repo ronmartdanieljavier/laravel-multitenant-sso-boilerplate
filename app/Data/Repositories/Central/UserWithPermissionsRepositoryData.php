@@ -14,6 +14,7 @@ class UserWithPermissionsRepositoryData extends Data
         public bool $isActive,
         public ?Carbon $invitationSentAt,
         public ?string $profilePictureUrl,
+        public ?Carbon $createdAt,
         /** @var UserAppRepositoryData[] */
         public array $apps,
     ) {}

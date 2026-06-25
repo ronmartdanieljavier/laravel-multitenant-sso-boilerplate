@@ -150,4 +150,48 @@ class UserManagementApiTest extends TestCase
                 ],
             ]);
     }
+
+    public function test_resend_invitation_returns_success_message(): void
+    {
+        Mail::fake();
+
+        $actor = User::factory()->create();
+        $pending = User::factory()->create([
+            'is_active' => false,
+            'invitation_token' => 'tok',
+            'invitation_sent_at' => now()->subDay(),
+        ]);
+
+        Sanctum::actingAs($actor);
+
+        $this->postJson("/api/v1/admin/users/{$pending->id}/resend-invitation")
+            ->assertOk()
+            ->assertJsonPath('message', 'Invitation resent.');
+    }
+
+    public function test_resend_invitation_sends_email(): void
+    {
+        Mail::fake();
+
+        $actor = User::factory()->create();
+        $pending = User::factory()->create([
+            'is_active' => false,
+            'invitation_token' => 'tok2',
+            'invitation_sent_at' => now()->subDay(),
+        ]);
+
+        Sanctum::actingAs($actor);
+
+        $this->postJson("/api/v1/admin/users/{$pending->id}/resend-invitation");
+
+        Mail::assertSent(UserInvitationMail::class, fn ($mail) => $mail->hasTo($pending->email));
+    }
+
+    public function test_unauthenticated_resend_is_rejected(): void
+    {
+        $pending = User::factory()->create(['is_active' => false, 'invitation_token' => 'tok3']);
+
+        $this->postJson("/api/v1/admin/users/{$pending->id}/resend-invitation")
+            ->assertUnauthorized();
+    }
 }

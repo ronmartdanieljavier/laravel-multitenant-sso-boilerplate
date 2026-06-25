@@ -113,4 +113,35 @@ class ReportDispatchTest extends TestCase
         $response->assertNoContent();
         $this->assertDatabaseMissing('reports', ['id' => $report->id]);
     }
+
+    public function test_generate_report_job_uses_custom_queue_and_timeout(): void
+    {
+        $job = new GenerateReportJob('some-report-id', 'acme-reports', 600);
+
+        $this->assertSame('acme-reports', $job->queue);
+        $this->assertSame(600, $job->timeout);
+    }
+
+    public function test_generate_report_job_defaults_to_reports_queue(): void
+    {
+        $job = new GenerateReportJob('some-report-id');
+
+        $this->assertSame('reports', $job->queue);
+        $this->assertSame(300, $job->timeout);
+    }
+
+    public function test_report_falls_back_to_default_queue_when_no_tenant(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->postJson('/api/v1/reports', [
+            'type' => 'user_activity',
+            'format' => ReportFormat::Screen->value,
+            'delivery' => ReportDelivery::None->value,
+        ]);
+
+        Queue::assertPushedOn('reports', GenerateReportJob::class);
+    }
 }

@@ -26,9 +26,21 @@ class GenerateReportJob implements ShouldQueue
 
     public int $backoff = 30;
 
-    public function __construct(public readonly string $reportId)
-    {
-        $this->onQueue('reports');
+    public function __construct(
+        public readonly string $reportId,
+        string $queue = 'reports',
+        ?int $timeout = null,
+        ?string $connection = null,
+    ) {
+        $this->onQueue($queue);
+
+        if ($timeout !== null) {
+            $this->timeout = $timeout;
+        }
+
+        if ($connection !== null) {
+            $this->onConnection($connection);
+        }
     }
 
     public function handle(ReportGeneratorFactory $factory): void

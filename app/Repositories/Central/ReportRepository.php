@@ -69,6 +69,19 @@ class ReportRepository
     }
 
     /**
+     * @return LengthAwarePaginator<int, ReportRepositoryData>
+     */
+    public function listForTenant(int $tenantId, int $perPage = 25): LengthAwarePaginator
+    {
+        return $this->model->query()
+            ->with('user:id,name,email')
+            ->where('tenant_id', $tenantId)
+            ->latest()
+            ->paginate($perPage)
+            ->through(fn (Report $report) => ReportRepositoryData::from($report));
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      */
     public function create(array $data): ReportRepositoryData

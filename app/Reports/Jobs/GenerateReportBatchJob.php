@@ -20,17 +20,22 @@ class GenerateReportBatchJob
     /**
      * @param  Collection<int, ReportRepositoryData>  $reports
      */
-    public function dispatch(Collection $reports, string $batchId): Batch
+    public function dispatch(Collection $reports, string $batchId, string $queue = 'reports', ?int $timeout = null, ?string $connection = null): Batch
     {
-        $jobs = $reports->map(fn (ReportRepositoryData $dto) => new GenerateReportJob($dto->id))->all();
+        $jobs = $reports->map(fn (ReportRepositoryData $dto) => new GenerateReportJob($dto->id, $queue, $timeout, $connection))->all();
 
-        return Bus::batch($jobs)
+        $batch = Bus::batch($jobs)
             ->then(function (Batch $batch) use ($reports, $batchId) {
                 $this->handleBatchCompletion($reports, $batchId);
             })
             ->name("Batch Report: {$batchId}")
-            ->onQueue('reports')
-            ->dispatch();
+            ->onQueue($queue);
+
+        if ($connection !== null) {
+            $batch->onConnection($connection);
+        }
+
+        return $batch->dispatch();
     }
 
     /**

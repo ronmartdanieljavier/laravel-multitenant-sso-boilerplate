@@ -323,6 +323,22 @@ function deleteTenant(tenant) {
                                                 class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
                                             Edit
                                         </button>
+                                        <Link :href="`/admin/tenants/${tenant.id}/settings`"
+                                              class="text-xs px-2 py-1 rounded bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 transition">
+                                            Settings
+                                        </Link>
+                                        <Link :href="`/admin/tenants/${tenant.id}/users`"
+                                              class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                                            Users
+                                        </Link>
+                                        <Link :href="`/admin/tenants/${tenant.id}/reports`"
+                                              class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition">
+                                            Reports
+                                        </Link>
+                                        <Link :href="`/admin/tenants/${tenant.id}/errors`"
+                                              class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
+                                            Errors
+                                        </Link>
                                         <button @click="migrateTenant(tenant)"
                                                 class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
                                             Migrate

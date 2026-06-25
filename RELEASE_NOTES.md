@@ -2,6 +2,115 @@
 
 ---
 
+## [2.15.0] — 2026-06-25
+
+### Added
+
+- **Persistent admin tenant layout — Phase 5.7** — admin users navigating between tenant-specific pages (Settings, Users, Reports, Errors) no longer need to return to the tenants list to switch pages; a fixed sub-navigation bar persists across all five tenant pages:
+  - **`AdminTenantLayout.vue`** (`resources/js/Layouts/`) — Inertia persistent layout applied via `defineOptions({ layout: AdminTenantLayout })` on all five admin tenant pages; reads `tenant` from `usePage().props` (already a shared Inertia prop) without extra prop drilling
+  - **Sticky sub-nav bar** — sits below the main admin sidebar; shows a "← Tenants" back-link, the current tenant name, and four tab-style links (Settings, Users, Reports, Errors); active tab highlighted per-page with colour coding (violet / slate / blue / red)
+  - **Active route detection** — `page.url.split('?')[0]` used to strip query strings before comparison; `startsWith(href + '/')` used so nested routes (e.g. `/errors/abc-123`) correctly activate the parent Errors tab
+  - **Sidebar HTML eliminated** — the `<aside>` block (220+ lines) that was duplicated in all five pages is removed; now lives exclusively in `AdminTenantLayout.vue`
+  - **Pages updated** — `Admin/Tenants/Settings.vue`, `Admin/Tenants/Users.vue`, `Admin/Tenants/Errors.vue`, `Admin/Tenants/ErrorDetail.vue`, `Admin/Tenants/ReportQueue.vue`
+  - **13 Vitest tests** — `AdminTenantLayout.test.js`: brand, main nav links, slot content, tenant sub-nav link hrefs, tenant name, active-state highlighting per page, error-detail sub-route activation, sign-out, no sub-nav when tenant is null, query-string stripping
+
+---
+
+## [2.14.0] — 2026-06-25
+
+### Added
+
+- **Tenant report queue — Phase 5.7** — both tenant users and admin users can view all report jobs for a tenant with live status updates:
+
+  **Tenant view** (`/tenant/reports`)
+  - `TenantReportQueueController` + `TenantReportQueueApiController` (in `app/Reports/`) — reads `current_tenant` from `$request->attributes` (set by `ResolveTenantDatabase` middleware); 404 if no tenant context; renders `Tenant/ReportQueue` Inertia page or returns paginated JSON
+  - `resources/js/Pages/Tenant/ReportQueue.vue` — stat cards (Total / Pending / Processing / Failed), status and format badges, table with per-row download link for completed reports, "Live" indicator when active jobs exist, pagination; `usePoll(4000, { only: ['reports'] }, { autoStart: true })` auto-refreshes every 4 s while open
+  - Uses `TenantLayout` persistent layout so the Reports nav link stays active during polling
+  - Web route: `GET /tenant/reports` (`tenant.reports`) — behind `auth` + `ResolveTenantDatabase`
+  - API route: `GET /api/v1/tenant/reports` (`tenant.reports.index`) — behind `auth:sanctum` + `ResolveTenantDatabase`
+  - **17 Vitest tests** — status/format badges, download link, Live indicator, empty state, pagination, polling call
+
+  **Admin view** (`/admin/tenants/{tenant}/reports`)
+  - `Admin\Http\Controllers\TenantReportQueueController` + `TenantReportQueueApiController` — uses `Tenant $tenant` route model binding (no middleware attribute needed)
+  - `resources/js/Pages/Admin/Tenants/ReportQueue.vue` — same stat card + table layout; no download link (admin read-only); `usePoll(4000, { only: ['reports'] })`; uses `AdminTenantLayout` persistent layout
+  - **"Reports" button** added to each row in `Admin/Tenants/Index.vue`
+  - Web route: `GET /admin/tenants/{tenant}/reports` (`admin.tenants.reports`)
+  - API route: `GET /api/v1/admin/tenants/{tenant}/reports` (`admin.api.tenants.reports`)
+  - **14 Vitest tests** — `Admin/Tenants/ReportQueue.test.js`
+
+  **Shared infrastructure**
+  - `ReportRepository::listForTenant(int $tenantId, int $perPage = 25)` — paginated, eager-loads `user:id,name,email`, ordered latest-first
+  - **11 new PHPUnit tests** — `TenantReportQueueWebTest` (6), `TenantReportQueueApiTest` (5) in `app/Reports/`; `Admin\Tests\TenantReportQueueWebTest` (6), `Admin\Tests\TenantReportQueueApiTest` (4); `ReportRepositoryTenantTest` (5) in `tests/Feature/Repositories/Central/`
+  - **Postman** — "Tenant Report Queue (API)" folder added with `GET /api/v1/tenant/reports`; "List Report Jobs (Admin View)" added to "Tenant Management (API)" folder
+
+---
+
+## [2.13.0] — 2026-06-25
+
+### Added
+
+- **Per-tenant Redis connection override — Phase 5.7** — report jobs for a tenant can now be routed to a dedicated Redis queue connection (e.g. a separate Redis server) in addition to the existing queue name and timeout overrides:
+  - **`report_connection` setting key** — added to `ALLOWED_KEYS` in `TenantSettingsService`, `TenantSettingsData` DTO (`public ?string $reportConnection`), and `UpdateTenantSettingsRequest` validation (`nullable|string|max:255`)
+  - **`GenerateReportJob`** — constructor now accepts `string $queue = 'reports'`, `?int $timeout = null`, `?string $connection = null`; calls `$this->onQueue($queue)`, conditionally sets `$this->timeout`, conditionally calls `$this->onConnection($connection)` — all three are applied before the job is pushed
+  - **`GenerateReportBatchJob`** — `dispatch()` accepts and passes all three parameters to each `GenerateReportJob`; calls `$batch->onConnection($connection)` to route the batch itself
+  - **`ReportController::resolveReportConfig()`** — private helper that reads `current_tenant` from `$request->attributes`, calls `TenantSettingsService::getSettings()`, and returns a `[queue, timeout, connection]` tuple; both `store()` and `batch()` destructure the tuple and pass all three to dispatch
+  - **Report Server tab** — dedicated fifth tab in `Admin/Tenants/Settings.vue` (separate from Report PDF); Queue name input, Timeout input, Redis Connection `<select>` dropdown populated from `redisConnections` prop
+  - **`redisConnections` prop** — `TenantSettingsController::index()` filters `config('queue.connections')` to redis-driver entries and passes `array_values(array_keys(...))` as the `redisConnections` Inertia prop; `TenantSettingsApiController::index()` returns `redis_connections` in the JSON envelope
+  - **2 new PHPUnit tests** — `test_redis_connections_prop_contains_only_redis_driver_keys` (web), `test_report_server_settings_can_be_saved` (web), `test_report_connection_can_be_saved_via_api` (API)
+  - **Postman** — "Update Report Server Settings" request added to "Tenant Settings (API)"; "Update Report PDF Settings" body trimmed to PDF-only fields
+
+---
+
+## [2.12.0] — 2026-06-25
+
+### Added
+
+- **Tenant error logs — Phase 5.7b** — every unhandled exception inside a tenant request context is automatically captured and stored in the central `tenant_error_logs` table with a unique support code:
+  - **Automatic capture** — `reportable()` callback in `bootstrap/app.php` detects the `current_tenant` attribute set by `ResolveTenantDatabase` middleware; HTTP exceptions (401/403/404) are deliberately excluded
+  - **Error code format** — `E-{SLUG}-{8-char-random}` e.g. `E-ACME-A3F9B12C`; uniqueness enforced in both generation loop and DB unique constraint
+  - **Full context snapshot** — exception class, message, file, line, 30-frame stack trace, sanitized request params and headers (`password`, `token`, `secret`, `authorization` and similar keys redacted to `[REDACTED]`), user ID (nullable), IP, user agent, app slug, tenant slug
+  - **Production masking** — in production (`app()->isProduction()`), the `renderable()` callback replaces the raw exception with `{"error_code":"E-ACME-...","message":"An unexpected error occurred. Quote the error code when contacting support."}` for API requests, or a minimal Blade error page (`resources/views/errors/tenant.blade.php`) for web requests; development environments retain default Laravel error rendering
+  - **`TenantErrorContext`** — static per-request bridge between the `reportable()` and `renderable()` callbacks; `reportable()` stores the generated code, `renderable()` reads and clears it
+  - **Admin UI** — `GET /admin/tenants/{tenant}/errors` lists all logs with severity filter and unresolved-only toggle; stat cards show total / unresolved / critical / error counts; each row links to the full detail page
+  - **Detail page** — `GET /admin/tenants/{tenant}/errors/{error}` shows exception summary, request URL/method/params/headers, context block, and 30-frame stack trace; copy-to-clipboard button for the error code
+  - **Lifecycle management** — mark resolved, reopen, delete (web + API); resolved entries are visually dimmed
+  - **Support lookup** — `GET /api/v1/admin/errors/{errorCode}` finds any error log across all tenants by code — for support team use when a user quotes their error code
+  - **`TenantErrorsController` + `TenantErrorsApiController`** — `index`, `show`, `resolve`, `unresolve`, `destroy`; `show` / `resolve` / `unresolve` / `destroy` enforce tenant ownership (returns 404 if tenant mismatch)
+  - **`TenantErrorLogRepository`** — `create()`, `listForTenant()`, `findByCode()`, `findById()`, `resolve()`, `unresolve()`, `delete()`, `generateErrorCode()`, `sanitizeParams()`, `sanitizeHeaders()`
+  - **24 new PHPUnit tests** across `TenantErrorLogServiceTest` (16) and `TenantErrorLogWebTest` (8)
+  - **Postman** — "Tenant Error Logs (API)" folder added with 7 documented requests including the cross-tenant code lookup
+
+---
+
+## [2.11.0] — 2026-06-25
+
+### Added
+
+- **Per-tenant settings — Phase 5.7** — admins can configure tenant-specific overrides for email, storage, report PDF, and branding; unset fields transparently fall back to system settings at runtime:
+  - **`tenant_settings` table** — `(tenant_id, key, value)` with a unique constraint on `(tenant_id, key)`; setting null/empty string for a key deletes its override row, restoring system-default behaviour
+  - **`TenantSettingsData` DTO** — 40 nullable fields mirroring the tenant-overridable subset of `SystemSettingsData`, plus `effectiveEmailDriver` and `effectiveStorageDriver` (tenant override ?? system setting)
+  - **`TenantSettingsService`** — `getSettings()→TenantSettingsData`, `updateSettings()`, `uploadLogo()`, `deleteLogo()`, `resolveMailConfig()`, `resolveS3Config()`; the resolve methods return runtime-ready config arrays that merge tenant overrides with system defaults for use in queue jobs and mailers
+  - **Email overrides** — driver (`smtp`, `postmark`, `mailgun`, `ses`) + all per-driver credentials; a tenant with no email override uses the system driver and credentials transparently
+  - **Storage overrides** — driver (`s3`, `r2`) + credentials; tenant-scoped S3 and R2 buckets for file uploads and report delivery
+  - **Report PDF settings** — header text and footer text (both support HTML from the TipTap rich-text editor); logo upload stored under `public/tenant-logos/{tenant_id}/`; queue name and timeout override
+  - **Report PDF live preview** — Settings.vue Report PDF tab renders a mock A4 page in real time as the admin types; logo, header, and footer update instantly via computed refs + `v-html`
+  - **Branding overrides** — app name, support email, support URL
+  - **`UpdateTenantSettingsRequest`** — 30+ nullable validation rules; logo upload validated by `UploadTenantLogoRequest` (image, max 2 MB, mime whitelist)
+  - **`TenantSettingsController` + `TenantSettingsApiController`** — `index`, `update`, `uploadLogo`, `deleteLogo`
+  - **Routes** — `GET|PUT /admin/tenants/{tenant}/settings`, `POST|DELETE /admin/tenants/{tenant}/settings/logo` (web + API parity)
+  - **27 new PHPUnit tests** across `TenantSettingsWebTest`, `TenantSettingsApiTest`, `TenantSettingsServiceTest`
+  - **Postman** — "Tenant Settings (API)" folder with 8 documented requests
+
+- **Tenant user management — Phase 5.7** — per-tenant user list accessible directly from the tenant management table:
+  - **`GET /admin/tenants/{tenant}/users`** and **`GET /api/v1/admin/tenants/{tenant}/users`** — returns all users with an entry in `user_app_tenants` for the given tenant, with full app permissions
+  - **`UserRepository::listForTenant(int $tenantId)`** — scoped query filtering by `user_app_tenants.tenant_id`
+  - **`TenantUsersController` + `TenantUsersApiController`** — web returns `Admin/Tenants/Users` Inertia page; API returns `{ data: [...] }`
+  - **`Admin/Tenants/Users.vue`** — user table with status badges (Active / Invited / Inactive), app permission chips, and an inline edit modal (reuses the same app-permission flow as global user management)
+  - Tenant Index row now has **Settings**, **Users**, and **Errors** action buttons per row
+  - **Postman** — "Tenant Users (API)" folder with 1 documented request
+
+---
+
 ## [2.10.0] — 2026-06-24
 
 ### Added

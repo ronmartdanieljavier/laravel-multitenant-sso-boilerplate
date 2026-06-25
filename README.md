@@ -10,8 +10,8 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 |---|---|---|
 | **Auth** | `/api/v1/login`, `/api/v1/logout`, `/api/v1/apps` | SSO — issues Sanctum token, returns app + tenant access list |
 | **Web Auth** | `/login`, `/logout`, `/apps` | Browser session flow — login, logout, app picker |
-| **Admin** | `/api/v1/admin/...`, `/admin/...` | Manage users, permissions, tenant DBs, system settings |
-| **Tenant** | `/api/v1/tenant/...` | Transactional app — reads and writes to tenant DB |
+| **Admin** | `/api/v1/admin/...`, `/admin/...` | Manage users, permissions, tenant DBs, system settings, per-tenant settings, tenant error logs |
+| **Tenant** | `/api/v1/tenant/...`, `/tenant/...` | Transactional app — reads and writes to tenant DB; persistent sidebar layout |
 | **Reports** | `/api/v1/reports/...` | Read-only heavy queries, async generation, replica support |
 | **Profile (API)** | `/api/v1/profile/...` | User self-service — name, picture, password (Bearer token) |
 | **Profile (Web)** | `/profile/...` | User self-service — same actions via Inertia/session |
@@ -87,11 +87,21 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 - System-wide settings across seven tabs: Email (SMTP/Postmark/Mailgun/SES), SMS (Twilio/Vonage/SNS), Push (FCM/APNs/OneSignal), Storage (Local/S3/R2/GCS/FTP/SFTP), Authentication, Security, and Branding
 - Email footer signature editor (TipTap rich text) with unsubscribe URL for CAN-SPAM/GDPR compliance
 - Persistent amber banner on all admin pages when required settings are unset
+- **Per-tenant settings** — each tenant can override email driver, S3/R2 storage, report PDF header/footer (rich-text editor with live A4 preview), report queue/timeout/Redis connection, and branding; unset fields fall back to system settings at runtime
+- **Tenant users** — dedicated per-tenant user list with inline app-permission editing
+- **Tenant report queue** — admin can view all report jobs for any tenant (status, format, user, duration) from the admin panel at `/admin/tenants/{tenant}/reports`
+- **Tenant error logs** — every unhandled exception in a tenant request context is recorded with full stack trace, sanitized request params/headers, user ID, and IP; in production the raw error is replaced by a support-friendly error code (`E-ACME-A3F9B12C`); admin can list, filter, view detail, resolve, and delete logs per tenant; support teams can look up any error code globally via API
+- **Persistent tenant sub-navigation** — admin users navigating between tenant-specific pages (Settings, Users, Reports, Errors) stay in context via a sticky sub-nav bar; no need to return to the tenants list to switch pages
+
+**Tenant portal**
+- Persistent sidebar layout (`TenantLayout.vue`) so users navigate between Dashboard and Report Queue without page flicker
+- Report queue page at `/tenant/reports` — live status polling every 4 s, stat cards, format/status badges, download links
 
 **Inertia.js + Vue 3 frontend**
 - Vue 3 page components served via Inertia.js — no separate frontend server
 - Page components live in `resources/js/Pages/` per module, built by Vite
 - Active tenant and user permissions shared to every page via Inertia shared props
+- Persistent layouts (`TenantLayout`, `AdminTenantLayout`) keep sidebars and sub-nav in place during navigation
 
 ---
 
@@ -122,16 +132,24 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── InvitationController.php            # GET|POST /invitation/{token} — accept invitation
 │   │   │   ├── SystemSettingsApiController.php     # GET|PUT /api/v1/admin/settings — REST API surface
 │   │   │   ├── SystemSettingsController.php        # GET|PUT /admin/settings — Inertia web surface
+│   │   │   ├── TenantErrorsApiController.php       # GET|PATCH|DELETE /api/v1/admin/tenants/{t}/errors/* + GET /api/v1/admin/errors/{code}
+│   │   │   ├── TenantErrorsController.php          # GET|PATCH|DELETE /admin/tenants/{t}/errors/* — Inertia web surface
 │   │   │   ├── TenantHealthController.php          # (health service only — superseded by TenantManagementController for web)
 │   │   │   ├── TenantManagementApiController.php   # GET|POST|PUT|PATCH|POST|DELETE /api/v1/admin/tenants — REST API surface
 │   │   │   ├── TenantManagementController.php      # GET|POST|PUT|PATCH|POST|DELETE /admin/tenants — Inertia web surface
+│   │   │   ├── TenantSettingsApiController.php     # GET|PUT|POST|DELETE /api/v1/admin/tenants/{t}/settings/* — REST API surface
+│   │   │   ├── TenantSettingsController.php        # GET|PUT|POST|DELETE /admin/tenants/{t}/settings/* — Inertia web surface
+│   │   │   ├── TenantUsersApiController.php        # GET /api/v1/admin/tenants/{t}/users — REST API surface
+│   │   │   ├── TenantUsersController.php           # GET /admin/tenants/{t}/users — Inertia web surface
 │   │   │   ├── UserManagementApiController.php     # GET|POST|PUT /api/v1/admin/users — REST API surface
 │   │   │   └── UserManagementController.php        # GET|POST|PUT /admin/users — Inertia web surface
 │   │   ├── Http/Requests/
-│   │   │   ├── CreateTenantRequest.php         # name, slug (unique, regex), db_* fields, read_replica_* fields
-│   │   │   ├── InviteUserRequest.php           # name, email (unique), apps array validation
-│   │   │   ├── UpdateTenantRequest.php         # same as create with slug uniqueness scoped to self
-│   │   │   └── UpdateUserRequest.php           # name, email, apps array validation
+│   │   │   ├── CreateTenantRequest.php             # name, slug (unique, regex), db_* fields, read_replica_* fields
+│   │   │   ├── InviteUserRequest.php               # name, email (unique), apps array validation
+│   │   │   ├── UpdateTenantRequest.php             # same as create with slug uniqueness scoped to self
+│   │   │   ├── UpdateTenantSettingsRequest.php     # 30+ nullable rules for all tenant-overridable setting keys
+│   │   │   ├── UploadTenantLogoRequest.php         # logo: image, mimes png|jpg|jpeg|svg|webp, max 2 MB
+│   │   │   └── UpdateUserRequest.php               # name, email, apps array validation
 │   │   ├── Mail/
 │   │   │   └── UserInvitationMail.php          # Invitation email — accepts UserRepositoryData DTO
 │   │   ├── Routes/
@@ -139,20 +157,30 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   └── api_admin.php                   # Admin API routes
 │   │   ├── Services/
 │   │   │   ├── SystemSettingsService.php       # getSettings()→SystemSettingsData, updateSettings(), getMissingRequiredSettings()→MissingSystemSettingsData
+│   │   │   ├── TenantErrorContext.php          # Static per-request bridge between reportable() and renderable() exception callbacks
+│   │   │   ├── TenantErrorLogService.php       # record(), listForTenant(), getByCode(), getById(), resolve(), unresolve(), delete()
 │   │   │   ├── TenantHealthService.php         # getTenants(), getSummary(), computeHealthStatus()
 │   │   │   ├── TenantManagementService.php     # list()→Collection<TenantData>, create(), update(), setActive(), delete(), runMigrations()
+│   │   │   ├── TenantSettingsService.php       # getSettings()→TenantSettingsData, updateSettings(), uploadLogo(), deleteLogo(), resolveMailConfig(), resolveS3Config()
 │   │   │   └── UserManagementService.php       # list()→Collection<UserData>, invite(), update(), acceptInvitation()
 │   │   └── Tests/
 │   │       ├── AppManagementApiTest.php        # 10 PHPUnit tests — API surface
 │   │       ├── AppManagementWebTest.php        # 12 PHPUnit tests — web surface
-│   │       ├── SystemSettingsApiTest.php       # 33 PHPUnit tests — API surface, all tabs and validation
+│   │   │   ├── SystemSettingsApiTest.php       # 33 PHPUnit tests — API surface, all tabs and validation
 │   │       ├── SystemSettingsServiceTest.php   # 8 PHPUnit tests — DTO return contracts
 │   │       ├── SystemSettingsWebTest.php       # 43 PHPUnit tests — web surface, all tabs and validation
+│   │       ├── TenantErrorLogServiceTest.php   # 16 PHPUnit tests — record, sanitize, resolve, isolate, delete
+│   │       ├── TenantErrorLogWebTest.php       # 8 PHPUnit tests — list, detail, auth guard, wrong-tenant 404, CRUD
 │   │       ├── TenantHealthServiceTest.php     # 14 service-layer unit tests
 │   │       ├── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
 │   │       ├── TenantManagementApiTest.php     # 9 PHPUnit tests — API surface (list, create, update, toggle, migrate, delete)
 │   │       ├── TenantManagementServiceTest.php # 8 PHPUnit tests — DTO return contracts, token revocation
 │   │       ├── TenantManagementWebTest.php     # 11 PHPUnit tests — web surface (list, CRUD, toggle, delete)
+│   │       ├── TenantReportQueueApiTest.php    # 4 PHPUnit tests — admin API report queue
+│   │       ├── TenantReportQueueWebTest.php    # 6 PHPUnit tests — admin web report queue
+│   │       ├── TenantSettingsApiTest.php       # 9 PHPUnit tests — settings CRUD, logo, report_connection, redis_connections
+│   │       ├── TenantSettingsServiceTest.php   # 11 PHPUnit tests — effective fallback, setMany, resolveMailConfig
+│   │       ├── TenantSettingsWebTest.php       # 10 PHPUnit tests — web surface, validation, logo, report server settings
 │   │       ├── UserManagementApiTest.php       # PHPUnit tests — API surface (list, invite, update, validation)
 │   │       ├── UserManagementServiceTest.php   # PHPUnit tests — DTO return contracts
 │   │       └── UserManagementWebTest.php       # PHPUnit tests — web surface (list, invite, update)
@@ -205,7 +233,9 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── Report.php
 │   │   │   ├── SystemSetting.php
 │   │   │   ├── Tenant.php
+│   │   │   ├── TenantErrorLog.php          # tenant_id, error_code, exception_class, message, file, line, trace, request_*, severity, context, resolved_at
 │   │   │   ├── TenantMigrationVersion.php
+│   │   │   ├── TenantSetting.php           # tenant_id, key, value — per-tenant setting overrides
 │   │   │   ├── User.php
 │   │   │   ├── UserApp.php
 │   │   │   └── UserAppTenant.php
@@ -335,6 +365,11 @@ laravel-multitenant-sso-boilerplate/
 │
 ├── resources/
 │   ├── js/
+│   │   ├── Layouts/
+│   │   │   ├── AdminTenantLayout.vue       # Persistent layout for admin tenant pages — main sidebar + tenant sub-nav (Settings/Users/Reports/Errors)
+│   │   │   ├── AdminTenantLayout.test.js   # 13 Vitest tests
+│   │   │   ├── TenantLayout.vue            # Persistent layout for tenant portal — sidebar with Dashboard + Report Queue nav
+│   │   │   └── TenantLayout.test.js        # Vitest tests
 │   │   ├── Pages/
 │   │   │   ├── Admin/Index.vue             # Admin landing page (missing-settings banner)
 │   │   │   ├── Admin/Index.test.js
@@ -343,7 +378,17 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── Admin/Users/Index.vue       # User management — invite modal + edit modal with per-app/tenant permission selectors
 │   │   │   ├── Admin/Users/Index.test.js
 │   │   │   ├── Admin/Users/Accept.vue      # Invitation acceptance page — name + password form
-│   │   │   ├── Admin/Tenants/Index.vue     # Tenant health dashboard (missing-settings banner)
+│   │   │   ├── Admin/Tenants/Index.vue     # Tenant health + management dashboard (missing-settings banner, Settings/Users/Reports/Errors buttons per row)
+│   │   │   ├── Admin/Tenants/Settings.vue  # Per-tenant settings — 5 tabs (Email/Storage/Report PDF/Report Server/Branding); uses AdminTenantLayout
+│   │   │   ├── Admin/Tenants/Settings.test.js
+│   │   │   ├── Admin/Tenants/Users.vue     # Per-tenant user list with inline edit modal; uses AdminTenantLayout
+│   │   │   ├── Admin/Tenants/Users.test.js
+│   │   │   ├── Admin/Tenants/ReportQueue.vue  # Per-tenant report job queue (admin view, live polling); uses AdminTenantLayout
+│   │   │   ├── Admin/Tenants/ReportQueue.test.js
+│   │   │   ├── Admin/Tenants/Errors.vue    # Per-tenant error log list; uses AdminTenantLayout
+│   │   │   ├── Admin/Tenants/Errors.test.js
+│   │   │   ├── Admin/Tenants/ErrorDetail.vue  # Error detail with stack trace and resolve/reopen; uses AdminTenantLayout
+│   │   │   ├── Admin/Tenants/ErrorDetail.test.js
 │   │   │   ├── Admin/Settings/Index.vue    # System settings — 7 tabs, per-tab useForm
 │   │   │   ├── Admin/Settings/RichTextEditor.vue  # TipTap editor for email footer signature
 │   │   │   ├── Admin/Settings/RichTextEditor.test.js
@@ -352,8 +397,10 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── Login/Index.test.js
 │   │   │   ├── Reports/Index.vue           # Reports landing page
 │   │   │   ├── Reports/Index.test.js
-│   │   │   ├── Tenant/Index.vue            # Tenant portal landing page
+│   │   │   ├── Tenant/Index.vue            # Tenant portal landing page; uses TenantLayout
 │   │   │   ├── Tenant/Index.test.js
+│   │   │   ├── Tenant/ReportQueue.vue      # Tenant report job queue (live polling, download links); uses TenantLayout
+│   │   │   ├── Tenant/ReportQueue.test.js
 │   │   │   ├── Profile/Index.vue           # User profile page (name, picture, password)
 │   │   │   └── Profile/Index.test.js
 │   │   ├── composables/
@@ -446,6 +493,9 @@ What's built:
 - **App management (Phase 5.4)** — admin can view and edit app information (name, description) at `/admin/apps` and via `GET|PUT /api/v1/admin/apps`; Inertia inline-edit rows; `AppRepositoryData` DTO returned by the repository
 - **User management (Phase 5.5)** — admin can invite users by email with per-app and per-tenant permissions via `POST /api/v1/admin/users/invite`; admin can update user profile and permissions via `PUT /api/v1/admin/users/{user}`; invited users accept via `/invitation/{token}`; account stays inactive until accepted; `UserData` and `UserWithPermissionsRepositoryData` DTOs carry the full permission graph
 - **Tenant management (Phase 5.6)** — admin can create, edit, and delete tenants from `/admin/tenants`; creating a tenant automatically runs its DB migrations; admin can run migrations per-tenant or across all tenants; toggling `is_active` to false immediately revokes all Sanctum tokens for users on that tenant; deleting a tenant drops its database (best-effort), revokes user tokens, and cascades central record removal; full REST API under `/api/v1/admin/tenants`; `TenantData` DTO combines management fields (DB credentials, `isPasswordSet`) with health metrics for the combined management+health page
+- **Per-tenant settings (Phase 5.7)** — admin configures per-tenant overrides across five tabs (Email, Storage, Report PDF, Report Server, Branding); unset keys fall back to system settings at runtime via `TenantSettingsService::resolveMailConfig()` / `resolveS3Config()`; report jobs routed to tenant-specific queue, timeout, and Redis connection via `ReportController::resolveReportConfig()`; `report_connection` dropdown populated from `config/queue.php` redis entries; full REST API under `/api/v1/admin/tenants/{tenant}/settings`
+- **Tenant report queue (Phase 5.7)** — tenant users view their queued report jobs at `/tenant/reports` with live 4 s polling via `usePoll`; admin views any tenant's jobs at `/admin/tenants/{tenant}/reports`; both surfaces share `ReportRepository::listForTenant()`
+- **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (Dashboard + Report Queue sidebar); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
 - **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
@@ -554,6 +604,18 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `POST` | `/api/v1/admin/tenants/{tenant}/migrate` | Bearer | Run pending migrations for a single tenant |
 | `POST` | `/api/v1/admin/tenants/migrate-all` | Bearer | Run pending migrations across all tenant databases |
 | `DELETE` | `/api/v1/admin/tenants/{tenant}` | Bearer | Delete a tenant — revokes tokens, drops DB, removes all central records |
+
+**Tenant Report Queue (API — Bearer + X-App + X-Tenant headers)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/tenant/reports` | Bearer | List all report jobs for the current tenant (paginated, latest-first) |
+
+**Admin Tenant Report Queue (API — Bearer token auth)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/admin/tenants/{tenant}/reports` | Bearer | List all report jobs for a specific tenant (admin view) |
 
 The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, "Create Subscription" saves the ID to `{{subscription_id}}`, "Invite User" saves the new user ID to `{{invited_user_id}}`, and "Create Tenant" saves the ID to `{{tenant_id}}`, so subsequent requests work without manual copy-paste.
 
@@ -918,13 +980,17 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Admin can toggle a tenant's `is_active` flag — when deactivated, all users with a tenant role on that tenant are force-logged out (tokens revoked)
 - [x] Admin can delete a tenant — the tenant's database is dropped and all related central records are removed
 
-*5.7 — Tenant settings (admin)*
-- [ ] Admin can add, update, and delete per-tenant settings:
-  - **Email service** — SMTP or Postmark (only one active at a time); if unset, the system default email service is used
-  - **S3 settings** — bucket, region, and credentials; if unset, the system default S3 settings are used
-  - **Report PDF header and footer** — configurable text and optional logo upload, with a live frontend preview
-  - **Report server settings** — any tenant-specific overrides for report generation (e.g. queue, timeout)
-- [ ] The tenant's mail driver and S3 disk are resolved at runtime per request so all outbound emails and file uploads from a tenant context use that tenant's configured service
+*5.7 — Tenant settings (admin)* *(done)*
+- [x] Admin can add, update, and delete per-tenant settings:
+  - **Email service** — SMTP, Postmark, Mailgun, SES; if unset, the system default is used
+  - **S3 settings** — S3 or R2; if unset, the system default is used
+  - **Report PDF header and footer** — rich-text editor with live A4 preview; optional logo upload
+  - **Report server settings** — queue name, timeout (seconds), and Redis connection override; connection dropdown populated from `config/queue.php` redis entries
+  - **Branding** — app name, support email, support URL
+- [x] The tenant's mail driver and S3 disk are resolved at runtime per request via `TenantSettingsService::resolveMailConfig()` and `resolveS3Config()`
+- [x] Report jobs dispatched to the tenant's configured queue, timeout, and Redis connection via `ReportController::resolveReportConfig()`
+- [x] Tenant report queue — tenant users view their own report jobs at `/tenant/reports` with live status polling; admin views any tenant's jobs at `/admin/tenants/{tenant}/reports`
+- [x] Persistent admin tenant layout — Settings, Users, Reports, and Errors pages share a sticky sub-navigation bar so admins stay in context without returning to the tenant list
 
 ---
 

@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'report_url',
     'report_server',
     'is_active',
+    'is_maintenance',
 ])]
 class Tenant extends Model
 {
@@ -43,6 +44,7 @@ class Tenant extends Model
             'db_password' => 'encrypted',
             'read_replica_password' => 'encrypted',
             'is_active' => 'boolean',
+            'is_maintenance' => 'boolean',
         ];
     }
 

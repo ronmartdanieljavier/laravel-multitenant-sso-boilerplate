@@ -34,7 +34,7 @@ class DashboardApiTest extends TestCase
                     'active_tenants',
                     'active_sso_sessions',
                 ],
-                'health_summary' => ['total', 'healthy', 'warning', 'critical'],
+                'health_summary' => ['total', 'healthy', 'warning', 'critical', 'maintenance'],
                 'recent_users',
                 'pending_users',
                 'unresolved_errors' => ['total', 'error', 'warning', 'critical', 'by_tenant'],
@@ -73,6 +73,7 @@ class DashboardApiTest extends TestCase
         $this->assertIsInt($summary['healthy']);
         $this->assertIsInt($summary['warning']);
         $this->assertIsInt($summary['critical']);
+        $this->assertIsInt($summary['maintenance']);
     }
 
     public function test_health_summary_total_equals_sum_of_statuses(): void

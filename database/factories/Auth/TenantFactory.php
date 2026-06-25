@@ -34,6 +34,7 @@ class TenantFactory extends Factory
             'report_url' => null,
             'report_server' => 'shared',
             'is_active' => true,
+            'is_maintenance' => false,
         ];
     }
 }

@@ -497,6 +497,8 @@ What's built:
 - **Tenant management (Phase 5.6)** — admin can create, edit, and delete tenants from `/admin/tenants`; creating a tenant automatically runs its DB migrations; admin can run migrations per-tenant or across all tenants; toggling `is_active` to false immediately revokes all Sanctum tokens for users on that tenant; deleting a tenant drops its database (best-effort), revokes user tokens, and cascades central record removal; full REST API under `/api/v1/admin/tenants`; `TenantData` DTO combines management fields (DB credentials, `isPasswordSet`) with health metrics for the combined management+health page
 - **Per-tenant settings (Phase 5.7)** — admin configures per-tenant overrides across five tabs (Email, Storage, Report PDF, Report Server, Branding); unset keys fall back to system settings at runtime via `TenantSettingsService::resolveMailConfig()` / `resolveS3Config()`; report jobs routed to tenant-specific queue, timeout, and Redis connection via `ReportController::resolveReportConfig()`; `report_connection` dropdown populated from `config/queue.php` redis entries; full REST API under `/api/v1/admin/tenants/{tenant}/settings`
 - **Tenant report queue (Phase 5.7)** — tenant users view their queued report jobs at `/tenant/reports` with live 4 s polling via `usePoll`; admin views any tenant's jobs at `/admin/tenants/{tenant}/reports`; both surfaces share `ReportRepository::listForTenant()`
+- **Live admin dashboard (Phase 5.8)** — single-page snapshot of the entire platform: user/app/tenant/SSO-session stat cards, tenant health bar (healthy/warning/critical) with click-to-filter, pending invitation list with one-click resend, recent users table with edit modal shortcut, cross-tenant unresolved error log summary by severity, report queue health (pending/processing/failed per tenant), and tenant migration compliance (behind tenants listed with one-click Run migrations); also exposed as `GET /api/v1/admin/dashboard` for mobile and external consumers
+- **Tenant maintenance mode (Phase 5.9)** — admin can put any individual tenant or all tenants simultaneously into maintenance mode; enabling immediately revokes all Sanctum tokens for affected tenant users (force logout), hides the tenant from the app picker (`AppService.loadApps()`), and returns HTTP 503 on all API requests resolved through that tenant; admin UI on `/admin/tenants` includes per-row toggle buttons and "Maintenance: All On / All Off" bulk buttons; a dedicated "In Maintenance" summary card appears on both the tenant list and admin dashboard; full REST API via `PATCH /api/v1/admin/tenants/{id}/maintenance` and `PATCH /api/v1/admin/tenants/maintenance/all`
 - **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (Dashboard + Report Queue sidebar); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
 - **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
@@ -994,25 +996,30 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Tenant report queue — tenant users view their own report jobs at `/tenant/reports` with live status polling; admin views any tenant's jobs at `/admin/tenants/{tenant}/reports`
 - [x] Persistent admin tenant layout — Settings, Users, Reports, and Errors pages share a sticky sub-navigation bar so admins stay in context without returning to the tenant list
 
-*5.8 — Admin dashboard* *(planned)*
+*5.8 — Admin dashboard* *(done)*
 
-The admin landing page at `/admin` currently renders static hardcoded data. Phase 5.8 replaces it with a fully live dashboard driven by the services and repositories already built across phases 5.1–5.7.
+- [x] **Live stat cards** — real counts from the database: total users (active + pending-invitation), active apps, active tenants, active SSO sessions (live Sanctum personal access tokens)
+- [x] **Tenant health summary bar** — `TenantHealthSummaryData` (healthy / warning / critical / maintenance counts); clicking a status badge navigates to `/admin/tenants` pre-filtered to that status
+- [x] **Recent users widget** — latest 5 users sorted by `created_at` desc; active/pending-invitation badge; "Edit" links open the edit modal on `/admin/users`
+- [x] **Pending invitations list** — collapsible section listing users with `invitation_token` set; one-click "Resend Invitation" re-generates the token and re-queues `UserInvitationMail`
+- [x] **Unresolved error log summary** — total unresolved `TenantErrorLog` records across all tenants broken down by severity; link to tenant error list
+- [x] **Report queue health widget** — pending/processing/failed counts across all tenants; `failed` count in red; per-tenant breakdown
+- [x] **Tenant migration compliance** — up-to-date vs behind counts; behind tenants listed with one-click "Run migrations"
+- [x] **Dashboard controller** — `DashboardController` + `DashboardService` + `DashboardStatsData` DTO
+- [x] **API parity** — `GET /api/v1/admin/dashboard` via `DashboardApiController` returning full snapshot
+- [x] **Tests** — `DashboardWebTest`, `DashboardApiTest`, `DashboardServiceTest`
 
-- [ ] **Live stat cards** — replace hardcoded values with real counts from the database:
-  - Total users (with active vs pending-invitation breakdown)
-  - Active apps
-  - Active tenants
-  - Active SSO sessions (count of live Sanctum personal access tokens across all users)
-- [ ] **Tenant health summary bar** — surface the `TenantHealthSummaryData` (healthy / warning / critical counts) already computed by `TenantHealthService::getSummary()`; clicking a status badge navigates to `/admin/tenants` pre-filtered to that status
-- [ ] **Recent users widget** — wire the existing "Recent Users" table to real data via `UserManagementService::list()` (latest 5, sorted by `created_at` desc); show active/pending-invitation badge; "Edit" links open the edit modal on `/admin/users`
-- [ ] **Pending invitations counter** — highlight users whose `invitation_token` is set but not yet accepted; show count on the stat card and list them in a collapsible section with a "Resend" action stub
-- [ ] **Unresolved error log summary** — total unresolved `TenantErrorLog` records across all tenants, broken down by severity (`error` / `warning` / `critical`); link to the relevant tenant error list
-- [ ] **Report queue health widget** — counts of `pending`, `processing`, and `failed` report jobs across all tenants from `ReportRepository`; `failed` count shown in red; links to the relevant tenant report queue
-- [ ] **Tenant migration compliance** — number of tenants that are fully up-to-date vs behind, using the `TenantHealthData` fields already populated by `TenantHealthService`; behind-tenants listed with a one-click "Run migrations" action
-- [ ] **Quick actions** — wire the existing "+ Invite User" header button to open the invite modal from `Admin/Users/Index.vue`; add "Add Tenant" and "View Settings" shortcut buttons
-- [ ] **Dashboard controller** — extract the data-fetching logic from the current inline route closure in `web_admin.php` into a dedicated `DashboardController` and `DashboardService`; pass all widget data as typed Inertia props to `Admin/Index.vue`
-- [ ] **API parity** — expose a `GET /api/v1/admin/dashboard` endpoint (via `DashboardApiController`) returning the same aggregated snapshot for mobile and external consumers
-- [ ] **Tests** — `DashboardWebTest`, `DashboardApiTest`, and `DashboardServiceTest` covering all stat computations, health summary, and the pending-invitation and error-count aggregations
+*5.9 — Tenant maintenance mode* *(done)*
+
+- [x] **Per-tenant maintenance toggle** — admin can enable or disable maintenance mode for any individual tenant from `/admin/tenants`; per-row "Maintenance" / "End Maintenance" buttons in the tenant table
+- [x] **Bulk maintenance toggle** — "Maintenance: All On" and "Maintenance: All Off" header buttons apply the state to every tenant at once
+- [x] **Force logout on enable** — enabling maintenance revokes all Sanctum tokens for users assigned to that tenant; re-login is blocked until maintenance ends
+- [x] **503 enforcement** — `ResolveTenantDatabase` middleware returns `HTTP 503 Service Unavailable` for any API request that resolves to a maintenance tenant
+- [x] **App picker filter** — `AppService::loadApps()` excludes maintenance tenants so they do not appear in the tenant picker after login
+- [x] **Summary cards** — "In Maintenance" count card added to both the admin tenants page and the admin dashboard
+- [x] **`is_maintenance` field** — new boolean column on the `tenants` table (`database/migrations/central/`); `TenantRepositoryData`, `TenantData`, `TenantHealthData`, and `TenantHealthSummaryData` all expose the field
+- [x] **API parity** — `PATCH /api/v1/admin/tenants/{tenant}/maintenance` and `PATCH /api/v1/admin/tenants/maintenance/all` via `TenantManagementApiController`
+- [x] **Tests** — backend: `TenantManagementWebTest`, `TenantManagementApiTest`, `TenantManagementServiceTest`, `TenantHealthWebTest`, `TenantHealthServiceTest`, `DashboardWebTest`, `DashboardApiTest`, `ResolveTenantDatabaseMiddlewareTest`, `AppServiceTest`; frontend: 11 new Vitest cases in `Admin/Tenants/Index.test.js`
 
 ---
 

@@ -123,17 +123,19 @@ class TenantHealthServiceTest extends TestCase
 
     public function test_get_summary_counts_statuses_correctly(): void
     {
-        $healthy = new TenantHealthData(1, 'A', 'a', true, false, 1, 1, null, 0, 0, null, 'healthy');
-        $warning = new TenantHealthData(2, 'B', 'b', true, false, 0, 0, null, 0, 0, null, 'warning');
-        $critical = new TenantHealthData(3, 'C', 'c', false, false, 0, 0, null, 0, 0, null, 'critical');
+        $healthy = new TenantHealthData(1, 'A', 'a', true, false, false, 1, 1, null, 0, 0, null, 'healthy');
+        $warning = new TenantHealthData(2, 'B', 'b', true, false, false, 0, 0, null, 0, 0, null, 'warning');
+        $critical = new TenantHealthData(3, 'C', 'c', false, false, false, 0, 0, null, 0, 0, null, 'critical');
+        $maintenance = new TenantHealthData(4, 'D', 'd', true, true, false, 1, 1, null, 0, 0, null, 'healthy');
 
-        $summary = $this->service->getSummary(collect([$healthy, $warning, $critical]));
+        $summary = $this->service->getSummary(collect([$healthy, $warning, $critical, $maintenance]));
 
         $this->assertInstanceOf(TenantHealthSummaryData::class, $summary);
-        $this->assertSame(3, $summary->total);
-        $this->assertSame(1, $summary->healthy);
+        $this->assertSame(4, $summary->total);
+        $this->assertSame(2, $summary->healthy);
         $this->assertSame(1, $summary->warning);
         $this->assertSame(1, $summary->critical);
+        $this->assertSame(1, $summary->maintenance);
     }
 
     public function test_compute_health_status_returns_critical_for_inactive(): void

@@ -185,4 +185,61 @@ class TenantManagementServiceTest extends TestCase
         $this->assertDatabaseMissing('tenants', ['id' => $tenant->id]);
         $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
     }
+
+    public function test_set_maintenance_true_revokes_tenant_user_tokens(): void
+    {
+        $tenant = Tenant::factory()->create(['is_maintenance' => false]);
+        $tenantUser = User::factory()->create();
+        $tenantUser->createToken('my-token', ['*']);
+
+        DB::table('user_app_tenants')->insert([
+            'user_id' => $tenantUser->id,
+            'app_id' => App::factory()->create()->id,
+            'tenant_id' => $tenant->id,
+            'role' => 'user',
+            'is_default' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->service->setMaintenance($tenant->id, true);
+
+        $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'is_maintenance' => true]);
+        $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
+    }
+
+    public function test_set_maintenance_false_does_not_affect_tokens(): void
+    {
+        $tenant = Tenant::factory()->create(['is_maintenance' => true]);
+        $tenantUser = User::factory()->create();
+        $tenantUser->createToken('my-token', ['*']);
+
+        DB::table('user_app_tenants')->insert([
+            'user_id' => $tenantUser->id,
+            'app_id' => App::factory()->create()->id,
+            'tenant_id' => $tenant->id,
+            'role' => 'user',
+            'is_default' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->service->setMaintenance($tenant->id, false);
+
+        $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'is_maintenance' => false]);
+        $this->assertDatabaseHas('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
+    }
+
+    public function test_set_maintenance_all_updates_all_tenants(): void
+    {
+        $slug1 = 'svc-maint-a-'.uniqid();
+        $slug2 = 'svc-maint-b-'.uniqid();
+        Tenant::factory()->create(['slug' => $slug1, 'is_maintenance' => false]);
+        Tenant::factory()->create(['slug' => $slug2, 'is_maintenance' => false]);
+
+        $this->service->setMaintenanceAll(true);
+
+        $this->assertDatabaseHas('tenants', ['slug' => $slug1, 'is_maintenance' => true]);
+        $this->assertDatabaseHas('tenants', ['slug' => $slug2, 'is_maintenance' => true]);
+    }
 }

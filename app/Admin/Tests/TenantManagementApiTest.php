@@ -150,4 +150,67 @@ class TenantManagementApiTest extends TestCase
             'slug' => 'other',
         ])->assertUnprocessable();
     }
+
+    public function test_authenticated_user_can_enable_maintenance_mode(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $tenant = Tenant::factory()->create(['is_maintenance' => false]);
+
+        $this->patchJson("/api/v1/admin/tenants/{$tenant->id}/maintenance", ['is_maintenance' => true])
+            ->assertOk()
+            ->assertJsonStructure(['message']);
+
+        $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'is_maintenance' => true]);
+    }
+
+    public function test_enabling_maintenance_mode_revokes_user_tokens(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $tenant = Tenant::factory()->create(['is_maintenance' => false]);
+        $tenantUser = User::factory()->create();
+        $tenantUser->createToken('api-token', ['*']);
+
+        DB::table('user_app_tenants')->insert([
+            'user_id' => $tenantUser->id,
+            'app_id' => App::factory()->create()->id,
+            'tenant_id' => $tenant->id,
+            'role' => 'user',
+            'is_default' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->patchJson("/api/v1/admin/tenants/{$tenant->id}/maintenance", ['is_maintenance' => true])
+            ->assertOk();
+
+        $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
+    }
+
+    public function test_authenticated_user_can_disable_maintenance_mode(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $tenant = Tenant::factory()->create(['is_maintenance' => true]);
+
+        $this->patchJson("/api/v1/admin/tenants/{$tenant->id}/maintenance", ['is_maintenance' => false])
+            ->assertOk()
+            ->assertJsonStructure(['message']);
+
+        $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'is_maintenance' => false]);
+    }
+
+    public function test_authenticated_user_can_enable_maintenance_for_all_tenants(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $slug1 = 'api-maint-a-'.uniqid();
+        $slug2 = 'api-maint-b-'.uniqid();
+        Tenant::factory()->create(['slug' => $slug1, 'is_maintenance' => false]);
+        Tenant::factory()->create(['slug' => $slug2, 'is_maintenance' => false]);
+
+        $this->patchJson('/api/v1/admin/tenants/maintenance/all', ['is_maintenance' => true])
+            ->assertOk()
+            ->assertJsonStructure(['message']);
+
+        $this->assertDatabaseHas('tenants', ['slug' => $slug1, 'is_maintenance' => true]);
+        $this->assertDatabaseHas('tenants', ['slug' => $slug2, 'is_maintenance' => true]);
+    }
 }

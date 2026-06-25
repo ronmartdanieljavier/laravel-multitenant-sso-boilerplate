@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/tenants/{tenant}/settings/logo', [TenantSettingsController::class, 'deleteLogo'])->name('admin.tenants.settings.logo.delete');
 
     Route::get('/admin/tenants/{tenant}/users', [TenantUsersController::class, 'index'])->name('admin.tenants.users');
+    Route::delete('/admin/tenants/{tenant}/users/{user}/session', [TenantUsersController::class, 'forceLogout'])->name('admin.tenants.users.forceLogout');
     Route::get('/admin/tenants/{tenant}/reports', [TenantReportQueueController::class, 'index'])->name('admin.tenants.reports');
 
     Route::get('/admin/tenants/{tenant}/errors', [TenantErrorsController::class, 'index'])->name('admin.tenants.errors');

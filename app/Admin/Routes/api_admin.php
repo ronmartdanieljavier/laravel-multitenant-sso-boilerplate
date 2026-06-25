@@ -41,6 +41,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->name('admin.')->group(functi
     Route::delete('tenants/{tenant}/settings/logo', [TenantSettingsApiController::class, 'deleteLogo'])->name('api.tenants.settings.logo.delete');
 
     Route::get('tenants/{tenant}/users', [TenantUsersApiController::class, 'index'])->name('api.tenants.users');
+    Route::delete('tenants/{tenant}/users/{user}/session', [TenantUsersApiController::class, 'forceLogout'])->name('api.tenants.users.forceLogout');
     Route::get('tenants/{tenant}/reports', [TenantReportQueueApiController::class, 'index'])->name('api.tenants.reports');
 
     Route::get('tenants/{tenant}/errors', [TenantErrorsApiController::class, 'index'])->name('api.tenants.errors');

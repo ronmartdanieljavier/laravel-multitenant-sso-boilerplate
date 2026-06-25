@@ -138,6 +138,19 @@ class UserRepository
         return $user ? UserRepositoryData::from($user) : null;
     }
 
+    public function revokeTokensForUser(int $userId): void
+    {
+        $user = $this->model->find($userId);
+        $user?->tokens()->delete();
+    }
+
+    public function hasActiveToken(int $userId): bool
+    {
+        return PersonalAccessToken::where('tokenable_id', $userId)
+            ->where('tokenable_type', User::class)
+            ->exists();
+    }
+
     /** @param Collection<int, int> $userIds */
     public function revokeTokensForUsers(Collection $userIds): void
     {

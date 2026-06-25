@@ -52,6 +52,7 @@ class TenantManagementWebTest extends TestCase
                     ->has('is_password_set')
                     ->has('has_read_replica')
                     ->has('user_count')
+                    ->has('logged_in_count')
                     ->has('migration_count')
                     ->has('pending_reports')
                     ->has('failed_reports')
@@ -218,6 +219,38 @@ class TenantManagementWebTest extends TestCase
             ->assertRedirect(route('admin.tenants'));
 
         $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
+    }
+
+    public function test_logged_in_count_reflects_users_with_active_tokens(): void
+    {
+        $admin = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create(['slug' => 'online-test-'.uniqid()]);
+
+        $userWithToken = User::factory()->create();
+        $userWithoutToken = User::factory()->create();
+
+        foreach ([$userWithToken, $userWithoutToken] as $u) {
+            DB::table('user_app_tenants')->insert([
+                'user_id' => $u->id,
+                'app_id' => $app->id,
+                'tenant_id' => $tenant->id,
+                'role' => 'user',
+                'is_default' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $userWithToken->createToken('sso');
+
+        $this->actingAs($admin)
+            ->get(route('admin.tenants'))
+            ->assertInertia(fn ($page) => $page
+                ->where('tenants', fn ($tenants) => collect($tenants)
+                    ->firstWhere('id', $tenant->id)['logged_in_count'] === 1
+                )
+            );
     }
 
     public function test_tenants_payload_includes_is_maintenance_field(): void

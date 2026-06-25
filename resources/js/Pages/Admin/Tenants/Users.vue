@@ -83,6 +83,13 @@ function statusBadge(user) {
     }
     return { label: 'Inactive', cls: 'bg-slate-700 text-slate-400' };
 }
+
+// ── Force logout ──────────────────────────────────────────────────────────────
+
+function forceLogout(user) {
+    if (!confirm(`Force logout "${user.name}"? Their active session will be immediately terminated.`)) return;
+    router.delete(`/admin/tenants/${props.tenant.id}/users/${user.id}/session`);
+}
 </script>
 
 <template>
@@ -106,7 +113,14 @@ function statusBadge(user) {
             <div class="flex items-center justify-between mb-8">
                 <div>
                     <h1 class="text-2xl font-bold text-white">{{ tenant.name }} — Users</h1>
-                    <p class="text-sm text-slate-400 mt-1">{{ users.length }} user{{ users.length !== 1 ? 's' : '' }} in this tenant</p>
+                    <p class="text-sm text-slate-400 mt-1">
+                        {{ users.length }} user{{ users.length !== 1 ? 's' : '' }} in this tenant
+                        <span v-if="users.filter(u => u.is_logged_in).length > 0"
+                              class="ml-2 inline-flex items-center gap-1 text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                            {{ users.filter(u => u.is_logged_in).length }} online
+                        </span>
+                    </p>
                 </div>
                 <div class="flex gap-2">
                     <Link :href="`/admin/tenants/${tenant.id}/settings`"
@@ -130,6 +144,7 @@ function statusBadge(user) {
                         <tr class="border-b border-white/5">
                             <th class="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">User</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Status</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Session</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Apps</th>
                             <th class="px-6 py-4 text-right text-xs font-medium text-slate-400 uppercase tracking-wide">Actions</th>
                         </tr>
@@ -156,6 +171,14 @@ function statusBadge(user) {
                                 </span>
                             </td>
                             <td class="px-6 py-4">
+                                <span v-if="user.is_logged_in"
+                                      class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/20 text-emerald-400">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                                    Online
+                                </span>
+                                <span v-else class="text-xs text-slate-600">—</span>
+                            </td>
+                            <td class="px-6 py-4">
                                 <div class="flex flex-wrap gap-1">
                                     <span v-for="app in user.apps" :key="app.app_id"
                                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 text-xs text-slate-300">
@@ -166,10 +189,17 @@ function statusBadge(user) {
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button @click="openEdit(user)"
-                                        class="text-sm text-slate-400 hover:text-violet-300 transition">
-                                    Edit
-                                </button>
+                                <div class="flex items-center justify-end gap-3">
+                                    <button v-if="user.is_logged_in"
+                                            @click="forceLogout(user)"
+                                            class="text-sm text-red-400 hover:text-red-300 transition">
+                                        Force Logout
+                                    </button>
+                                    <button @click="openEdit(user)"
+                                            class="text-sm text-slate-400 hover:text-violet-300 transition">
+                                        Edit
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>

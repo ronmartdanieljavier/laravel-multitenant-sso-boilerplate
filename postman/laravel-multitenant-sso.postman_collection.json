@@ -4731,7 +4731,7 @@
                 "users"
               ]
             },
-            "description": "Returns all users who have access to this tenant (at least one entry in `user_app_tenants` for this tenant ID). Includes each user's app permissions and tenant assignments."
+            "description": "Returns all users who have access to this tenant (at least one entry in `user_app_tenants` for this tenant ID). Includes each user's app permissions, tenant assignments, and live session status.\n\n`is_logged_in` is `true` when the user has at least one active Sanctum token (i.e. they are currently logged in to any app)."
           },
           "response": [
             {
@@ -4744,7 +4744,93 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"data\": [\n    {\n      \"id\": 3,\n      \"name\": \"Alice Smith\",\n      \"email\": \"alice@acme.com\",\n      \"is_active\": true,\n      \"invitation_sent_at\": null,\n      \"profile_picture_url\": null,\n      \"apps\": [\n        {\n          \"app_id\": 1,\n          \"app_name\": \"Main App\",\n          \"role\": \"admin\",\n          \"tenant_ids\": [\n            1\n          ]\n        }\n      ]\n    }\n  ]\n}"
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 3,\n      \"name\": \"Alice Smith\",\n      \"email\": \"alice@acme.com\",\n      \"is_active\": true,\n      \"is_logged_in\": true,\n      \"invitation_sent_at\": null,\n      \"profile_picture_url\": null,\n      \"apps\": [\n        {\n          \"app_id\": 1,\n          \"app_name\": \"Main App\",\n          \"role\": \"admin\",\n          \"tenant_ids\": [\n            1\n          ]\n        }\n      ]\n    },\n    {\n      \"id\": 4,\n      \"name\": \"Bob Jones\",\n      \"email\": \"bob@acme.com\",\n      \"is_active\": true,\n      \"is_logged_in\": false,\n      \"invitation_sent_at\": null,\n      \"profile_picture_url\": null,\n      \"apps\": [\n        {\n          \"app_id\": 1,\n          \"app_name\": \"Main App\",\n          \"role\": \"user\",\n          \"tenant_ids\": [\n            1\n          ]\n        }\n      ]\n    }\n  ]\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Force Logout User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/users/:user_id/session",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "users",
+                ":user_id",
+                "session"
+              ],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": "{{invited_user_id}}",
+                  "description": "ID of the user to force-logout"
+                }
+              ]
+            },
+            "description": "Immediately revokes all Sanctum tokens for the specified user, terminating every active session across all apps. Use this to force a user out without waiting for token expiry.\n\nReturns `{ message }` 200 on success. Safe to call even if the user has no active tokens — it is idempotent."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Alice Smith has been logged out.\"\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\Central\\\\User].\"\n}"
             }
           ]
         }

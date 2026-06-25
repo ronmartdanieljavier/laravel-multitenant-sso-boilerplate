@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
+import TourButton from '../../Partials/TourButton.vue';
+import { useTour } from '../../../composables/useTour';
 
 const page = usePage();
 const missingSettings = page.props.missingRequiredSettings ?? [];
@@ -128,6 +130,20 @@ function isTenantSelected(form, appIndex, tenantId) {
 
 const usedAppIds = (form, currentIndex) =>
     form.apps.map((a, i) => i !== currentIndex ? a.app_id : null).filter(Boolean);
+
+const { startTour } = useTour('admin-users', [
+    {
+        element: '#tour-users-header',
+        title: 'User Management',
+        description: 'Manage all admin portal users. Use "Invite User" to send an email invitation. Invited users receive a link to set their password and activate their account.',
+    },
+    {
+        element: '#tour-users-table',
+        title: 'Users Table',
+        description: 'Each row shows a user\'s name, email, account status (Active / Invited / Inactive), and which applications they have access to with their assigned role.',
+        side: 'top',
+    },
+]);
 </script>
 
 <template>
@@ -205,7 +221,7 @@ const usedAppIds = (form, currentIndex) =>
             </div>
 
             <!-- Header -->
-            <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
+            <header id="tour-users-header" class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
                 <h2 class="text-lg font-semibold">User Management</h2>
                 <button @click="openInvite"
                         class="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
@@ -214,7 +230,7 @@ const usedAppIds = (form, currentIndex) =>
             </header>
 
             <main class="p-8">
-                <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+                <div id="tour-users-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
                     <div class="px-6 py-4 border-b border-white/5">
                         <h3 class="font-semibold text-white">Users</h3>
                     </div>
@@ -492,4 +508,6 @@ const usedAppIds = (form, currentIndex) =>
             </div>
         </div>
     </Teleport>
+
+    <TourButton @click="startTour" />
 </template>

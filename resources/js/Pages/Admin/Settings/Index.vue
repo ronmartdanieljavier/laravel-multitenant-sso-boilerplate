@@ -2,6 +2,8 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useIdleTimeout } from '../../../composables/useIdleTimeout';
+import TourButton from '../../Partials/TourButton.vue';
+import { useTour } from '../../../composables/useTour';
 import RichTextEditor from './RichTextEditor.vue';
 
 const page = usePage();
@@ -12,6 +14,20 @@ const props = defineProps({
 });
 
 const activeTab = ref('email');
+
+const { startTour } = useTour('admin-settings', [
+    {
+        element: '#tour-settings-tabs',
+        title: 'System Settings',
+        description: 'Configure global defaults for Email, SMS, Push notifications, Storage, Security, Branding, and Authentication. These apply to all tenants unless overridden at the tenant level.',
+    },
+    {
+        element: '#tour-settings-panel',
+        title: 'Settings Panel',
+        description: 'Each tab contains a form for that category of settings. Changes are saved per-tab using the Save button at the bottom of each form.',
+        side: 'top',
+    },
+]);
 
 const tabs = [
     { key: 'email', label: 'Email' },
@@ -250,7 +266,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                 </div>
 
                 <!-- Tab bar -->
-                <div class="flex gap-1 mb-6 bg-slate-900 border border-white/5 rounded-xl p-1 w-fit">
+                <div id="tour-settings-tabs" class="flex gap-1 mb-6 bg-slate-900 border border-white/5 rounded-xl p-1 w-fit">
                     <button
                         v-for="tab in tabs"
                         :key="tab.key"
@@ -264,7 +280,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                 </div>
 
                 <!-- Email tab -->
-                <div v-show="activeTab === 'email'" class="max-w-2xl">
+                <div id="tour-settings-panel" v-show="activeTab === 'email'" class="max-w-2xl">
                     <form @submit.prevent="saveEmail" class="space-y-6">
                         <div class="bg-slate-900 border border-white/5 rounded-xl p-6 space-y-5">
                             <div>
@@ -1147,4 +1163,6 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
             </main>
         </div>
     </div>
+
+    <TourButton @click="startTour" />
 </template>

@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
+import TourButton from '../../Partials/TourButton.vue';
+import { useTour } from '../../../composables/useTour';
 
 const page = usePage();
 const missingSettings = page.props.missingRequiredSettings ?? [];
@@ -204,6 +206,26 @@ function deleteTenant(tenant) {
     if (!confirm(`Delete "${tenant.name}"? This will DROP the tenant database and remove all related records. This cannot be undone.`)) return;
     router.delete(`/admin/tenants/${tenant.id}`);
 }
+
+const { startTour } = useTour('admin-tenants', [
+    {
+        element: '#tour-tenants-header',
+        title: 'Tenant Management',
+        description: 'Manage all tenants in the system. Use "Add Tenant" to provision a new tenant database, or run migrations across all tenants at once.',
+    },
+    {
+        element: '#tour-tenants-summary',
+        title: 'Health Summary',
+        description: 'A quick overview of all tenants by health status. Click a status card to filter the table below.',
+        side: 'bottom',
+    },
+    {
+        element: '#tour-tenants-table',
+        title: 'Tenants Table',
+        description: 'Each row is a tenant. You can see their health status, user count, pending migrations, and report queue. Click the tenant name to view detailed settings, users, and error logs.',
+        side: 'top',
+    },
+]);
 </script>
 
 <template>
@@ -290,7 +312,7 @@ function deleteTenant(tenant) {
             </div>
 
             <!-- Header -->
-            <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
+            <header id="tour-tenants-header" class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
                 <h2 class="text-lg font-semibold">Tenant Management</h2>
                 <div class="flex items-center gap-3">
                     <button @click="migrateAll"
@@ -314,7 +336,7 @@ function deleteTenant(tenant) {
 
             <main class="p-8 space-y-8">
                 <!-- Summary Cards -->
-                <div class="grid grid-cols-5 gap-4">
+                <div id="tour-tenants-summary" class="grid grid-cols-5 gap-4">
                     <div v-for="card in summaryCards" :key="card.key"
                          class="bg-slate-900 border border-white/5 rounded-xl p-5">
                         <p class="text-slate-400 text-sm">{{ card.label }}</p>
@@ -323,7 +345,7 @@ function deleteTenant(tenant) {
                 </div>
 
                 <!-- Tenants Table -->
-                <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+                <div id="tour-tenants-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
                     <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
                         <h3 class="font-semibold text-white">
                             All Tenants
@@ -707,4 +729,6 @@ function deleteTenant(tenant) {
             </form>
         </div>
     </div>
+
+    <TourButton @click="startTour" />
 </template>

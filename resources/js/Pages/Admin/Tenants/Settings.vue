@@ -3,6 +3,8 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import RichTextEditor from '../Settings/RichTextEditor.vue';
 import AdminTenantLayout from '../../../Layouts/AdminTenantLayout.vue';
+import TourButton from '../../Partials/TourButton.vue';
+import { useTour } from '../../../composables/useTour';
 
 defineOptions({ layout: AdminTenantLayout });
 
@@ -17,6 +19,20 @@ const props = defineProps({
 const s = props.settings;
 
 const activeTab = ref('email');
+
+const { startTour } = useTour('admin-tenant-settings', [
+    {
+        element: '#tour-settings-tabs',
+        title: 'Settings Tabs',
+        description: 'Tenant settings are grouped into tabs: Email, Storage, Report PDF, Report Server, and Branding. Click a tab to configure that section.',
+    },
+    {
+        element: '#tour-settings-content',
+        title: 'Override Global Settings',
+        description: 'Each setting here overrides the global default configured in Admin → Settings. Leave a field blank to inherit the system-wide default.',
+        side: 'top',
+    },
+]);
 
 const tabs = [
     { key: 'email', label: 'Email' },
@@ -182,7 +198,7 @@ const flash = computed(() => page.props.flash ?? {});
             </div>
 
             <!-- Tabs -->
-            <div class="flex gap-1 mb-6 border-b border-white/5">
+            <div id="tour-settings-tabs" class="flex gap-1 mb-6 border-b border-white/5">
                 <button v-for="tab in tabs" :key="tab.key"
                         @click="activeTab = tab.key"
                         :class="activeTab === tab.key
@@ -194,7 +210,7 @@ const flash = computed(() => page.props.flash ?? {});
             </div>
 
             <!-- Email tab -->
-            <div v-show="activeTab === 'email'" class="max-w-2xl">
+            <div id="tour-settings-content" v-show="activeTab === 'email'" class="max-w-2xl">
                 <p v-if="settings.effective_email_driver" class="text-xs text-slate-500 mb-4">
                     Effective driver: <span class="text-slate-300 font-mono">{{ settings.effective_email_driver }}</span>
                     <span v-if="!settings.email_driver" class="ml-2 text-slate-600">(from system settings)</span>
@@ -597,4 +613,6 @@ const flash = computed(() => page.props.flash ?? {});
                 </form>
             </div>
     </main>
+
+    <TourButton @click="startTour" />
 </template>

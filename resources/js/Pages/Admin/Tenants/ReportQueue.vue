@@ -2,6 +2,8 @@
 import { Head, Link, router, usePage, usePoll } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AdminTenantLayout from '../../../Layouts/AdminTenantLayout.vue';
+import TourButton from '../../Partials/TourButton.vue';
+import { useTour } from '../../../composables/useTour';
 
 defineOptions({ layout: AdminTenantLayout });
 
@@ -57,6 +59,20 @@ function duration(report) {
 function goToPage(url) {
     if (url) { router.visit(url, { preserveScroll: true }); }
 }
+
+const { startTour } = useTour('admin-tenant-report-queue', [
+    {
+        element: '#tour-admin-rq-stats',
+        title: 'Report Queue Summary',
+        description: 'Overview of report job counts for this tenant: total jobs, currently pending, actively processing, and those that have failed.',
+    },
+    {
+        element: '#tour-admin-rq-table',
+        title: 'Report Jobs',
+        description: 'Each row is a queued report job showing its type, output format, who requested it, current processing status, and any error message on failure.',
+        side: 'top',
+    },
+]);
 </script>
 
 <template>
@@ -97,7 +113,7 @@ function goToPage(url) {
             </div>
 
             <!-- Stat cards -->
-            <div class="grid grid-cols-4 gap-4 mb-8">
+            <div id="tour-admin-rq-stats" class="grid grid-cols-4 gap-4 mb-8">
                 <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
                     <p class="text-xs text-slate-500 mb-1">Total</p>
                     <p class="text-2xl font-semibold text-white">{{ reports.total }}</p>
@@ -117,7 +133,7 @@ function goToPage(url) {
             </div>
 
             <!-- Table -->
-            <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+            <div id="tour-admin-rq-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-white/5 text-xs text-slate-500 uppercase tracking-wide">
@@ -175,4 +191,6 @@ function goToPage(url) {
                 </div>
             </div>
     </main>
+
+    <TourButton @click="startTour" />
 </template>

@@ -19,11 +19,12 @@ test.describe('Admin dashboard', () => {
     });
 
     test('shows the recent users table', async ({ page }) => {
-        await expect(page.getByText('Recent Users')).toBeVisible();
-        await expect(page.locator('tbody tr')).toHaveCount(4);
+        const section = page.locator('div').filter({ hasText: /^Recent Users/ }).first();
+        await expect(section).toBeVisible();
+        await expect(section.locator('tbody tr')).toHaveCount(4);
     });
 
     test('shows the invite user button', async ({ page }) => {
-        await expect(page.getByRole('button', { name: /invite user/i })).toBeVisible();
+        await expect(page.getByRole('link', { name: /invite user/i })).toBeVisible();
     });
 });

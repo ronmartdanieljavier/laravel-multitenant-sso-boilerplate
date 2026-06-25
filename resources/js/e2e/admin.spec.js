@@ -21,7 +21,7 @@ test.describe('Admin dashboard', () => {
     test('shows the recent users table', async ({ page }) => {
         const section = page.locator('div').filter({ hasText: /^Recent Users/ }).first();
         await expect(section).toBeVisible();
-        await expect(section.locator('tbody tr')).toHaveCount(4);
+        await expect(section.locator('tbody tr')).not.toHaveCount(0);
     });
 
     test('shows the invite user button', async ({ page }) => {

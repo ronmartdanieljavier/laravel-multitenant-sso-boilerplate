@@ -20,6 +20,7 @@ class TenantData extends Data
         public bool $hasReadReplica,
         public int $migrationCount,
         public int $userCount,
+        public int $loggedInCount,
         public int $pendingReports,
         public int $failedReports,
         public string $healthStatus,

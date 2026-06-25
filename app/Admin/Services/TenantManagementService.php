@@ -33,15 +33,18 @@ class TenantManagementService
         $pendingByTenant = $this->reportRepository->pendingCountByTenant();
         $failedByTenant = $this->reportRepository->failedCountByTenant();
         $userCountByTenant = $this->tenantRepository->userCountByTenant();
+        $loggedInByTenant = $this->tenantRepository->loggedInUserCountByTenant();
 
         return $tenants->map(function (TenantRepositoryData $tenant) use (
             $pendingByTenant,
             $failedByTenant,
             $userCountByTenant,
+            $loggedInByTenant,
         ) {
             $versions = collect($tenant->migrationVersions);
             $lastMigration = $versions->max('migratedAt');
             $userCount = (int) ($userCountByTenant[$tenant->id] ?? 0);
+            $loggedInCount = (int) ($loggedInByTenant[$tenant->id] ?? 0);
             $pendingReports = (int) ($pendingByTenant[$tenant->id] ?? 0);
             $failedReports = (int) ($failedByTenant[$tenant->id] ?? 0);
 
@@ -59,6 +62,7 @@ class TenantManagementService
                 hasReadReplica: $tenant->hasReadReplica,
                 migrationCount: $versions->count(),
                 userCount: $userCount,
+                loggedInCount: $loggedInCount,
                 pendingReports: $pendingReports,
                 failedReports: $failedReports,
                 healthStatus: $this->computeHealthStatus(
@@ -200,6 +204,7 @@ class TenantManagementService
             hasReadReplica: $tenant->hasReadReplica,
             migrationCount: count($tenant->migrationVersions),
             userCount: 0,
+            loggedInCount: 0,
             pendingReports: 0,
             failedReports: 0,
             healthStatus: 'healthy',

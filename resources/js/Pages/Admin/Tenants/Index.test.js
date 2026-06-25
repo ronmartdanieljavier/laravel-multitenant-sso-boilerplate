@@ -35,6 +35,8 @@ const sampleTenants = [
         is_maintenance: false,
         health_status: 'healthy',
         last_report_at: null,
+        user_count: 3,
+        logged_in_count: 2,
         pending_reports: 0,
         failed_reports: 0,
         unresolved_errors: 0,
@@ -48,6 +50,8 @@ const sampleTenants = [
         is_maintenance: true,
         health_status: 'warning',
         last_report_at: null,
+        user_count: 1,
+        logged_in_count: 0,
         pending_reports: 1,
         failed_reports: 0,
         unresolved_errors: 0,
@@ -143,9 +147,9 @@ describe('Admin/Tenants/Index', () => {
             expect(wrapper.text()).toContain('Maintenance');
         });
 
-        it('shows End Maintenance button for a tenant in maintenance', () => {
+        it('shows End Maint. button for a tenant in maintenance', () => {
             const wrapper = mountPage();
-            const btn = wrapper.findAll('button').find(b => b.text() === 'End Maintenance');
+            const btn = wrapper.findAll('button').find(b => b.text() === 'End Maint.');
             expect(btn).toBeDefined();
         });
 
@@ -208,13 +212,70 @@ describe('Admin/Tenants/Index', () => {
         it('calls router.patch to end maintenance for a specific tenant when confirmed', async () => {
             vi.spyOn(window, 'confirm').mockReturnValue(true);
             const wrapper = mountPage();
-            // Beta Inc (id:2) is in maintenance — button text is "End Maintenance"
-            const btn = wrapper.findAll('button').find(b => b.text() === 'End Maintenance');
+            // Beta Inc (id:2) is in maintenance — button text is "End Maint."
+            const btn = wrapper.findAll('button').find(b => b.text() === 'End Maint.');
             await btn.trigger('click');
             expect(inertia.router.patch).toHaveBeenCalledWith(
                 '/admin/tenants/2/maintenance',
                 { is_maintenance: false },
             );
+        });
+    });
+
+    describe('users online display', () => {
+        it('shows total user count for each tenant', () => {
+            const wrapper = mountPage();
+            expect(wrapper.text()).toContain('3 total');
+            expect(wrapper.text()).toContain('1 total');
+        });
+
+        it('shows online count in green when users are logged in', () => {
+            const wrapper = mountPage();
+            // Acme Corp has logged_in_count: 2
+            const onlineEl = wrapper.findAll('span').find(s => s.text() === '2 online');
+            expect(onlineEl).toBeDefined();
+            expect(onlineEl.classes()).toContain('text-emerald-400');
+        });
+
+        it('shows 0 online in muted colour when no users are logged in', () => {
+            const wrapper = mountPage();
+            // Beta Inc has logged_in_count: 0
+            const onlineEl = wrapper.findAll('span').find(s => s.text() === '0 online');
+            expect(onlineEl).toBeDefined();
+            expect(onlineEl.classes()).toContain('text-slate-600');
+        });
+    });
+
+    describe('compact two-row actions layout', () => {
+        it('shows navigation links (Edit, Settings, Users, Reports, Errors) for each tenant', () => {
+            const wrapper = mountPage();
+            const text = wrapper.text();
+            expect(text).toContain('Edit');
+            expect(text).toContain('Settings');
+            expect(text).toContain('Users');
+            expect(text).toContain('Reports');
+            expect(text).toContain('Errors');
+        });
+
+        it('shows admin action buttons (Migrate, Deactivate/Activate, Delete) for each tenant', () => {
+            const wrapper = mountPage();
+            const text = wrapper.text();
+            expect(text).toContain('Migrate');
+            expect(text).toContain('Delete');
+        });
+
+        it('shows Deactivate for an active tenant', () => {
+            const wrapper = mountPage();
+            const btn = wrapper.findAll('button').find(b => b.text() === 'Deactivate');
+            expect(btn).toBeDefined();
+        });
+
+        it('renders a Users link for each tenant', () => {
+            const wrapper = mountPage();
+            // The Link mock renders <a> without forwarding href; verify the text is present in the row
+            const rows = wrapper.findAll('tbody tr');
+            const acmeRow = rows.find(r => r.text().includes('Acme Corp'));
+            expect(acmeRow.text()).toContain('Users');
         });
     });
 

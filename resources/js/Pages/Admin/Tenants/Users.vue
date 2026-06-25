@@ -2,6 +2,8 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AdminTenantLayout from '../../../Layouts/AdminTenantLayout.vue';
+import TourButton from '../../Partials/TourButton.vue';
+import { useTour } from '../../../composables/useTour';
 
 defineOptions({ layout: AdminTenantLayout });
 
@@ -90,6 +92,20 @@ function forceLogout(user) {
     if (!confirm(`Force logout "${user.name}"? Their active session will be immediately terminated.`)) return;
     router.delete(`/admin/tenants/${props.tenant.id}/users/${user.id}/session`);
 }
+
+const { startTour } = useTour('admin-tenant-users', [
+    {
+        element: '#tour-tenant-users-header',
+        title: 'Tenant Users',
+        description: 'All users who have access to this tenant. Users with a green "Online" badge are currently logged in.',
+    },
+    {
+        element: '#tour-tenant-users-table',
+        title: 'User Table',
+        description: 'Shows each user\'s name, email, account status (Active / Invited / Inactive), current session state, and which apps they can access with their assigned role.',
+        side: 'top',
+    },
+]);
 </script>
 
 <template>
@@ -110,7 +126,7 @@ function forceLogout(user) {
             </div>
 
             <!-- Header -->
-            <div class="flex items-center justify-between mb-8">
+            <div id="tour-tenant-users-header" class="flex items-center justify-between mb-8">
                 <div>
                     <h1 class="text-2xl font-bold text-white">{{ tenant.name }} — Users</h1>
                     <p class="text-sm text-slate-400 mt-1">
@@ -138,7 +154,7 @@ function forceLogout(user) {
                 </Link>
             </div>
 
-            <div v-else class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+            <div v-else id="tour-tenant-users-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-white/5">
@@ -281,4 +297,6 @@ function forceLogout(user) {
             </form>
         </div>
     </div>
+
+    <TourButton @click="startTour" />
 </template>

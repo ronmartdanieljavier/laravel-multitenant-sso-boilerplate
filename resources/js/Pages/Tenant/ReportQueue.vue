@@ -2,6 +2,8 @@
 import { Head, router, usePage, usePoll } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import TenantLayout from '../../Layouts/TenantLayout.vue';
+import TourButton from '../Partials/TourButton.vue';
+import { useTour } from '../../composables/useTour';
 
 defineOptions({ layout: TenantLayout });
 
@@ -54,6 +56,26 @@ function duration(report) {
 function goToPage(url) {
     if (url) { router.visit(url, { preserveScroll: true }); }
 }
+
+const { startTour } = useTour('tenant-report-queue', [
+    {
+        element: '#tour-rq-header',
+        title: 'Report Queue',
+        description: 'This page shows all report generation jobs for your tenant. Reports are processed asynchronously and this page auto-refreshes while jobs are active.',
+    },
+    {
+        element: '#tour-rq-stats',
+        title: 'Job Counters',
+        description: 'A quick summary of how many reports are pending, currently processing, or have failed.',
+        side: 'bottom',
+    },
+    {
+        element: '#tour-rq-table',
+        title: 'Report Jobs Table',
+        description: 'Each row is a report job. You can see the type, format (PDF, Excel, Screen), who requested it, current status, and how long it took. Completed reports have a Download link.',
+        side: 'top',
+    },
+]);
 </script>
 
 <template>
@@ -61,7 +83,7 @@ function goToPage(url) {
 
     <main class="flex-1 px-8 py-10 max-w-5xl">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
+        <div id="tour-rq-header" class="flex items-center justify-between mb-6">
             <div>
                 <h1 class="text-xl font-semibold text-white">Report Queue</h1>
                 <p class="text-sm text-slate-500 mt-0.5">All report jobs for this tenant · auto-refreshes every 4 s while jobs are active.</p>
@@ -79,7 +101,7 @@ function goToPage(url) {
         </div>
 
         <!-- Stat cards -->
-        <div class="grid grid-cols-4 gap-4 mb-8">
+        <div id="tour-rq-stats" class="grid grid-cols-4 gap-4 mb-8">
             <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
                 <p class="text-xs text-slate-500 mb-1">Total</p>
                 <p class="text-2xl font-semibold text-white">{{ reports.total }}</p>
@@ -99,7 +121,7 @@ function goToPage(url) {
         </div>
 
         <!-- Table -->
-        <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+        <div id="tour-rq-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-white/5 text-xs text-slate-500 uppercase tracking-wide">
@@ -165,4 +187,6 @@ function goToPage(url) {
             </div>
         </div>
     </main>
+
+    <TourButton @click="startTour" />
 </template>

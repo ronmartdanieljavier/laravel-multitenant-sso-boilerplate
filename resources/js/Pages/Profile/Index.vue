@@ -2,6 +2,8 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useIdleTimeout } from '../../composables/useIdleTimeout';
+import TourButton from '../Partials/TourButton.vue';
+import { useTour } from '../../composables/useTour';
 
 const page = usePage();
 useIdleTimeout(page.props.idleTimeoutMinutes);
@@ -48,6 +50,27 @@ function updatePassword() {
         onSuccess: () => passwordForm.reset(),
     });
 }
+
+const { startTour } = useTour('profile', [
+    {
+        element: '#tour-profile-name',
+        title: 'Display Name',
+        description: 'Update the name that appears across the admin portal and in emails sent on your behalf.',
+        side: 'right',
+    },
+    {
+        element: '#tour-profile-picture',
+        title: 'Profile Picture',
+        description: 'Upload a photo to personalise your account. It appears in the sidebar and in your profile.',
+        side: 'right',
+    },
+    {
+        element: '#tour-profile-password',
+        title: 'Change Password',
+        description: 'Update your login password here. You must enter your current password to confirm the change.',
+        side: 'right',
+    },
+]);
 </script>
 
 <template>
@@ -105,7 +128,7 @@ function updatePassword() {
                 </div>
 
                 <!-- Display Name -->
-                <section class="bg-slate-900 border border-white/5 rounded-xl p-6">
+                <section id="tour-profile-name" class="bg-slate-900 border border-white/5 rounded-xl p-6">
                     <h3 class="font-semibold text-white mb-4">Display Name</h3>
                     <form @submit.prevent="updateName" class="space-y-4">
                         <div>
@@ -131,7 +154,7 @@ function updatePassword() {
                 </section>
 
                 <!-- Profile Picture -->
-                <section class="bg-slate-900 border border-white/5 rounded-xl p-6">
+                <section id="tour-profile-picture" class="bg-slate-900 border border-white/5 rounded-xl p-6">
                     <h3 class="font-semibold text-white mb-4">Profile Picture</h3>
                     <form @submit.prevent="updatePicture" class="space-y-4">
                         <div class="flex items-center gap-5">
@@ -171,7 +194,7 @@ function updatePassword() {
                 </section>
 
                 <!-- Change Password -->
-                <section class="bg-slate-900 border border-white/5 rounded-xl p-6">
+                <section id="tour-profile-password" class="bg-slate-900 border border-white/5 rounded-xl p-6">
                     <h3 class="font-semibold text-white mb-4">Change Password</h3>
                     <form @submit.prevent="updatePassword" class="space-y-4">
                         <div>
@@ -216,4 +239,6 @@ function updatePassword() {
             </main>
         </div>
     </div>
+
+    <TourButton @click="startTour" />
 </template>

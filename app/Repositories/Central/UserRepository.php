@@ -10,6 +10,7 @@ use App\Models\Central\UserApp;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UserRepository
 {
@@ -149,6 +150,32 @@ class UserRepository
         });
     }
 
+    public function countActive(): int
+    {
+        return $this->model->where('is_active', true)->count();
+    }
+
+    public function countPendingInvitation(): int
+    {
+        return $this->model->where('is_active', false)->whereNotNull('invitation_token')->count();
+    }
+
+    public function refreshInvitationToken(int $id): UserRepositoryData
+    {
+        $user = $this->model->findOrFail($id);
+        $user->update([
+            'invitation_token' => Str::random(64),
+            'invitation_sent_at' => now(),
+        ]);
+
+        return UserRepositoryData::from($user->fresh());
+    }
+
+    public function countSsoSessions(): int
+    {
+        return PersonalAccessToken::count();
+    }
+
     public function verifyPassword(int $id, string $password): bool
     {
         $user = $this->model->findOrFail($id);
@@ -175,6 +202,7 @@ class UserRepository
             isActive: $user->is_active,
             invitationSentAt: $user->invitation_sent_at,
             profilePictureUrl: $user->profile_picture_url,
+            createdAt: $user->created_at,
             apps: $user->userApps->map(fn (UserApp $ua) => new UserAppRepositoryData(
                 appId: $ua->app_id,
                 appName: $ua->app->name,

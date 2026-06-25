@@ -1,6 +1,7 @@
 <?php
 
 use App\Admin\Http\Controllers\AppManagementApiController;
+use App\Admin\Http\Controllers\DashboardApiController;
 use App\Admin\Http\Controllers\SystemSettingsApiController;
 use App\Admin\Http\Controllers\TenantErrorsApiController;
 use App\Admin\Http\Controllers\TenantManagementApiController;
@@ -11,9 +12,12 @@ use App\Admin\Http\Controllers\UserManagementApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('dashboard', [DashboardApiController::class, 'index'])->name('api.dashboard');
+
     Route::get('users', [UserManagementApiController::class, 'index'])->name('api.users');
     Route::post('users/invite', [UserManagementApiController::class, 'invite'])->name('api.users.invite');
     Route::put('users/{user}', [UserManagementApiController::class, 'update'])->name('api.users.update');
+    Route::post('users/{user}/resend-invitation', [UserManagementApiController::class, 'resendInvitation'])->name('api.users.resendInvitation');
 
     Route::get('apps', [AppManagementApiController::class, 'index'])->name('api.apps');
     Route::put('apps/{app}', [AppManagementApiController::class, 'update'])->name('api.apps.update');

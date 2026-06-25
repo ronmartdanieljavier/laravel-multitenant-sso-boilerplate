@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const page = usePage();
 const missingSettings = page.props.missingRequiredSettings ?? [];
@@ -28,6 +28,18 @@ const healthBadge = {
     warning: 'bg-amber-500/20 text-amber-300',
     critical: 'bg-red-500/20 text-red-400',
 };
+
+const healthFilter = computed(() => new URLSearchParams(window.location.search).get('health') ?? null);
+
+const filteredTenants = computed(() =>
+    healthFilter.value
+        ? props.tenants.filter(t => t.health_status === healthFilter.value)
+        : props.tenants,
+);
+
+function clearHealthFilter() {
+    router.get('/admin/tenants', {}, { preserveState: true, replace: true });
+}
 
 function formatDate(value) {
     if (!value) return 'Never';
@@ -77,6 +89,16 @@ function submitCreate() {
         onSuccess: () => { showCreateModal.value = false; },
     });
 }
+
+onMounted(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('add')) {
+        openCreate();
+        const url = new URL(window.location.href);
+        url.searchParams.delete('add');
+        window.history.replaceState({}, '', url.toString());
+    }
+});
 
 // ── Edit modal ────────────────────────────────────────────────────────────────
 
@@ -270,8 +292,26 @@ function deleteTenant(tenant) {
 
                 <!-- Tenants Table -->
                 <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
-                    <div class="px-6 py-4 border-b border-white/5">
-                        <h3 class="font-semibold text-white">All Tenants</h3>
+                    <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                        <h3 class="font-semibold text-white">
+                            All Tenants
+                            <span v-if="healthFilter" class="ml-2 text-xs font-normal text-slate-400">
+                                — filtered by
+                            </span>
+                        </h3>
+                        <button v-if="healthFilter"
+                                @click="clearHealthFilter"
+                                :class="{
+                                    'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30': healthFilter === 'healthy',
+                                    'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30': healthFilter === 'warning',
+                                    'bg-red-500/20 text-red-400 hover:bg-red-500/30': healthFilter === 'critical',
+                                }"
+                                class="flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full capitalize transition">
+                            {{ healthFilter }}
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                     <table class="w-full text-sm">
                         <thead class="text-slate-400 border-b border-white/5">
@@ -287,7 +327,7 @@ function deleteTenant(tenant) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5">
-                            <tr v-for="tenant in tenants" :key="tenant.id" class="hover:bg-white/2 transition">
+                            <tr v-for="tenant in filteredTenants" :key="tenant.id" class="hover:bg-white/2 transition">
                                 <td class="px-6 py-4">
                                     <p class="font-medium text-white">{{ tenant.name }}</p>
                                     <p class="text-xs text-slate-500">{{ tenant.slug }}</p>

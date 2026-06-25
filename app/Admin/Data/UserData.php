@@ -17,6 +17,7 @@ class UserData extends Data
         public bool $isActive,
         public ?Carbon $invitationSentAt,
         public ?string $profilePictureUrl,
+        public ?Carbon $createdAt,
         public array $apps,
     ) {}
 }

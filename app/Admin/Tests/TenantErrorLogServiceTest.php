@@ -3,8 +3,11 @@
 namespace App\Admin\Tests;
 
 use App\Admin\Data\TenantErrorLogData;
+use App\Admin\Data\UnresolvedErrorSummaryData;
+use App\Admin\Data\UnresolvedErrorTenantData;
 use App\Admin\Services\TenantErrorLogService;
 use App\Models\Central\Tenant;
+use App\Models\Central\TenantErrorLog;
 use App\Models\Central\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Request;
@@ -216,5 +219,105 @@ class TenantErrorLogServiceTest extends TestCase
 
         $this->assertNull($this->service->getByCode($log->errorCode));
         $this->assertDatabaseMissing('tenant_error_logs', ['id' => $log->id]);
+    }
+
+    private function errorLog(Tenant $tenant, array $overrides = []): void
+    {
+        TenantErrorLog::create(array_merge([
+            'tenant_id' => $tenant->id,
+            'error_code' => 'E-TEST-'.strtoupper(substr(md5(uniqid()), 0, 8)),
+            'exception_class' => 'RuntimeException',
+            'message' => 'Test error',
+            'severity' => 'error',
+            'file' => '/app/foo.php',
+            'line' => 1,
+        ], $overrides));
+    }
+
+    public function test_get_unresolved_summary_returns_correct_type(): void
+    {
+        $result = $this->service->getUnresolvedSummary();
+
+        $this->assertInstanceOf(UnresolvedErrorSummaryData::class, $result);
+    }
+
+    public function test_get_unresolved_summary_total_counts_unresolved_only(): void
+    {
+        $tenant = $this->tenant();
+        $before = $this->service->getUnresolvedSummary()->total;
+
+        $this->errorLog($tenant, ['resolved_at' => null]);
+        $this->errorLog($tenant, ['resolved_at' => now()]);
+
+        $result = $this->service->getUnresolvedSummary();
+
+        $this->assertSame($before + 1, $result->total);
+    }
+
+    public function test_get_unresolved_summary_breaks_down_by_severity(): void
+    {
+        $tenant = $this->tenant();
+
+        $this->errorLog($tenant, ['severity' => 'error']);
+        $this->errorLog($tenant, ['severity' => 'warning']);
+        $this->errorLog($tenant, ['severity' => 'critical']);
+
+        $result = $this->service->getUnresolvedSummary();
+
+        $this->assertSame(1, $result->error);
+        $this->assertSame(1, $result->warning);
+        $this->assertSame(1, $result->critical);
+        $this->assertSame(3, $result->total);
+    }
+
+    public function test_get_unresolved_summary_by_tenant_returns_unresolved_error_tenant_data(): void
+    {
+        $tenant = $this->tenant();
+        $this->errorLog($tenant, ['severity' => 'error']);
+
+        $result = $this->service->getUnresolvedSummary();
+
+        $this->assertNotEmpty($result->byTenant);
+        $this->assertInstanceOf(UnresolvedErrorTenantData::class, $result->byTenant[0]);
+    }
+
+    public function test_get_unresolved_summary_by_tenant_sorted_by_total_desc(): void
+    {
+        $tenantA = Tenant::factory()->create(['slug' => 'alpha']);
+        $tenantB = Tenant::factory()->create(['slug' => 'beta']);
+
+        $this->errorLog($tenantA, ['severity' => 'error']);
+        $this->errorLog($tenantB, ['severity' => 'error']);
+        $this->errorLog($tenantB, ['severity' => 'warning']);
+
+        $result = $this->service->getUnresolvedSummary();
+
+        $byTenant = collect($result->byTenant)->keyBy('tenantId');
+        $this->assertGreaterThan($byTenant[$tenantA->id]->total, $byTenant[$tenantB->id]->total);
+        $this->assertSame($tenantB->id, $result->byTenant[0]->tenantId);
+    }
+
+    public function test_get_unresolved_summary_excludes_resolved_from_by_tenant(): void
+    {
+        $tenant = $this->tenant();
+        $this->errorLog($tenant, ['severity' => 'error', 'resolved_at' => now()]);
+
+        $result = $this->service->getUnresolvedSummary();
+
+        $byTenant = collect($result->byTenant)->firstWhere('tenantId', $tenant->id);
+        $this->assertNull($byTenant);
+    }
+
+    public function test_get_unresolved_summary_link_uses_tenant_id(): void
+    {
+        $tenant = $this->tenant();
+        $this->errorLog($tenant, ['severity' => 'critical']);
+
+        $result = $this->service->getUnresolvedSummary();
+
+        $row = collect($result->byTenant)->firstWhere('tenantId', $tenant->id);
+        $this->assertNotNull($row);
+        $this->assertSame($tenant->name, $row->tenantName);
+        $this->assertSame($tenant->slug, $row->tenantSlug);
     }
 }

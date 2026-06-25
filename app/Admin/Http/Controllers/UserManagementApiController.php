@@ -46,4 +46,14 @@ class UserManagementApiController extends Controller
 
         return response()->json(['data' => $userData]);
     }
+
+    /**
+     * Resend the invitation email to a pending user.
+     */
+    public function resendInvitation(User $user): JsonResponse
+    {
+        $this->service->resendInvitation($user->id);
+
+        return response()->json(['message' => 'Invitation resent.']);
+    }
 }

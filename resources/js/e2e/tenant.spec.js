@@ -8,7 +8,7 @@ test.describe('Tenant portal', () => {
     });
 
     test('shows the welcome message', async ({ page }) => {
-        await expect(page.getByText(/good morning/i)).toBeVisible();
+        await expect(page.getByText(/good (morning|afternoon|evening)/i)).toBeVisible();
     });
 
     test('shows app cards', async ({ page }) => {

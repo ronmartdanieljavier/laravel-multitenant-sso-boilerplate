@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/tenants', [TenantManagementController::class, 'store'])->name('admin.tenants.store');
     Route::put('/admin/tenants/{tenant}', [TenantManagementController::class, 'update'])->name('admin.tenants.update');
     Route::patch('/admin/tenants/{tenant}/active', [TenantManagementController::class, 'setActive'])->name('admin.tenants.setActive');
+    Route::patch('/admin/tenants/{tenant}/maintenance', [TenantManagementController::class, 'setMaintenance'])->name('admin.tenants.setMaintenance');
+    Route::patch('/admin/tenants/maintenance/all', [TenantManagementController::class, 'setMaintenanceAll'])->name('admin.tenants.setMaintenanceAll');
     Route::post('/admin/tenants/{tenant}/migrate', [TenantManagementController::class, 'migrate'])->name('admin.tenants.migrate');
     Route::delete('/admin/tenants/{tenant}', [TenantManagementController::class, 'destroy'])->name('admin.tenants.destroy');
 

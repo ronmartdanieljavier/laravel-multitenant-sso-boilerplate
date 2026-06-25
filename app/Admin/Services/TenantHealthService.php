@@ -48,6 +48,7 @@ class TenantHealthService
                 name: $tenant->name,
                 slug: $tenant->slug,
                 isActive: $tenant->isActive,
+                isMaintenance: $tenant->isMaintenance,
                 hasReadReplica: $tenant->hasReadReplica,
                 userCount: $userCount,
                 migrationCount: $versions->count(),
@@ -77,6 +78,7 @@ class TenantHealthService
             healthy: $tenants->where('healthStatus', 'healthy')->count(),
             warning: $tenants->where('healthStatus', 'warning')->count(),
             critical: $tenants->where('healthStatus', 'critical')->count(),
+            maintenance: $tenants->where('isMaintenance', true)->count(),
         );
     }
 

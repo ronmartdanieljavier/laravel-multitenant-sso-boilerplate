@@ -27,6 +27,7 @@ class AppService
 
         $apps = $userApps->map(function (UserApp $userApp) use ($tenantsByApp): AppAccessData {
             $tenants = ($tenantsByApp->get($userApp->app_id) ?? collect())
+                ->filter(fn (UserAppTenant $uac): bool => ! $uac->tenant->is_maintenance)
                 ->map(fn (UserAppTenant $uac): TenantAccessData => new TenantAccessData(
                     tenantId: $uac->tenant_id,
                     name: $uac->tenant->name,

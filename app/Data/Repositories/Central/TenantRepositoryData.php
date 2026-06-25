@@ -11,6 +11,7 @@ class TenantRepositoryData extends Data
         public string $name,
         public string $slug,
         public bool $isActive,
+        public bool $isMaintenance,
         public ?string $dbHost,
         public ?int $dbPort,
         public ?string $dbName,

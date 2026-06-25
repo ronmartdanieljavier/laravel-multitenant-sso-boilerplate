@@ -88,6 +88,34 @@ class AppServiceTest extends TestCase
         $this->assertSame($appA->id, $apps->first()->appId);
     }
 
+    public function test_load_apps_excludes_tenants_in_maintenance(): void
+    {
+        $user = User::factory()->create();
+        $app = App::factory()->create();
+        $activeTenant = Tenant::factory()->create(['is_maintenance' => false]);
+        $maintenanceTenant = Tenant::factory()->create(['is_maintenance' => true]);
+
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::User]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $activeTenant->id,
+            'role' => Role::User,
+            'is_default' => true,
+        ]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $maintenanceTenant->id,
+            'role' => Role::User,
+            'is_default' => false,
+        ]);
+
+        $result = $this->service->loadApps($user->id);
+
+        $tenants = $result->toCollection()->first()->tenants->toCollection();
+        $this->assertCount(1, $tenants);
+        $this->assertSame($activeTenant->id, $tenants->first()->tenantId);
+    }
+
     public function test_load_apps_returns_multiple_apps(): void
     {
         $user = User::factory()->create();

@@ -192,6 +192,28 @@ class ResolveTenantDatabaseMiddlewareTest extends TestCase
         $this->assertEquals(403, $response->getStatusCode());
     }
 
+    public function test_returns_503_when_tenant_is_in_maintenance(): void
+    {
+        $user = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create(['is_active' => true, 'is_maintenance' => true]);
+
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::User]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $tenant->id,
+            'role' => Role::User,
+            'is_default' => true,
+        ]);
+
+        $request = $this->makeRequest($user, $app->slug, $tenant->slug, ["app:{$app->slug}"]);
+
+        $middleware = new ResolveTenantDatabase;
+        $response = $middleware->handle($request, fn () => new Response('ok'));
+
+        $this->assertEquals(503, $response->getStatusCode());
+    }
+
     public function test_configures_tenant_database_connection_for_authorized_user(): void
     {
         $user = User::factory()->create();

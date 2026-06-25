@@ -71,6 +71,7 @@ class TenantHealthWebTest extends TestCase
                     ->has('healthy')
                     ->has('warning')
                     ->has('critical')
+                    ->has('maintenance')
                 )
             );
     }

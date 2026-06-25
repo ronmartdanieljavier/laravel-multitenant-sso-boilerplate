@@ -15,6 +15,7 @@ class UserData extends Data
         public string $name,
         public string $email,
         public bool $isActive,
+        public bool $isLoggedIn,
         public ?Carbon $invitationSentAt,
         public ?string $profilePictureUrl,
         public ?Carbon $createdAt,

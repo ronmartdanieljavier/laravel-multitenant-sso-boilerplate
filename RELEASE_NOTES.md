@@ -2,6 +2,50 @@
 
 ---
 
+## [2.18.0] — 2026-06-26
+
+### Added
+
+- **Admin tenant logged-in users — Phase 5.10** — admins can now see how many users are currently online per tenant and force-logout individual users from the tenant users page:
+
+  **Tenant list (`/admin/tenants`)**
+  - Users column now shows two lines: total user count and a live "X online" indicator
+  - Green dot + count when users have active sessions; muted grey "0 online" when none are logged in
+  - Powered by `TenantRepository::loggedInUserCountByTenant()` — single join query across `user_app_tenants` and `personal_access_tokens`
+  - Actions column refactored into two compact rows: navigation links (Edit, Settings, Users, Reports, Errors) on top; admin actions (Migrate, Activate/Deactivate, Maintenance, Delete) below — eliminates horizontal overflow
+
+  **Tenant users page (`/admin/tenants/{tenant}/users`)**
+  - New **Session** column with a pulsing green "Online" badge for users with at least one active Sanctum token; dash for users with no active session
+  - Header subtitle shows "X online" count alongside total user count
+  - New **Force Logout** button (red, appears only for online users) — revokes all tokens for that user immediately and redirects with a flash success message
+
+  **New endpoints**
+  - Web: `DELETE /admin/tenants/{tenant}/users/{user}/session` (`admin.tenants.users.forceLogout`)
+  - API: `DELETE /api/v1/admin/tenants/{tenant}/users/{user}/session` (`api.tenants.users.forceLogout`)
+  - Both return a success message; the web endpoint redirects back to the tenant users page
+
+  **New repository methods**
+  - `TenantRepository::loggedInUserCountByTenant()` — map of `tenant_id → online user count`
+  - `TenantRepository::loggedInUserIdsForTenant(int $tenantId)` — IDs of users with active tokens for a given tenant
+  - `UserRepository::revokeTokensForUser(int $userId)` — single-user token revocation (complements the existing bulk `revokeTokensForUsers()`)
+  - `UserRepository::hasActiveToken(int $userId): bool`
+
+  **DTO changes**
+  - `TenantData` — new `loggedInCount: int` field; serialises as `logged_in_count` in JSON
+  - `UserData` (Admin) — new `isLoggedIn: bool` field; serialises as `is_logged_in` in JSON
+
+  **Tests** (22 PHPUnit, 10 Vitest)
+  - `TenantUsersWebTest` — 6 new tests: `is_logged_in` field presence, true/false token scenarios, force-logout revokes tokens, force-logout auth guard
+  - `TenantUsersApiTest` — 6 new tests: `is_logged_in` in JSON structure, true/false token scenarios, force-logout 200 + token deletion, force-logout 401
+  - `TenantManagementWebTest` — `logged_in_count` added to payload fields assertion; new `test_logged_in_count_reflects_users_with_active_tokens` verifies count is 1 when one of two tenant users has an active token
+  - `Index.test.js` — 4 tests for online display (total count, green badge, muted-zero badge); 4 tests for compact two-row actions layout; sample fixtures updated with `user_count` and `logged_in_count`
+
+  **Postman**
+  - "List Users in Tenant" response updated — `is_logged_in` added to both user objects in the example; description updated to mention live session status
+  - New **Force Logout User** request in "Tenant Users (API)" — `DELETE /api/v1/admin/tenants/:tenant_id/users/:user_id/session`; 200, 401, and 404 example responses documented
+
+---
+
 ## [2.17.0] — 2026-06-26
 
 ### Added

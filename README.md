@@ -6,44 +6,72 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 
 ## What's included
 
-| Module | Route prefix | Responsibility |
-|---|---|---|
-| **Auth** | `/api/v1/login`, `/api/v1/logout`, `/api/v1/apps` | SSO — issues Sanctum token, returns app + tenant access list |
-| **Web Auth** | `/login`, `/logout`, `/apps` | Browser session flow — login, logout, app picker |
-| **Admin** | `/api/v1/admin/...`, `/admin/...` | Manage users, permissions, tenant DBs, system settings, per-tenant settings, tenant error logs |
-| **Tenant** | `/api/v1/tenant/...`, `/tenant/...` | Transactional app — reads and writes to tenant DB; persistent sidebar layout |
-| **Reports** | `/api/v1/reports/...` | Read-only heavy queries, async generation, replica support |
-| **Profile (API)** | `/api/v1/profile/...` | User self-service — name, picture, password (Bearer token) |
-| **Profile (Web)** | `/profile/...` | User self-service — same actions via Inertia/session |
+| Module | Route prefix | Auth | Responsibility |
+|---|---|---|---|
+| **Auth (API)** | `/api/v1/login` `/api/v1/logout` `/api/v1/apps` | — / Bearer | SSO — issues Sanctum token scoped per app, returns accessible app + tenant list |
+| **Auth (Web)** | `/login` `/logout` `/apps` | Session | Browser login form, app picker, idle session timeout, redirect-if-authenticated guard |
+| **Admin — Dashboard** | `/admin` `/api/v1/admin/dashboard` | Admin | Platform snapshot: stat cards, tenant health bar, pending invitations, error log summary, report queue health, migration compliance |
+| **Admin — Users** | `/admin/users` `/api/v1/admin/users` `/invitation/{token}` | Admin / — | Invite users with per-app + per-tenant permissions; edit profile and permissions; invitation acceptance flow |
+| **Admin — Apps** | `/admin/apps` `/api/v1/admin/apps` | Admin | View and edit registered app names and descriptions |
+| **Admin — Tenants** | `/admin/tenants` `/api/v1/admin/tenants` | Admin | Create, edit, delete tenants; run migrations; toggle active/maintenance; online-user count per tenant; force logout per user |
+| **Admin — Tenant Settings** | `/admin/tenants/{t}/settings` `/api/v1/admin/tenants/{t}/settings` | Admin | Per-tenant overrides: email driver, S3 storage, report PDF header/footer + logo, report queue/timeout/Redis connection, branding |
+| **Admin — Tenant Users** | `/admin/tenants/{t}/users` `/api/v1/admin/tenants/{t}/users` | Admin | Per-tenant user list with live online badge; force logout individual users |
+| **Admin — Tenant Reports** | `/admin/tenants/{t}/reports` `/api/v1/admin/tenants/{t}/reports` | Admin | Admin view of any tenant's report job queue (status, format, user, duration) |
+| **Admin — Tenant Errors** | `/admin/tenants/{t}/errors` `/api/v1/admin/tenants/{t}/errors` | Admin | Per-tenant exception log: list, filter, detail with stack trace, resolve/reopen, delete; global error-code lookup |
+| **Admin — System Settings** | `/admin/settings` `/api/v1/admin/settings` | Admin | Seven-tab system config: Email, SMS, Push, Storage, Authentication, Security, Branding; amber banner when required settings are unset |
+| **Tenant (Web)** | `/tenant` `/tenant/reports` | Session | Persistent sidebar portal — dashboard and report queue with live 4 s polling |
+| **Reports (API)** | `/api/v1/reports` | Bearer + X-App + X-Tenant | Dispatch single and batch report jobs; poll status; download files; manage scheduled subscriptions (daily/weekly/monthly, email/S3 delivery) |
+| **Profile (API)** | `/api/v1/profile` | Bearer | Update display name, upload profile picture, change password |
+| **Profile (Web)** | `/profile` | Session | Same self-service actions via Inertia |
 
 ---
 
 ## Architecture overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                /api/v1/login                        │
-│        Single login — issues Sanctum token          │
-└────────────┬───────────────────┬────────────────────┘
-             │                   │
-     ┌───────▼──────┐   ┌────────▼──────────┐
-     │/api/v1/admin │   │ /api/v1/tenant     │
-     │              │   │ /api/v1/reports    │
-     │              │   │ /api/v1/profile    │
-     └───────┬──────┘   └────────┬───────────┘
-             │                   │
-     ┌───────▼───────────────────▼─────────┐
-     │              Central DB             │
-     │  users, apps, tenants, permissions  │
-     └─────────────────────────────────────┘
-                         │
-          ┌──────────────┼──────────────┐
-          │              │              │
-   ┌──────▼──────┐ ┌─────▼──────┐ ┌───▼────────┐
-   │ tenant_acme │ │tenant_globex│ │ tenant_xyz │
-   │    _db      │ │    _db      │ │    _db     │
-   │(any server) │ │(any server) │ │(any server)│
-   └─────────────┘ └────────────┘ └────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Browser / API Client                            │
+└───────────────┬─────────────────────────────────────┬────────────────────┘
+                │  Web (session cookie)                │  API (Sanctum Bearer)
+                │  /login  /admin/*  /tenant/*         │  /api/v1/login
+                │  /profile  /invitation/*             │  /api/v1/admin/*
+                │                                      │  /api/v1/tenant/*
+                ▼                                      ▼  /api/v1/reports/*
+┌────────────────────────────────────────────────────────────────────────┐
+│                       Laravel 13 + Inertia.js v3                        │
+│                                                                         │
+│  ┌───────────┐  ┌───────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐ │
+│  │   Auth    │  │   Admin   │  │  Tenant  │  │ Reports  │  │Profile │ │
+│  │  Module   │  │  Module   │  │  Module  │  │  Module  │  │ Module │ │
+│  └─────┬─────┘  └─────┬─────┘  └────┬─────┘  └────┬─────┘  └───┬────┘ │
+│        └──────────────┴─────────────┴──────────────┴────────────┘      │
+│                                      │                                   │
+│               Controller → Service → Repository → Model                  │
+│               (no Eloquent outside Repositories; DTOs at every boundary) │
+└──────────────────────────────────────┬──────────────────────────────────┘
+                                       │
+                   ┌───────────────────┼──────────────────────┐
+                   │                   │                       │
+        ┌──────────▼──────────┐  ┌─────▼──────┐  ┌───────────▼───────────┐
+        │     Central DB       │  │   Redis     │  │   Horizon Workers     │
+        │     PostgreSQL       │  │  cache      │  │   (reports queue)     │
+        │  users  apps         │  │  sessions   │  │  GenerateReportJob    │
+        │  tenants  settings   │  │  queues     │  │  GenerateReportBatch  │
+        │  reports  error_logs │  └─────────────┘  │  ScheduledReports     │
+        └──────────┬───────────┘                   └───────────────────────┘
+                   │
+                   │  ResolveTenantDatabase middleware
+                   │  X-Tenant header → per-request DB connection
+                   │  from credentials stored in Central DB
+                   │
+        ┌──────────┼──────────────┐
+        │          │              │
+  ┌─────▼──────┐ ┌─▼──────────┐ ┌▼──────────┐
+  │ tenant_    │ │ tenant_    │ │ tenant_   │
+  │ acme_db   │ │ globex_db  │ │ xyz_db    │
+  │ (any host) │ │ (any host) │ │ (any host)│
+  │ + replica  │ │ + replica  │ │           │
+  └────────────┘ └────────────┘ └───────────┘
 ```
 
 ---

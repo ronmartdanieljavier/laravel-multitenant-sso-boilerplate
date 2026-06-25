@@ -44,6 +44,19 @@ class UserRepository
             ->map(fn (User $user) => $this->toWithPermissions($user));
     }
 
+    /**
+     * @return Collection<int, UserWithPermissionsRepositoryData>
+     */
+    public function listForTenant(int $tenantId): Collection
+    {
+        return $this->model
+            ->with(['userApps.app:id,name,slug', 'userAppTenants'])
+            ->whereHas('userAppTenants', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $user) => $this->toWithPermissions($user));
+    }
+
     public function findWithPermissions(int $id): UserWithPermissionsRepositoryData
     {
         $user = $this->model

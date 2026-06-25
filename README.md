@@ -992,6 +992,26 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Tenant report queue — tenant users view their own report jobs at `/tenant/reports` with live status polling; admin views any tenant's jobs at `/admin/tenants/{tenant}/reports`
 - [x] Persistent admin tenant layout — Settings, Users, Reports, and Errors pages share a sticky sub-navigation bar so admins stay in context without returning to the tenant list
 
+*5.8 — Admin dashboard* *(planned)*
+
+The admin landing page at `/admin` currently renders static hardcoded data. Phase 5.8 replaces it with a fully live dashboard driven by the services and repositories already built across phases 5.1–5.7.
+
+- [ ] **Live stat cards** — replace hardcoded values with real counts from the database:
+  - Total users (with active vs pending-invitation breakdown)
+  - Active apps
+  - Active tenants
+  - Active SSO sessions (count of live Sanctum personal access tokens across all users)
+- [ ] **Tenant health summary bar** — surface the `TenantHealthSummaryData` (healthy / warning / critical counts) already computed by `TenantHealthService::getSummary()`; clicking a status badge navigates to `/admin/tenants` pre-filtered to that status
+- [ ] **Recent users widget** — wire the existing "Recent Users" table to real data via `UserManagementService::list()` (latest 5, sorted by `created_at` desc); show active/pending-invitation badge; "Edit" links open the edit modal on `/admin/users`
+- [ ] **Pending invitations counter** — highlight users whose `invitation_token` is set but not yet accepted; show count on the stat card and list them in a collapsible section with a "Resend" action stub
+- [ ] **Unresolved error log summary** — total unresolved `TenantErrorLog` records across all tenants, broken down by severity (`error` / `warning` / `critical`); link to the relevant tenant error list
+- [ ] **Report queue health widget** — counts of `pending`, `processing`, and `failed` report jobs across all tenants from `ReportRepository`; `failed` count shown in red; links to the relevant tenant report queue
+- [ ] **Tenant migration compliance** — number of tenants that are fully up-to-date vs behind, using the `TenantHealthData` fields already populated by `TenantHealthService`; behind-tenants listed with a one-click "Run migrations" action
+- [ ] **Quick actions** — wire the existing "+ Invite User" header button to open the invite modal from `Admin/Users/Index.vue`; add "Add Tenant" and "View Settings" shortcut buttons
+- [ ] **Dashboard controller** — extract the data-fetching logic from the current inline route closure in `web_admin.php` into a dedicated `DashboardController` and `DashboardService`; pass all widget data as typed Inertia props to `Admin/Index.vue`
+- [ ] **API parity** — expose a `GET /api/v1/admin/dashboard` endpoint (via `DashboardApiController`) returning the same aggregated snapshot for mobile and external consumers
+- [ ] **Tests** — `DashboardWebTest`, `DashboardApiTest`, and `DashboardServiceTest` covering all stat computations, health summary, and the pending-invitation and error-count aggregations
+
 ---
 
 ## Claude Code

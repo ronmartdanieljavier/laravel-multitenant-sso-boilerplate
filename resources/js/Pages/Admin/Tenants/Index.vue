@@ -382,7 +382,17 @@ function deleteTenant(tenant) {
                                         {{ tenant.health_status }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-slate-300">{{ tenant.user_count }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1">
+                                        <span class="text-slate-300">{{ tenant.user_count }} total</span>
+                                        <span class="inline-flex items-center gap-1 text-xs"
+                                              :class="tenant.logged_in_count > 0 ? 'text-emerald-400' : 'text-slate-600'">
+                                            <span class="w-1.5 h-1.5 rounded-full inline-block"
+                                                  :class="tenant.logged_in_count > 0 ? 'bg-emerald-400' : 'bg-slate-600'"></span>
+                                            {{ tenant.logged_in_count }} online
+                                        </span>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4 text-slate-400">{{ tenant.migration_count }}</td>
                                 <td class="px-6 py-4">
                                     <span class="text-slate-400">{{ tenant.pending_reports }}</span>
@@ -396,49 +406,55 @@ function deleteTenant(tenant) {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <button @click="openEdit(tenant)"
-                                                class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
-                                            Edit
-                                        </button>
-                                        <Link :href="`/admin/tenants/${tenant.id}/settings`"
-                                              class="text-xs px-2 py-1 rounded bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 transition">
-                                            Settings
-                                        </Link>
-                                        <Link :href="`/admin/tenants/${tenant.id}/users`"
-                                              class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
-                                            Users
-                                        </Link>
-                                        <Link :href="`/admin/tenants/${tenant.id}/reports`"
-                                              class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition">
-                                            Reports
-                                        </Link>
-                                        <Link :href="`/admin/tenants/${tenant.id}/errors`"
-                                              class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
-                                            Errors
-                                        </Link>
-                                        <button @click="migrateTenant(tenant)"
-                                                class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
-                                            Migrate
-                                        </button>
-                                        <button @click="toggleActive(tenant)"
-                                                :class="tenant.is_active
-                                                    ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
-                                                    : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'"
-                                                class="text-xs px-2 py-1 rounded transition">
-                                            {{ tenant.is_active ? 'Deactivate' : 'Activate' }}
-                                        </button>
-                                        <button @click="toggleMaintenance(tenant)"
-                                                :class="tenant.is_maintenance
-                                                    ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
-                                                    : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'"
-                                                class="text-xs px-2 py-1 rounded transition">
-                                            {{ tenant.is_maintenance ? 'End Maintenance' : 'Maintenance' }}
-                                        </button>
-                                        <button @click="deleteTenant(tenant)"
-                                                class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
-                                            Delete
-                                        </button>
+                                    <div class="flex flex-col gap-1.5">
+                                        <!-- Navigation links -->
+                                        <div class="flex items-center gap-1">
+                                            <button @click="openEdit(tenant)"
+                                                    class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                                                Edit
+                                            </button>
+                                            <Link :href="`/admin/tenants/${tenant.id}/settings`"
+                                                  class="text-xs px-2 py-1 rounded bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 transition">
+                                                Settings
+                                            </Link>
+                                            <Link :href="`/admin/tenants/${tenant.id}/users`"
+                                                  class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                                                Users
+                                            </Link>
+                                            <Link :href="`/admin/tenants/${tenant.id}/reports`"
+                                                  class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition">
+                                                Reports
+                                            </Link>
+                                            <Link :href="`/admin/tenants/${tenant.id}/errors`"
+                                                  class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
+                                                Errors
+                                            </Link>
+                                        </div>
+                                        <!-- Admin actions -->
+                                        <div class="flex items-center gap-1">
+                                            <button @click="migrateTenant(tenant)"
+                                                    class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                                                Migrate
+                                            </button>
+                                            <button @click="toggleActive(tenant)"
+                                                    :class="tenant.is_active
+                                                        ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+                                                        : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'"
+                                                    class="text-xs px-2 py-1 rounded transition">
+                                                {{ tenant.is_active ? 'Deactivate' : 'Activate' }}
+                                            </button>
+                                            <button @click="toggleMaintenance(tenant)"
+                                                    :class="tenant.is_maintenance
+                                                        ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                                                        : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'"
+                                                    class="text-xs px-2 py-1 rounded transition">
+                                                {{ tenant.is_maintenance ? 'End Maint.' : 'Maintenance' }}
+                                            </button>
+                                            <button @click="deleteTenant(tenant)"
+                                                    class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
+                                                Delete
+                                            </button>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

@@ -7,6 +7,8 @@ use App\Admin\Data\UserData;
 use App\Data\Repositories\Central\UserWithPermissionsRepositoryData;
 use App\Http\Controllers\Controller;
 use App\Models\Central\Tenant;
+use App\Models\Central\User;
+use App\Repositories\Central\TenantRepository;
 use App\Repositories\Central\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
@@ -15,6 +17,7 @@ class TenantUsersApiController extends Controller
 {
     public function __construct(
         private readonly UserRepository $userRepository,
+        private readonly TenantRepository $tenantRepository,
     ) {}
 
     /**
@@ -22,13 +25,26 @@ class TenantUsersApiController extends Controller
      */
     public function index(Tenant $tenant): JsonResponse
     {
-        return response()->json(['data' => $this->listUsersForTenant($tenant->id)]);
+        $loggedInIds = $this->tenantRepository->loggedInUserIdsForTenant($tenant->id);
+
+        return response()->json(['data' => $this->listUsersForTenant($tenant->id, $loggedInIds)]);
     }
 
     /**
+     * Force logout a specific user from this tenant by revoking their tokens.
+     */
+    public function forceLogout(Tenant $tenant, User $user): JsonResponse
+    {
+        $this->userRepository->revokeTokensForUser($user->id);
+
+        return response()->json(['message' => "{$user->name} has been logged out."]);
+    }
+
+    /**
+     * @param  Collection<int, int>  $loggedInIds
      * @return Collection<int, UserData>
      */
-    private function listUsersForTenant(int $tenantId): Collection
+    private function listUsersForTenant(int $tenantId, Collection $loggedInIds): Collection
     {
         return $this->userRepository->listForTenant($tenantId)
             ->map(fn (UserWithPermissionsRepositoryData $dto) => new UserData(
@@ -36,6 +52,7 @@ class TenantUsersApiController extends Controller
                 name: $dto->name,
                 email: $dto->email,
                 isActive: $dto->isActive,
+                isLoggedIn: $loggedInIds->contains($dto->id),
                 invitationSentAt: $dto->invitationSentAt,
                 profilePictureUrl: $dto->profilePictureUrl,
                 createdAt: $dto->createdAt,

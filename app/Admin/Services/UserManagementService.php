@@ -123,6 +123,7 @@ class UserManagementService
             name: $dto->name,
             email: $dto->email,
             isActive: $dto->isActive,
+            isLoggedIn: false,
             invitationSentAt: $dto->invitationSentAt,
             profilePictureUrl: $dto->profilePictureUrl,
             createdAt: $dto->createdAt,

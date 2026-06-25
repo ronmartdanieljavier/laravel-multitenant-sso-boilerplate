@@ -93,9 +93,72 @@ class TenantUsersApiTest extends TestCase
             ->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    '*' => ['id', 'name', 'email', 'is_active', 'apps'],
+                    '*' => ['id', 'name', 'email', 'is_active', 'is_logged_in', 'apps'],
                 ],
             ]);
+    }
+
+    public function test_is_logged_in_is_true_when_user_has_active_token(): void
+    {
+        $admin = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create();
+        $tenantUser = User::factory()->create();
+
+        $this->assignUserToTenant($tenantUser, $app, $tenant);
+        $tenantUser->createToken('sso');
+
+        $data = $this->actingAs($admin, 'sanctum')
+            ->getJson(route('admin.api.tenants.users', $tenant))
+            ->assertOk()
+            ->json('data');
+
+        $user = collect($data)->firstWhere('id', $tenantUser->id);
+        $this->assertTrue($user['is_logged_in']);
+    }
+
+    public function test_is_logged_in_is_false_when_user_has_no_active_token(): void
+    {
+        $admin = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create();
+        $tenantUser = User::factory()->create();
+
+        $this->assignUserToTenant($tenantUser, $app, $tenant);
+
+        $data = $this->actingAs($admin, 'sanctum')
+            ->getJson(route('admin.api.tenants.users', $tenant))
+            ->assertOk()
+            ->json('data');
+
+        $user = collect($data)->firstWhere('id', $tenantUser->id);
+        $this->assertFalse($user['is_logged_in']);
+    }
+
+    public function test_force_logout_revokes_user_tokens(): void
+    {
+        $admin = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create();
+        $tenantUser = User::factory()->create();
+
+        $this->assignUserToTenant($tenantUser, $app, $tenant);
+        $tenantUser->createToken('sso');
+
+        $this->actingAs($admin, 'sanctum')
+            ->deleteJson(route('admin.api.tenants.users.forceLogout', [$tenant, $tenantUser]))
+            ->assertOk()
+            ->assertJsonStructure(['message']);
+
+        $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
+    }
+
+    public function test_force_logout_unauthenticated_is_rejected(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $user = User::factory()->create();
+
+        $this->deleteJson(route('admin.api.tenants.users.forceLogout', [$tenant, $user]))->assertUnauthorized();
     }
 
     public function test_returns_empty_data_when_no_users_in_tenant(): void

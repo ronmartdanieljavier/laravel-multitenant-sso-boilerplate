@@ -90,7 +90,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 - Email footer signature editor (TipTap rich text) with unsubscribe URL for CAN-SPAM/GDPR compliance
 - Persistent amber banner on all admin pages when required settings are unset
 - **Per-tenant settings** — each tenant can override email driver, S3/R2 storage, report PDF header/footer (rich-text editor with live A4 preview), report queue/timeout/Redis connection, and branding; unset fields fall back to system settings at runtime
-- **Tenant users** — dedicated per-tenant user list with inline app-permission editing
+- **Tenant users** — dedicated per-tenant user list with inline app-permission editing; live "Online" badge per user (pulsing green when a Sanctum token is active); per-user Force Logout button revokes all tokens immediately; tenant list shows logged-in count per tenant alongside total users
 - **Tenant report queue** — admin can view all report jobs for any tenant (status, format, user, duration) from the admin panel at `/admin/tenants/{tenant}/reports`
 - **Tenant error logs** — every unhandled exception in a tenant request context is recorded with full stack trace, sanitized request params/headers, user ID, and IP; in production the raw error is replaced by a support-friendly error code (`E-ACME-A3F9B12C`); admin can list, filter, view detail, resolve, and delete logs per tenant; support teams can look up any error code globally via API
 - **Persistent tenant sub-navigation** — admin users navigating between tenant-specific pages (Settings, Users, Reports, Errors) stay in context via a sticky sub-nav bar; no need to return to the tenants list to switch pages
@@ -141,8 +141,8 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── TenantManagementController.php      # GET|POST|PUT|PATCH|POST|DELETE /admin/tenants — Inertia web surface
 │   │   │   ├── TenantSettingsApiController.php     # GET|PUT|POST|DELETE /api/v1/admin/tenants/{t}/settings/* — REST API surface
 │   │   │   ├── TenantSettingsController.php        # GET|PUT|POST|DELETE /admin/tenants/{t}/settings/* — Inertia web surface
-│   │   │   ├── TenantUsersApiController.php        # GET /api/v1/admin/tenants/{t}/users — REST API surface
-│   │   │   ├── TenantUsersController.php           # GET /admin/tenants/{t}/users — Inertia web surface
+│   │   │   ├── TenantUsersApiController.php        # GET|DELETE /api/v1/admin/tenants/{t}/users — REST API surface
+│   │   │   ├── TenantUsersController.php           # GET|DELETE /admin/tenants/{t}/users — Inertia web surface
 │   │   │   ├── UserManagementApiController.php     # GET|POST|PUT /api/v1/admin/users — REST API surface
 │   │   │   └── UserManagementController.php        # GET|POST|PUT /admin/users — Inertia web surface
 │   │   ├── Http/Requests/
@@ -499,6 +499,7 @@ What's built:
 - **Tenant report queue (Phase 5.7)** — tenant users view their queued report jobs at `/tenant/reports` with live 4 s polling via `usePoll`; admin views any tenant's jobs at `/admin/tenants/{tenant}/reports`; both surfaces share `ReportRepository::listForTenant()`
 - **Live admin dashboard (Phase 5.8)** — single-page snapshot of the entire platform: user/app/tenant/SSO-session stat cards, tenant health bar (healthy/warning/critical) with click-to-filter, pending invitation list with one-click resend, recent users table with edit modal shortcut, cross-tenant unresolved error log summary by severity, report queue health (pending/processing/failed per tenant), and tenant migration compliance (behind tenants listed with one-click Run migrations); also exposed as `GET /api/v1/admin/dashboard` for mobile and external consumers
 - **Tenant maintenance mode (Phase 5.9)** — admin can put any individual tenant or all tenants simultaneously into maintenance mode; enabling immediately revokes all Sanctum tokens for affected tenant users (force logout), hides the tenant from the app picker (`AppService.loadApps()`), and returns HTTP 503 on all API requests resolved through that tenant; admin UI on `/admin/tenants` includes per-row toggle buttons and "Maintenance: All On / All Off" bulk buttons; a dedicated "In Maintenance" summary card appears on both the tenant list and admin dashboard; full REST API via `PATCH /api/v1/admin/tenants/{id}/maintenance` and `PATCH /api/v1/admin/tenants/maintenance/all`
+- **Tenant logged-in users (Phase 5.10)** — admin can see how many users are currently online per tenant (green "X online" dot on the tenant list) and view per-user live session status on the tenant users page; Force Logout button immediately revokes all Sanctum tokens for a specific user; `TenantData` gains `loggedInCount`, `UserData` gains `isLoggedIn`; powered by `TenantRepository::loggedInUserCountByTenant()` and `loggedInUserIdsForTenant()` (join on `personal_access_tokens`); full REST API via `DELETE /api/v1/admin/tenants/{tenant}/users/{user}/session`
 - **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (Dashboard + Report Queue sidebar); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
 - **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
@@ -1020,6 +1021,17 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] **`is_maintenance` field** — new boolean column on the `tenants` table (`database/migrations/central/`); `TenantRepositoryData`, `TenantData`, `TenantHealthData`, and `TenantHealthSummaryData` all expose the field
 - [x] **API parity** — `PATCH /api/v1/admin/tenants/{tenant}/maintenance` and `PATCH /api/v1/admin/tenants/maintenance/all` via `TenantManagementApiController`
 - [x] **Tests** — backend: `TenantManagementWebTest`, `TenantManagementApiTest`, `TenantManagementServiceTest`, `TenantHealthWebTest`, `TenantHealthServiceTest`, `DashboardWebTest`, `DashboardApiTest`, `ResolveTenantDatabaseMiddlewareTest`, `AppServiceTest`; frontend: 11 new Vitest cases in `Admin/Tenants/Index.test.js`
+
+*5.10 — Tenant logged-in users* *(done)*
+
+- [x] **Online count on tenant list** — Users column shows "X total" + live "X online" indicator (green dot when active, grey when zero); powered by `TenantRepository::loggedInUserCountByTenant()` joining `user_app_tenants` with `personal_access_tokens`
+- [x] **Session column on tenant users page** — pulsing green "Online" badge for users with active tokens; header subtitle shows online count; dash for offline users
+- [x] **Force Logout** — red button visible only for online users; calls `UserRepository::revokeTokensForUser()` to delete all tokens for that user immediately
+- [x] **Compact actions layout** — tenant list actions split into two compact rows (navigation links / admin actions) to eliminate horizontal overflow
+- [x] **DTO changes** — `TenantData::loggedInCount` (serialises as `logged_in_count`); `UserData::isLoggedIn` (serialises as `is_logged_in`)
+- [x] **API parity** — `DELETE /api/v1/admin/tenants/{tenant}/users/{user}/session` via `TenantUsersApiController::forceLogout()`
+- [x] **Tests** — backend: 6 new `TenantUsersWebTest`, 6 new `TenantUsersApiTest`, 1 new `TenantManagementWebTest`; frontend: 10 new Vitest cases in `Index.test.js`
+- [x] **Postman** — `is_logged_in` added to List Users example; Force Logout User request documented with 200/401/404 responses
 
 ---
 

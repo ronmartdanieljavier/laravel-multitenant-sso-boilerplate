@@ -7,9 +7,11 @@ use App\Admin\Data\UserData;
 use App\Data\Repositories\Central\UserWithPermissionsRepositoryData;
 use App\Http\Controllers\Controller;
 use App\Models\Central\Tenant;
+use App\Models\Central\User;
 use App\Repositories\Central\AppRepository;
 use App\Repositories\Central\TenantRepository;
 use App\Repositories\Central\UserRepository;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,18 +29,32 @@ class TenantUsersController extends Controller
      */
     public function index(Tenant $tenant): Response
     {
+        $loggedInIds = $this->tenantRepository->loggedInUserIdsForTenant($tenant->id);
+
         return Inertia::render('Admin/Tenants/Users', [
             'tenant' => ['id' => $tenant->id, 'name' => $tenant->name, 'slug' => $tenant->slug],
-            'users' => $this->listUsersForTenant($tenant->id),
+            'users' => $this->listUsersForTenant($tenant->id, $loggedInIds),
             'apps' => $this->appRepository->listOrdered(),
             'tenants' => $this->tenantRepository->listOrdered(),
         ]);
     }
 
     /**
+     * Force logout a specific user from this tenant by revoking their tokens.
+     */
+    public function forceLogout(Tenant $tenant, User $user): RedirectResponse
+    {
+        $this->userRepository->revokeTokensForUser($user->id);
+
+        return redirect()->route('admin.tenants.users', $tenant)
+            ->with('success', "{$user->name} has been logged out.");
+    }
+
+    /**
+     * @param  Collection<int, int>  $loggedInIds
      * @return Collection<int, UserData>
      */
-    private function listUsersForTenant(int $tenantId): Collection
+    private function listUsersForTenant(int $tenantId, Collection $loggedInIds): Collection
     {
         return $this->userRepository->listForTenant($tenantId)
             ->map(fn (UserWithPermissionsRepositoryData $dto) => new UserData(
@@ -46,6 +62,7 @@ class TenantUsersController extends Controller
                 name: $dto->name,
                 email: $dto->email,
                 isActive: $dto->isActive,
+                isLoggedIn: $loggedInIds->contains($dto->id),
                 invitationSentAt: $dto->invitationSentAt,
                 profilePictureUrl: $dto->profilePictureUrl,
                 createdAt: $dto->createdAt,

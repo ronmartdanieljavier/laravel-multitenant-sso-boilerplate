@@ -100,8 +100,64 @@ class TenantUsersWebTest extends TestCase
                 ->has('users.0.name')
                 ->has('users.0.email')
                 ->has('users.0.is_active')
+                ->has('users.0.is_logged_in')
                 ->has('users.0.apps')
             );
+    }
+
+    public function test_is_logged_in_is_true_when_user_has_active_token(): void
+    {
+        $admin = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create();
+        $tenantUser = User::factory()->create();
+        $this->assignUserToTenant($tenantUser, $app, $tenant);
+        $tenantUser->createToken('sso');
+
+        $this->actingAs($admin)
+            ->get(route('admin.tenants.users', $tenant))
+            ->assertInertia(fn ($page) => $page
+                ->where('users.0.is_logged_in', true)
+            );
+    }
+
+    public function test_is_logged_in_is_false_when_user_has_no_token(): void
+    {
+        $admin = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create();
+        $tenantUser = User::factory()->create();
+        $this->assignUserToTenant($tenantUser, $app, $tenant);
+
+        $this->actingAs($admin)
+            ->get(route('admin.tenants.users', $tenant))
+            ->assertInertia(fn ($page) => $page
+                ->where('users.0.is_logged_in', false)
+            );
+    }
+
+    public function test_force_logout_revokes_user_tokens(): void
+    {
+        $admin = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create();
+        $tenantUser = User::factory()->create();
+        $this->assignUserToTenant($tenantUser, $app, $tenant);
+        $tenantUser->createToken('sso');
+
+        $this->actingAs($admin)
+            ->delete(route('admin.tenants.users.forceLogout', [$tenant, $tenantUser]))
+            ->assertRedirect(route('admin.tenants.users', $tenant));
+
+        $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
+    }
+
+    public function test_force_logout_unauthenticated_is_redirected(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $user = User::factory()->create();
+
+        $this->delete(route('admin.tenants.users.forceLogout', [$tenant, $user]))->assertRedirect(route('login'));
     }
 
     public function test_users_prop_is_empty_when_no_users_assigned_to_tenant(): void

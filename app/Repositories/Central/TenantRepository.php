@@ -43,6 +43,40 @@ class TenantRepository
     }
 
     /**
+     * Get a map of tenant_id => count of users with active tokens.
+     *
+     * @return BaseCollection<int|string, int>
+     */
+    public function loggedInUserCountByTenant(): BaseCollection
+    {
+        return DB::table('user_app_tenants')
+            ->join('personal_access_tokens', function ($join) {
+                $join->on('personal_access_tokens.tokenable_id', '=', 'user_app_tenants.user_id')
+                    ->where('personal_access_tokens.tokenable_type', '=', 'App\\Models\\Central\\User');
+            })
+            ->selectRaw('user_app_tenants.tenant_id, COUNT(DISTINCT user_app_tenants.user_id) as count')
+            ->groupBy('user_app_tenants.tenant_id')
+            ->pluck('count', 'tenant_id');
+    }
+
+    /**
+     * Get the IDs of users who belong to the given tenant and have active tokens.
+     *
+     * @return BaseCollection<int, int>
+     */
+    public function loggedInUserIdsForTenant(int $tenantId): BaseCollection
+    {
+        return DB::table('user_app_tenants')
+            ->join('personal_access_tokens', function ($join) {
+                $join->on('personal_access_tokens.tokenable_id', '=', 'user_app_tenants.user_id')
+                    ->where('personal_access_tokens.tokenable_type', '=', 'App\\Models\\Central\\User');
+            })
+            ->where('user_app_tenants.tenant_id', $tenantId)
+            ->distinct()
+            ->pluck('user_app_tenants.user_id');
+    }
+
+    /**
      * @return Collection<int, TenantRepositoryData>
      */
     public function listActiveWithMigrationVersions(?string $slug = null): Collection

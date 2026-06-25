@@ -109,6 +109,7 @@ class TenantRepository
             'read_replica_username' => $data->readReplicaUsername,
             'read_replica_password' => $data->readReplicaPassword,
             'is_active' => true,
+            'is_maintenance' => false,
         ]);
 
         return $this->toData($tenant);
@@ -146,6 +147,24 @@ class TenantRepository
     public function setActive(int $id, bool $isActive): void
     {
         $this->model->findOrFail($id)->update(['is_active' => $isActive]);
+    }
+
+    public function setMaintenance(int $id, bool $isMaintenance): void
+    {
+        $this->model->findOrFail($id)->update(['is_maintenance' => $isMaintenance]);
+    }
+
+    public function setMaintenanceAll(bool $isMaintenance): void
+    {
+        $this->model->query()->update(['is_maintenance' => $isMaintenance]);
+    }
+
+    /**
+     * @return BaseCollection<int, int>
+     */
+    public function getAllIds(): BaseCollection
+    {
+        return $this->model->pluck('id');
     }
 
     public function delete(int $id): void
@@ -226,6 +245,7 @@ class TenantRepository
             name: $tenant->name,
             slug: $tenant->slug,
             isActive: $tenant->is_active,
+            isMaintenance: $tenant->is_maintenance,
             dbHost: $tenant->db_host,
             dbPort: $tenant->db_port,
             dbName: $tenant->db_name,

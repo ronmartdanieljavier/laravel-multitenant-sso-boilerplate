@@ -30,6 +30,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->name('admin.')->group(functi
     Route::post('tenants', [TenantManagementApiController::class, 'store'])->name('api.tenants.store');
     Route::put('tenants/{tenant}', [TenantManagementApiController::class, 'update'])->name('api.tenants.update');
     Route::patch('tenants/{tenant}/active', [TenantManagementApiController::class, 'setActive'])->name('api.tenants.setActive');
+    Route::patch('tenants/{tenant}/maintenance', [TenantManagementApiController::class, 'setMaintenance'])->name('api.tenants.setMaintenance');
+    Route::patch('tenants/maintenance/all', [TenantManagementApiController::class, 'setMaintenanceAll'])->name('api.tenants.setMaintenanceAll');
     Route::post('tenants/{tenant}/migrate', [TenantManagementApiController::class, 'migrate'])->name('api.tenants.migrate');
     Route::delete('tenants/{tenant}', [TenantManagementApiController::class, 'destroy'])->name('api.tenants.destroy');
 

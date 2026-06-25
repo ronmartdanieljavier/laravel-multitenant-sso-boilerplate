@@ -2,6 +2,40 @@
 
 ---
 
+## [2.17.0] — 2026-06-26
+
+### Added
+
+- **Tenant maintenance mode — Phase 5.9** — admin can put any individual tenant or all tenants simultaneously into maintenance mode from `/admin/tenants`:
+
+  **Per-tenant toggle**
+  - Each tenant row gains a "Maintenance" / "End Maintenance" button; confirmation dialog prevents accidental clicks
+  - Web: `PATCH /admin/tenants/{tenant}/maintenance` — `SetTenantMaintenanceRequest` validates `is_maintenance: boolean`
+  - API: `PATCH /api/v1/admin/tenants/{tenant}/maintenance` — same validation; returns `{ message }` 200
+
+  **Bulk toggle**
+  - "Maintenance: All On" and "Maintenance: All Off" header buttons apply state to every tenant at once
+  - Web: `PATCH /admin/tenants/maintenance/all`
+  - API: `PATCH /api/v1/admin/tenants/maintenance/all`
+
+  **Enforcement (three layers)**
+  - **Token revocation** — enabling maintenance immediately calls `revokeTokensForUsers()` on all users assigned to that tenant, forcing logout of every active session
+  - **503 middleware** — `ResolveTenantDatabase` returns `HTTP 503 Service Unavailable` for any API request whose resolved tenant has `is_maintenance = true`
+  - **App picker filter** — `AppService::loadApps()` filters out maintenance tenants so they are invisible in the tenant picker post-login
+
+  **Summary cards**
+  - "In Maintenance" count card added to both `/admin/tenants` (5-card grid) and the admin dashboard health summary bar
+
+  **Schema**
+  - `database/migrations/central/2026_06_25_141540_add_is_maintenance_to_tenants_table.php` — adds `is_maintenance boolean default false` to the `tenants` table
+  - `TenantRepositoryData`, `TenantData`, `TenantHealthData`, and `TenantHealthSummaryData` all expose the new `isMaintenance` field
+
+  **Tests**
+  - 9 new/updated backend test files: `TenantManagementWebTest`, `TenantManagementApiTest`, `TenantManagementServiceTest`, `TenantHealthWebTest`, `TenantHealthServiceTest`, `DashboardWebTest`, `DashboardApiTest`, `ResolveTenantDatabaseMiddlewareTest`, `AppServiceTest`
+  - 11 new frontend Vitest cases in `resources/js/Pages/Admin/Tenants/Index.test.js`
+
+---
+
 ## [2.16.0] — 2026-06-25
 
 ### Added

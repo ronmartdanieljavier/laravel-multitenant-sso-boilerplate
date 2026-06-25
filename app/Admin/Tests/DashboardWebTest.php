@@ -135,6 +135,7 @@ class DashboardWebTest extends TestCase
                 ->has('healthSummary.healthy')
                 ->has('healthSummary.warning')
                 ->has('healthSummary.critical')
+                ->has('healthSummary.maintenance')
             );
     }
 

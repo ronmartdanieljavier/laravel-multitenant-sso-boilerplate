@@ -11,5 +11,6 @@ class TenantHealthSummaryData extends Data
         public int $healthy,
         public int $warning,
         public int $critical,
+        public int $maintenance,
     ) {}
 }

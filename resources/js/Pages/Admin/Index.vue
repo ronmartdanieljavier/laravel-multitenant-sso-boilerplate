@@ -299,6 +299,11 @@ const statCards = [
                                 <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
                                 {{ healthSummary.critical }} Critical
                             </Link>
+                            <Link href="/admin/tenants"
+                                  class="flex items-center gap-1.5 bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 text-xs font-medium px-3 py-1 rounded-full transition">
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-400 inline-block" />
+                                {{ healthSummary.maintenance }} Maintenance
+                            </Link>
                         </div>
                     </div>
                 </div>

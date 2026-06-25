@@ -48,6 +48,7 @@ class TenantUsersController extends Controller
                 isActive: $dto->isActive,
                 invitationSentAt: $dto->invitationSentAt,
                 profilePictureUrl: $dto->profilePictureUrl,
+                createdAt: $dto->createdAt,
                 apps: array_map(fn ($a) => new UserAppData(
                     appId: $a->appId,
                     appName: $a->appName,

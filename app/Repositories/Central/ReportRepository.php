@@ -7,6 +7,7 @@ use App\Models\Central\Report;
 use App\Reports\Enums\ReportStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ReportRepository
 {
@@ -79,6 +80,26 @@ class ReportRepository
             ->latest()
             ->paginate($perPage)
             ->through(fn (Report $report) => ReportRepositoryData::from($report));
+    }
+
+    /**
+     * Count pending, processing, and failed reports grouped by tenant.
+     * Each row is a stdClass with: tenant_id, tenant_name, tenant_slug, status, count.
+     *
+     * @return Collection<int, \stdClass>
+     */
+    public function countQueueStatusByTenant(): Collection
+    {
+        return DB::table('reports')
+            ->join('tenants', 'reports.tenant_id', '=', 'tenants.id')
+            ->whereIn('reports.status', [
+                ReportStatus::Pending->value,
+                ReportStatus::Processing->value,
+                ReportStatus::Failed->value,
+            ])
+            ->selectRaw('reports.tenant_id, tenants.name as tenant_name, tenants.slug as tenant_slug, reports.status, COUNT(*) as count')
+            ->groupBy('reports.tenant_id', 'tenants.name', 'tenants.slug', 'reports.status')
+            ->get();
     }
 
     /**

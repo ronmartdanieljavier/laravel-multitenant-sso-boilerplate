@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const page = usePage();
 const missingSettings = page.props.missingRequiredSettings ?? [];
@@ -69,6 +69,11 @@ function openEdit(user) {
 function closeEdit() {
     showEditModal.value = false;
     editingUser.value = null;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('edit')) {
+        url.searchParams.delete('edit');
+        window.history.replaceState({}, '', url.toString());
+    }
 }
 
 function submitEdit() {
@@ -78,6 +83,25 @@ function submitEdit() {
         },
     });
 }
+
+onMounted(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const editId = params.get('edit');
+    if (editId) {
+        const user = props.users.find(u => u.id === parseInt(editId, 10));
+        if (user) {
+            openEdit(user);
+        }
+    }
+
+    if (params.has('invite')) {
+        openInvite();
+        const url = new URL(window.location.href);
+        url.searchParams.delete('invite');
+        window.history.replaceState({}, '', url.toString());
+    }
+});
 
 // Shared app permissions helpers (used for both invite and edit forms)
 function addApp(form) {

@@ -234,4 +234,47 @@ class UserManagementWebTest extends TestCase
             'tenant_id' => $tenant->id,
         ]);
     }
+
+    public function test_resend_invitation_sends_email_and_redirects(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create();
+        $pending = User::factory()->create([
+            'is_active' => false,
+            'invitation_token' => 'original-token',
+            'invitation_sent_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.resendInvitation', $pending->id))
+            ->assertRedirect();
+
+        Mail::assertSent(UserInvitationMail::class, fn ($mail) => $mail->hasTo($pending->email));
+    }
+
+    public function test_resend_invitation_refreshes_the_token(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create();
+        $pending = User::factory()->create([
+            'is_active' => false,
+            'invitation_token' => 'old-token',
+            'invitation_sent_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.resendInvitation', $pending->id));
+
+        $this->assertDatabaseMissing('users', ['id' => $pending->id, 'invitation_token' => 'old-token']);
+    }
+
+    public function test_unauthenticated_resend_is_redirected_to_login(): void
+    {
+        $pending = User::factory()->create(['is_active' => false, 'invitation_token' => 'tok']);
+
+        $this->post(route('admin.users.resendInvitation', $pending->id))
+            ->assertRedirect(route('login'));
+    }
 }

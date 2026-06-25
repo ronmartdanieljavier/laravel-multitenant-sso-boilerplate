@@ -6,12 +6,14 @@ use App\Admin\Data\InviteUserData;
 use App\Admin\Data\UpdateUserData;
 use App\Admin\Data\UserAppPermissionData;
 use App\Admin\Data\UserData;
+use App\Admin\Mail\UserInvitationMail;
 use App\Admin\Services\UserManagementService;
 use App\Models\Central\App;
 use App\Models\Central\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Spatie\LaravelData\DataCollection;
 use Tests\TestCase;
 
@@ -92,5 +94,115 @@ class UserManagementServiceTest extends TestCase
         $this->assertInstanceOf(UserData::class, $result);
         $this->assertTrue($result->isActive);
         $this->assertSame('Activated Name', $result->name);
+    }
+
+    public function test_recent_users_returns_collection_of_user_data(): void
+    {
+        User::factory()->count(3)->create();
+
+        $result = $this->service->recentUsers();
+
+        $this->assertInstanceOf(Collection::class, $result);
+        $this->assertInstanceOf(UserData::class, $result->first());
+    }
+
+    public function test_recent_users_returns_at_most_five(): void
+    {
+        User::factory()->count(10)->create();
+
+        $result = $this->service->recentUsers();
+
+        $this->assertLessThanOrEqual(5, $result->count());
+    }
+
+    public function test_recent_users_are_ordered_newest_first(): void
+    {
+        $oldest = User::factory()->create(['created_at' => now()->subDays(5)]);
+        $newest = User::factory()->create(['created_at' => now()]);
+
+        $result = $this->service->recentUsers();
+
+        $this->assertSame($newest->id, $result->first()->id);
+        $this->assertSame($oldest->id, $result->last()->id);
+    }
+
+    public function test_user_data_includes_created_at(): void
+    {
+        User::factory()->create();
+
+        $result = $this->service->recentUsers();
+
+        $this->assertNotNull($result->first()->createdAt);
+    }
+
+    public function test_pending_users_returns_only_uninvited_users(): void
+    {
+        User::factory()->create(['is_active' => true]);
+        User::factory()->create([
+            'is_active' => false,
+            'invitation_token' => Str::random(64),
+            'invitation_sent_at' => now(),
+        ]);
+
+        $result = $this->service->pendingUsers();
+
+        $this->assertNotEmpty($result);
+        $result->each(fn ($u) => $this->assertFalse($u->isActive));
+    }
+
+    public function test_pending_users_excludes_active_users(): void
+    {
+        $before = $this->service->pendingUsers()->count();
+        User::factory()->create(['is_active' => true]);
+
+        $result = $this->service->pendingUsers();
+
+        $this->assertSame($before, $result->count());
+    }
+
+    public function test_resend_invitation_sends_email(): void
+    {
+        Mail::fake();
+
+        $pending = User::factory()->create([
+            'is_active' => false,
+            'invitation_token' => Str::random(64),
+            'invitation_sent_at' => now()->subDay(),
+        ]);
+
+        $this->service->resendInvitation($pending->id);
+
+        Mail::assertSent(UserInvitationMail::class, fn ($mail) => $mail->hasTo($pending->email));
+    }
+
+    public function test_resend_invitation_refreshes_token(): void
+    {
+        Mail::fake();
+
+        $originalToken = Str::random(64);
+        $pending = User::factory()->create([
+            'is_active' => false,
+            'invitation_token' => $originalToken,
+            'invitation_sent_at' => now()->subDay(),
+        ]);
+
+        $this->service->resendInvitation($pending->id);
+
+        $this->assertDatabaseMissing('users', ['id' => $pending->id, 'invitation_token' => $originalToken]);
+    }
+
+    public function test_resend_invitation_returns_user_data(): void
+    {
+        Mail::fake();
+
+        $pending = User::factory()->create([
+            'is_active' => false,
+            'invitation_token' => Str::random(64),
+            'invitation_sent_at' => now(),
+        ]);
+
+        $result = $this->service->resendInvitation($pending->id);
+
+        $this->assertInstanceOf(UserData::class, $result);
     }
 }

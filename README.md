@@ -82,6 +82,8 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 - Full CRUD REST API under `/api/reports/subscriptions`
 
 **Admin panel**
+- **Live admin dashboard** — single-page snapshot of the entire platform: user/app/tenant/SSO-session stat cards, tenant health bar (healthy/warning/critical) with click-to-filter, pending invitation list with one-click resend, recent users table with edit modal shortcut, cross-tenant unresolved error log summary by severity, report queue health (pending/processing/failed per tenant), and tenant migration compliance (behind tenants listed with one-click Run migrations); also exposed as `GET /api/v1/admin/dashboard` for mobile and external consumers
+- **Quick actions** — `+ Invite User`, `+ Add Tenant`, and `Settings` shortcut buttons in the dashboard header; each deep-links directly into the target page's modal
 - Manage users and assign app + tenant DB access
 - Add new tenant databases and run migrations from the UI
 - System-wide settings across seven tabs: Email (SMTP/Postmark/Mailgun/SES), SMS (Twilio/Vonage/SNS), Push (FCM/APNs/OneSignal), Storage (Local/S3/R2/GCS/FTP/SFTP), Authentication, Security, and Branding

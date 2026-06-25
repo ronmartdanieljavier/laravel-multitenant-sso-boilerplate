@@ -53,4 +53,14 @@ class UserManagementController extends Controller
 
         return redirect()->route('admin.users')->with('success', 'User updated.');
     }
+
+    /**
+     * Resend the invitation email to a pending user.
+     */
+    public function resendInvitation(User $user): RedirectResponse
+    {
+        $this->service->resendInvitation($user->id);
+
+        return redirect()->back()->with('success', 'Invitation resent.');
+    }
 }

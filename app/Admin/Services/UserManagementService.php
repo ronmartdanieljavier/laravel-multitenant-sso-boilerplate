@@ -77,8 +77,45 @@ class UserManagementService
     }
 
     /**
-     * Delete a user.
+     * Get all users with a pending invitation (token set, not yet accepted).
+     *
+     * @return Collection<int, UserData>
      */
+    public function pendingUsers(): Collection
+    {
+        return $this->userRepository->listWithPermissions()
+            ->filter(fn (UserWithPermissionsRepositoryData $dto) => ! $dto->isActive && $dto->invitationSentAt !== null)
+            ->sortByDesc(fn (UserWithPermissionsRepositoryData $dto) => $dto->createdAt)
+            ->map(fn (UserWithPermissionsRepositoryData $dto) => $this->toData($dto))
+            ->values();
+    }
+
+    /**
+     * Resend the invitation email for a pending user.
+     */
+    public function resendInvitation(int $userId): UserData
+    {
+        $refreshed = $this->userRepository->refreshInvitationToken($userId);
+
+        Mail::to($refreshed->email)->send(new UserInvitationMail($refreshed));
+
+        return $this->toData($this->userRepository->findWithPermissions($userId));
+    }
+
+    /**
+     * Get the 5 most recently created users.
+     *
+     * @return Collection<int, UserData>
+     */
+    public function recentUsers(int $limit = 5): Collection
+    {
+        return $this->userRepository->listWithPermissions()
+            ->sortByDesc(fn (UserWithPermissionsRepositoryData $dto) => $dto->createdAt)
+            ->take($limit)
+            ->map(fn (UserWithPermissionsRepositoryData $dto) => $this->toData($dto))
+            ->values();
+    }
+
     private function toData(UserWithPermissionsRepositoryData $dto): UserData
     {
         return new UserData(
@@ -88,6 +125,7 @@ class UserManagementService
             isActive: $dto->isActive,
             invitationSentAt: $dto->invitationSentAt,
             profilePictureUrl: $dto->profilePictureUrl,
+            createdAt: $dto->createdAt,
             apps: array_map(fn (UserAppRepositoryData $ua) => new UserAppData(
                 appId: $ua->appId,
                 appName: $ua->appName,

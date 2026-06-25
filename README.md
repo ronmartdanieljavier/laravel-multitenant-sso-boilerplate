@@ -132,6 +132,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 - Page components live in `resources/js/Pages/` per module, built by Vite
 - Active tenant and user permissions shared to every page via Inertia shared props
 - Persistent layouts (`TenantLayout`, `AdminTenantLayout`) keep sidebars and sub-nav in place during navigation
+- **Guided page tours** — every page auto-starts a contextual tour on first visit (driver.js); tours are skippable, and a floating `?` button lets users retrigger any tour; tour-seen state is persisted per page in `localStorage`; dark-theme CSS overrides built into `TourButton.vue`; `useTour` composable (`resources/js/composables/useTour.js`) provides a consistent API across all 12 pages
 
 ---
 
@@ -433,8 +434,11 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── Tenant/ReportQueue.test.js
 │   │   │   ├── Profile/Index.vue           # User profile page (name, picture, password)
 │   │   │   └── Profile/Index.test.js
+│   │   ├── Pages/Partials/
+│   │   │   └── TourButton.vue              # Floating ? button (Teleport to body) — triggers page tours; dark-theme driver.js CSS overrides
 │   │   ├── composables/
-│   │   │   └── useIdleTimeout.js           # Idle session timeout composable
+│   │   │   ├── useIdleTimeout.js           # Idle session timeout composable
+│   │   │   └── useTour.js                  # driver.js wrapper — auto-start, localStorage persistence, retrigger
 │   │   ├── e2e/
 │   │   │   ├── admin.spec.js
 │   │   │   ├── login.spec.js
@@ -527,6 +531,7 @@ What's built:
 - **Tenant report queue (Phase 5.7)** — tenant users view their queued report jobs at `/tenant/reports` with live 4 s polling via `usePoll`; admin views any tenant's jobs at `/admin/tenants/{tenant}/reports`; both surfaces share `ReportRepository::listForTenant()`
 - **Live admin dashboard (Phase 5.8)** — single-page snapshot of the entire platform: user/app/tenant/SSO-session stat cards, tenant health bar (healthy/warning/critical) with click-to-filter, pending invitation list with one-click resend, recent users table with edit modal shortcut, cross-tenant unresolved error log summary by severity, report queue health (pending/processing/failed per tenant), and tenant migration compliance (behind tenants listed with one-click Run migrations); also exposed as `GET /api/v1/admin/dashboard` for mobile and external consumers
 - **Tenant maintenance mode (Phase 5.9)** — admin can put any individual tenant or all tenants simultaneously into maintenance mode; enabling immediately revokes all Sanctum tokens for affected tenant users (force logout), hides the tenant from the app picker (`AppService.loadApps()`), and returns HTTP 503 on all API requests resolved through that tenant; admin UI on `/admin/tenants` includes per-row toggle buttons and "Maintenance: All On / All Off" bulk buttons; a dedicated "In Maintenance" summary card appears on both the tenant list and admin dashboard; full REST API via `PATCH /api/v1/admin/tenants/{id}/maintenance` and `PATCH /api/v1/admin/tenants/maintenance/all`
+- **App tour system** — every page has a guided tour (driver.js) that auto-starts on first visit, can be skipped, and retriggered via a floating `?` button; tour-seen state persisted per page in `localStorage`; 12 pages covered (admin dashboard, tenants, apps, users, settings, tenant settings/users/reports/errors, tenant portal dashboard and report queue, user profile); `useTour` composable + `TourButton.vue` component; all 217 Vitest tests pass with a global driver.js mock in `test-setup.js`
 - **Tenant logged-in users (Phase 5.10)** — admin can see how many users are currently online per tenant (green "X online" dot on the tenant list) and view per-user live session status on the tenant users page; Force Logout button immediately revokes all Sanctum tokens for a specific user; `TenantData` gains `loggedInCount`, `UserData` gains `isLoggedIn`; powered by `TenantRepository::loggedInUserCountByTenant()` and `loggedInUserIdsForTenant()` (join on `personal_access_tokens`); full REST API via `DELETE /api/v1/admin/tenants/{tenant}/users/{user}/session`
 - **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (Dashboard + Report Queue sidebar); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
 - **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers

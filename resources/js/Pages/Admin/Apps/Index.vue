@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import TourButton from '../../Partials/TourButton.vue';
+import { useTour } from '../../../composables/useTour';
 
 const page = usePage();
 const missingSettings = page.props.missingRequiredSettings ?? [];
@@ -39,6 +41,15 @@ function submitEdit(app) {
         },
     });
 }
+
+const { startTour } = useTour('admin-apps', [
+    {
+        element: '#tour-apps-table',
+        title: 'Application Registry',
+        description: 'These are the SSO-registered applications users can be granted access to. Each app has a unique slug used in token claims and API authentication.',
+        side: 'bottom',
+    },
+]);
 </script>
 
 <template>
@@ -121,7 +132,7 @@ function submitEdit(app) {
             </header>
 
             <main class="p-8">
-                <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+                <div id="tour-apps-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
                     <div class="px-6 py-4 border-b border-white/5">
                         <h3 class="font-semibold text-white">Apps</h3>
                     </div>
@@ -206,4 +217,6 @@ function submitEdit(app) {
             </main>
         </div>
     </div>
+
+    <TourButton @click="startTour" />
 </template>

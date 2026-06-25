@@ -56,6 +56,10 @@ class ResolveTenantDatabase
             return response()->json(['message' => 'Tenant not found or access denied.'], Response::HTTP_FORBIDDEN);
         }
 
+        if ($tenant->is_maintenance) {
+            return response()->json(['message' => 'This tenant is currently under maintenance. Please try again later.'], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
         $userAppTenant = $user->userAppTenants()
             ->where('app_id', $app->id)
             ->where('tenant_id', $tenant->id)

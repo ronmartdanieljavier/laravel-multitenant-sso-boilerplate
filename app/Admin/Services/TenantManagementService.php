@@ -50,6 +50,7 @@ class TenantManagementService
                 name: $tenant->name,
                 slug: $tenant->slug,
                 isActive: $tenant->isActive,
+                isMaintenance: $tenant->isMaintenance,
                 dbHost: $tenant->dbHost,
                 dbPort: $tenant->dbPort,
                 dbName: $tenant->dbName,
@@ -82,6 +83,7 @@ class TenantManagementService
             healthy: $tenants->where('healthStatus', 'healthy')->count(),
             warning: $tenants->where('healthStatus', 'warning')->count(),
             critical: $tenants->where('healthStatus', 'critical')->count(),
+            maintenance: $tenants->where('isMaintenance', true)->count(),
         );
     }
 
@@ -122,6 +124,38 @@ class TenantManagementService
     }
 
     /**
+     * Set the maintenance mode of a single tenant.
+     * When enabling maintenance, all user tokens for that tenant are revoked.
+     */
+    public function setMaintenance(int $tenantId, bool $isMaintenance): void
+    {
+        if ($isMaintenance) {
+            $userIds = $this->tenantRepository->getUserIdsForTenant($tenantId);
+            $this->userRepository->revokeTokensForUsers($userIds);
+        }
+
+        $this->tenantRepository->setMaintenance($tenantId, $isMaintenance);
+    }
+
+    /**
+     * Set the maintenance mode for all tenants.
+     * When enabling, all user tokens for every tenant are revoked.
+     */
+    public function setMaintenanceAll(bool $isMaintenance): void
+    {
+        if ($isMaintenance) {
+            $tenantIds = $this->tenantRepository->getAllIds();
+            $allUserIds = $tenantIds->flatMap(
+                fn (int $id) => $this->tenantRepository->getUserIdsForTenant($id)
+            )->unique()->values();
+
+            $this->userRepository->revokeTokensForUsers($allUserIds);
+        }
+
+        $this->tenantRepository->setMaintenanceAll($isMaintenance);
+    }
+
+    /**
      * Delete a tenant.
      */
     public function delete(int $tenantId): void
@@ -157,6 +191,7 @@ class TenantManagementService
             name: $tenant->name,
             slug: $tenant->slug,
             isActive: $tenant->isActive,
+            isMaintenance: $tenant->isMaintenance,
             dbHost: $tenant->dbHost,
             dbPort: $tenant->dbPort,
             dbName: $tenant->dbName,

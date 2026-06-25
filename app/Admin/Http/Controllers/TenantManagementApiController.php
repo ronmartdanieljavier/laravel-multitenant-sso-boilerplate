@@ -5,6 +5,7 @@ namespace App\Admin\Http\Controllers;
 use App\Admin\Data\CreateTenantData;
 use App\Admin\Data\UpdateTenantData;
 use App\Admin\Http\Requests\CreateTenantRequest;
+use App\Admin\Http\Requests\SetTenantMaintenanceRequest;
 use App\Admin\Http\Requests\UpdateTenantRequest;
 use App\Admin\Services\TenantManagementService;
 use App\Http\Controllers\Controller;
@@ -72,6 +73,36 @@ class TenantManagementApiController extends Controller
         $this->service->delete($tenant->id);
 
         return response()->json(['message' => 'Tenant deleted.']);
+    }
+
+    /**
+     * Set a tenant's maintenance mode.
+     */
+    public function setMaintenance(SetTenantMaintenanceRequest $request, Tenant $tenant): JsonResponse
+    {
+        $isMaintenance = (bool) $request->input('is_maintenance');
+        $this->service->setMaintenance($tenant->id, $isMaintenance);
+
+        $message = $isMaintenance
+            ? 'Tenant placed in maintenance mode and user tokens revoked.'
+            : 'Tenant maintenance mode disabled.';
+
+        return response()->json(['message' => $message]);
+    }
+
+    /**
+     * Set maintenance mode for all tenants.
+     */
+    public function setMaintenanceAll(SetTenantMaintenanceRequest $request): JsonResponse
+    {
+        $isMaintenance = (bool) $request->input('is_maintenance');
+        $this->service->setMaintenanceAll($isMaintenance);
+
+        $message = $isMaintenance
+            ? 'All tenants placed in maintenance mode and user tokens revoked.'
+            : 'Maintenance mode disabled for all tenants.';
+
+        return response()->json(['message' => $message]);
     }
 
     /**

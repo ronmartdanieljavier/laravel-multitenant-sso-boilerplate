@@ -2476,7 +2476,7 @@
                 "dashboard"
               ]
             },
-            "description": "Returns the full admin dashboard snapshot in one request:\n\n- `data` \u2014 stat counters: `total_users`, `active_users`, `pending_invitation_users`, `active_apps`, `active_tenants`, `active_sso_sessions`\n- `health_summary` \u2014 tenant health counts: `total`, `healthy`, `warning`, `critical`\n- `recent_users` \u2014 latest 5 users ordered by `created_at` desc; each entry includes `id`, `name`, `email`, `is_active`\n- `pending_users` \u2014 users with an unsent invitation (`invitation_token` set, `is_active` false)\n- `unresolved_errors` \u2014 cross-tenant unresolved error log aggregate: `total`, `error`, `warning`, `critical`, `by_tenant[]`\n- `report_queue` \u2014 pending/processing/failed report counts: `pending`, `processing`, `failed`, `by_tenant[]`\n- `migration_compliance` \u2014 tenant migration state: `total`, `up_to_date`, `behind_count`, `available_migrations`, `behind[]`\n\nRequires Sanctum Bearer token."
+            "description": "Returns the full admin dashboard snapshot in one request:\n\n- `data` \u2014 stat counters: `total_users`, `active_users`, `pending_invitation_users`, `active_apps`, `active_tenants`, `active_sso_sessions`\n- `health_summary` \u2014 tenant health counts: `total`, `healthy`, `warning`, `critical`, `maintenance`\n- `recent_users` \u2014 latest 5 users ordered by `created_at` desc; each entry includes `id`, `name`, `email`, `is_active`\n- `pending_users` \u2014 users with an unsent invitation (`invitation_token` set, `is_active` false)\n- `unresolved_errors` \u2014 cross-tenant unresolved error log aggregate: `total`, `error`, `warning`, `critical`, `by_tenant[]`\n- `report_queue` \u2014 pending/processing/failed report counts: `pending`, `processing`, `failed`, `by_tenant[]`\n- `migration_compliance` \u2014 tenant migration state: `total`, `up_to_date`, `behind_count`, `available_migrations`, `behind[]`\n\nRequires Sanctum Bearer token."
           },
           "response": [
             {
@@ -2998,6 +2998,138 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "body": "{\n  \"message\": \"Tenant deactivated and user tokens revoked.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Tenant Maintenance",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_maintenance\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/maintenance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "maintenance"
+              ]
+            },
+            "description": "Enables or disables maintenance mode for a single tenant. When enabling (is_maintenance: true), all Sanctum tokens for users assigned to this tenant are immediately revoked, tenant is hidden from the app picker, and API requests to that tenant return 503."
+          },
+          "response": [
+            {
+              "name": "200 OK — Maintenance Enabled",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/maintenance",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    "{{tenant_id}}",
+                    "maintenance"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Tenant maintenance mode enabled and user tokens revoked.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Maintenance (All Tenants)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_maintenance\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/maintenance/all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "maintenance",
+                "all"
+              ]
+            },
+            "description": "Enables or disables maintenance mode for all tenants at once. When enabling (is_maintenance: true), Sanctum tokens for all users across all tenants are immediately revoked."
+          },
+          "response": [
+            {
+              "name": "200 OK — All Tenants in Maintenance",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/tenants/maintenance/all",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    "maintenance",
+                    "all"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"All tenants set to maintenance mode and user tokens revoked.\"\n}"
             }
           ]
         },

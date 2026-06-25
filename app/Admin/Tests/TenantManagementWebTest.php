@@ -73,6 +73,7 @@ class TenantManagementWebTest extends TestCase
                     ->has('healthy')
                     ->has('warning')
                     ->has('critical')
+                    ->has('maintenance')
                 )
             );
     }
@@ -217,6 +218,91 @@ class TenantManagementWebTest extends TestCase
             ->assertRedirect(route('admin.tenants'));
 
         $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
+    }
+
+    public function test_tenants_payload_includes_is_maintenance_field(): void
+    {
+        $user = User::factory()->create();
+        Tenant::factory()->create(['slug' => 'maint-test-'.uniqid(), 'is_maintenance' => false]);
+
+        $this->actingAs($user)
+            ->get(route('admin.tenants'))
+            ->assertInertia(fn ($page) => $page
+                ->has('tenants.0', fn ($tenant) => $tenant
+                    ->has('is_maintenance')
+                    ->etc()
+                )
+            );
+    }
+
+    public function test_authenticated_user_can_enable_maintenance_mode_and_tokens_are_revoked(): void
+    {
+        $admin = User::factory()->create();
+        $tenant = Tenant::factory()->create(['is_maintenance' => false]);
+        $tenantUser = User::factory()->create();
+
+        $tenantUser->createToken('test-token', ['*']);
+
+        DB::table('user_app_tenants')->insert([
+            'user_id' => $tenantUser->id,
+            'app_id' => App::factory()->create()->id,
+            'tenant_id' => $tenant->id,
+            'role' => 'user',
+            'is_default' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.tenants.setMaintenance', $tenant), ['is_maintenance' => true])
+            ->assertRedirect(route('admin.tenants'));
+
+        $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'is_maintenance' => true]);
+        $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $tenantUser->id]);
+    }
+
+    public function test_authenticated_user_can_disable_maintenance_mode(): void
+    {
+        $admin = User::factory()->create();
+        $tenant = Tenant::factory()->create(['is_maintenance' => true]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.tenants.setMaintenance', $tenant), ['is_maintenance' => false])
+            ->assertRedirect(route('admin.tenants'));
+
+        $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'is_maintenance' => false]);
+    }
+
+    public function test_authenticated_user_can_enable_maintenance_for_all_tenants(): void
+    {
+        $admin = User::factory()->create();
+        $slug1 = 'maint-all-a-'.uniqid();
+        $slug2 = 'maint-all-b-'.uniqid();
+        Tenant::factory()->create(['slug' => $slug1, 'is_maintenance' => false]);
+        Tenant::factory()->create(['slug' => $slug2, 'is_maintenance' => false]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.tenants.setMaintenanceAll'), ['is_maintenance' => true])
+            ->assertRedirect(route('admin.tenants'));
+
+        $this->assertDatabaseHas('tenants', ['slug' => $slug1, 'is_maintenance' => true]);
+        $this->assertDatabaseHas('tenants', ['slug' => $slug2, 'is_maintenance' => true]);
+    }
+
+    public function test_authenticated_user_can_disable_maintenance_for_all_tenants(): void
+    {
+        $admin = User::factory()->create();
+        $slug1 = 'maint-off-a-'.uniqid();
+        $slug2 = 'maint-off-b-'.uniqid();
+        Tenant::factory()->create(['slug' => $slug1, 'is_maintenance' => true]);
+        Tenant::factory()->create(['slug' => $slug2, 'is_maintenance' => true]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.tenants.setMaintenanceAll'), ['is_maintenance' => false])
+            ->assertRedirect(route('admin.tenants'));
+
+        $this->assertDatabaseHas('tenants', ['slug' => $slug1, 'is_maintenance' => false]);
+        $this->assertDatabaseHas('tenants', ['slug' => $slug2, 'is_maintenance' => false]);
     }
 
     public function test_inactive_tenant_appears_as_critical_in_response(): void

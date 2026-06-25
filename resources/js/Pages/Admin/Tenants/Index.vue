@@ -21,6 +21,7 @@ const summaryCards = [
     { label: 'Healthy', key: 'healthy', color: 'text-emerald-400' },
     { label: 'Warning', key: 'warning', color: 'text-amber-400' },
     { label: 'Critical', key: 'critical', color: 'text-red-400' },
+    { label: 'In Maintenance', key: 'maintenance', color: 'text-orange-400' },
 ];
 
 const healthBadge = {
@@ -162,6 +163,29 @@ function toggleActive(tenant) {
     router.patch(`/admin/tenants/${tenant.id}/active`, { is_active: newState });
 }
 
+// ── Maintenance mode ──────────────────────────────────────────────────────────
+
+function toggleMaintenance(tenant) {
+    const enabling = !tenant.is_maintenance;
+    const confirmMsg = enabling
+        ? `Enable maintenance mode for "${tenant.name}"? All user tokens for this tenant will be revoked and users will be logged out.`
+        : `Disable maintenance mode for "${tenant.name}"?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    router.patch(`/admin/tenants/${tenant.id}/maintenance`, { is_maintenance: enabling });
+}
+
+function toggleMaintenanceAll(enable) {
+    const confirmMsg = enable
+        ? 'Enable maintenance mode for ALL tenants? All user tokens will be revoked and users will be logged out.'
+        : 'Disable maintenance mode for all tenants?';
+
+    if (!confirm(confirmMsg)) return;
+
+    router.patch('/admin/tenants/maintenance/all', { is_maintenance: enable });
+}
+
 // ── Run migrations ────────────────────────────────────────────────────────────
 
 function migrateTenant(tenant) {
@@ -273,6 +297,14 @@ function deleteTenant(tenant) {
                             class="text-sm px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
                         Run All Migrations
                     </button>
+                    <button @click="toggleMaintenanceAll(true)"
+                            class="text-sm px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 transition">
+                        Maintenance: All On
+                    </button>
+                    <button @click="toggleMaintenanceAll(false)"
+                            class="text-sm px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 transition">
+                        Maintenance: All Off
+                    </button>
                     <button @click="openCreate"
                             class="text-sm px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition">
                         + Add Tenant
@@ -282,7 +314,7 @@ function deleteTenant(tenant) {
 
             <main class="p-8 space-y-8">
                 <!-- Summary Cards -->
-                <div class="grid grid-cols-4 gap-4">
+                <div class="grid grid-cols-5 gap-4">
                     <div v-for="card in summaryCards" :key="card.key"
                          class="bg-slate-900 border border-white/5 rounded-xl p-5">
                         <p class="text-slate-400 text-sm">{{ card.label }}</p>
@@ -333,10 +365,16 @@ function deleteTenant(tenant) {
                                     <p class="text-xs text-slate-500">{{ tenant.slug }}</p>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span :class="tenant.is_active ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-500/20 text-slate-400'"
-                                          class="text-xs px-2 py-0.5 rounded-full">
-                                        {{ tenant.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                    <div class="flex flex-col gap-1">
+                                        <span :class="tenant.is_active ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-500/20 text-slate-400'"
+                                              class="text-xs px-2 py-0.5 rounded-full w-fit">
+                                            {{ tenant.is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                        <span v-if="tenant.is_maintenance"
+                                              class="text-xs px-2 py-0.5 rounded-full w-fit bg-amber-500/20 text-amber-300">
+                                            Maintenance
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span :class="healthBadge[tenant.health_status]"
@@ -389,6 +427,13 @@ function deleteTenant(tenant) {
                                                     : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'"
                                                 class="text-xs px-2 py-1 rounded transition">
                                             {{ tenant.is_active ? 'Deactivate' : 'Activate' }}
+                                        </button>
+                                        <button @click="toggleMaintenance(tenant)"
+                                                :class="tenant.is_maintenance
+                                                    ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                                                    : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'"
+                                                class="text-xs px-2 py-1 rounded transition">
+                                            {{ tenant.is_maintenance ? 'End Maintenance' : 'Maintenance' }}
                                         </button>
                                         <button @click="deleteTenant(tenant)"
                                                 class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">

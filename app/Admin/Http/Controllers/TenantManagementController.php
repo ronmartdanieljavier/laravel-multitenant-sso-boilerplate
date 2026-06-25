@@ -5,6 +5,7 @@ namespace App\Admin\Http\Controllers;
 use App\Admin\Data\CreateTenantData;
 use App\Admin\Data\UpdateTenantData;
 use App\Admin\Http\Requests\CreateTenantRequest;
+use App\Admin\Http\Requests\SetTenantMaintenanceRequest;
 use App\Admin\Http\Requests\UpdateTenantRequest;
 use App\Admin\Services\TenantManagementService;
 use App\Http\Controllers\Controller;
@@ -74,6 +75,36 @@ class TenantManagementController extends Controller
         $this->service->delete($tenant->id);
 
         return redirect()->route('admin.tenants')->with('success', 'Tenant deleted.');
+    }
+
+    /**
+     * Set a tenant's maintenance mode.
+     */
+    public function setMaintenance(SetTenantMaintenanceRequest $request, Tenant $tenant): RedirectResponse
+    {
+        $isMaintenance = (bool) $request->input('is_maintenance');
+        $this->service->setMaintenance($tenant->id, $isMaintenance);
+
+        $message = $isMaintenance
+            ? 'Tenant placed in maintenance mode and user tokens revoked.'
+            : 'Tenant maintenance mode disabled.';
+
+        return redirect()->route('admin.tenants')->with('success', $message);
+    }
+
+    /**
+     * Set maintenance mode for all tenants.
+     */
+    public function setMaintenanceAll(SetTenantMaintenanceRequest $request): RedirectResponse
+    {
+        $isMaintenance = (bool) $request->input('is_maintenance');
+        $this->service->setMaintenanceAll($isMaintenance);
+
+        $message = $isMaintenance
+            ? 'All tenants placed in maintenance mode and user tokens revoked.'
+            : 'Maintenance mode disabled for all tenants.';
+
+        return redirect()->route('admin.tenants')->with('success', $message);
     }
 
     /**

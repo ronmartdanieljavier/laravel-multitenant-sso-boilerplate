@@ -11,6 +11,7 @@ class TenantHealthData extends Data
         public string $name,
         public string $slug,
         public bool $isActive,
+        public bool $isMaintenance,
         public bool $hasReadReplica,
         public int $userCount,
         public int $migrationCount,

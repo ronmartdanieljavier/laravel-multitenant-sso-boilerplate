@@ -2,6 +2,47 @@
 
 ---
 
+## [2.19.0] — 2026-06-26
+
+### Added
+
+- **App tour system** — every page now has a guided tour that auto-starts on first visit and can be retriggered at any time via a floating `?` button:
+
+  **Core infrastructure**
+  - `resources/js/composables/useTour.js` — composable wrapping [driver.js](https://driverjs.com/); accepts a `tourName` (used as the `localStorage` key `tour_seen_{name}`) and a `steps` array; auto-starts the tour 600 ms after mount if not yet seen; exposes `startTour()` for manual retrigger; guards against `localStorage` being undefined in SSR/jsdom environments
+  - `resources/js/Pages/Partials/TourButton.vue` — floating `?` button rendered via `<Teleport to="body">` (fixed bottom-right, always above all layouts); emits `click` to call `startTour()`; contains all driver.js dark-theme CSS overrides (`.app-tour-popover`) targeting the slate-950 UI palette with correct arrow colours for all four popover sides
+  - `driver.js` installed as an npm dependency
+  - `resources/js/test-setup.js` — global Vitest setup file that mocks `driver.js` so CSS imports and DOM APIs don't break jsdom; registered in `vite.config.js` as `setupFiles`; `css: false` added to the test section to suppress CSS processing in the test environment
+
+  **Pages covered** (tour key → steps)
+  - `admin-dashboard` — System Overview, Tenant Health, Pending Invitations (conditional — step included only when `pendingUsers.length > 0`), Unresolved Errors
+  - `admin-tenants` — Tenant Management header, Summary Stats, Tenant Table
+  - `admin-apps` — Apps Table
+  - `admin-users` — Users header, Users Table
+  - `admin-settings` — Settings Tabs, Settings Panel
+  - `admin-tenant-settings` — Settings Tabs, Settings Content
+  - `admin-tenant-users` — Users header, Users Table
+  - `admin-tenant-report-queue` — Report Stats, Report Table
+  - `admin-tenant-errors` — Error Stats, Filters, Error Table
+  - `tenant-dashboard` — Welcome, App Grid, Recent Activity
+  - `tenant-report-queue` — Report Queue header, Stats, Report Table
+  - `profile` — Display Name, Profile Picture, Change Password
+
+  **New files**
+  - `resources/js/composables/useTour.js`
+  - `resources/js/Pages/Partials/TourButton.vue`
+  - `resources/js/test-setup.js`
+
+  **Modified files**
+  - `vite.config.js` — added `css: false` and `setupFiles: ['resources/js/test-setup.js']` to the `test` block
+  - All 12 page components above — added `useTour` composable call, `TourButton` component, and `id="tour-*"` attributes on tour target elements
+
+  **Test infrastructure**
+  - All 217 existing Vitest tests continue to pass; driver.js is globally mocked so CSS imports and browser-only APIs don't break jsdom
+  - `localStorage` guards added in `useTour.js` (`onMounted` and `onDestroyStarted` callbacks) to handle environments where `localStorage` is undefined
+
+---
+
 ## [2.18.0] — 2026-06-26
 
 ### Added

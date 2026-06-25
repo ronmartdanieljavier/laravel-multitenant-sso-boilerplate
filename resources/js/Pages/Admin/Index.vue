@@ -2,6 +2,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useIdleTimeout } from '../../composables/useIdleTimeout';
+import TourButton from '../Partials/TourButton.vue';
+import { useTour } from '../../composables/useTour';
 
 const props = defineProps({
     stats: {
@@ -75,6 +77,34 @@ function logout() {
 }
 
 const missingSettings = page.props.missingRequiredSettings ?? [];
+
+const adminDashboardSteps = [
+    {
+        element: '#tour-admin-stats',
+        title: 'System Overview',
+        description: 'Key system metrics at a glance: total users, active tenants, report jobs in the queue, and unresolved errors across all tenants.',
+    },
+    {
+        element: '#tour-admin-health',
+        title: 'Tenant Health',
+        description: 'A breakdown of all tenants by health status. Click a status badge to jump to the filtered tenant list. Tenants in Warning or Critical state need attention.',
+        side: 'top',
+    },
+    ...(props.pendingUsers.length > 0 ? [{
+        element: '#tour-admin-pending',
+        title: 'Pending Invitations',
+        description: 'Users who have been invited but haven\'t accepted yet. You can resend their invitation email from here.',
+        side: 'top',
+    }] : []),
+    {
+        element: '#tour-admin-errors',
+        title: 'Unresolved Errors',
+        description: 'Recent unresolved exceptions across all tenants. Click an error code to see the full stack trace and mark it as resolved.',
+        side: 'top',
+    },
+];
+
+const { startTour } = useTour('admin-dashboard', adminDashboardSteps);
 
 const statCards = [
     {
@@ -194,7 +224,7 @@ const statCards = [
 
             <main class="p-8 space-y-8">
                 <!-- Stats -->
-                <div class="grid grid-cols-4 gap-4">
+                <div id="tour-admin-stats" class="grid grid-cols-4 gap-4">
                     <div v-for="card in statCards" :key="card.label"
                          :class="card.label === 'Total Users' && stats.pending_invitation_users > 0
                              ? 'bg-slate-900 border border-amber-500/30 rounded-xl p-5'
@@ -211,7 +241,7 @@ const statCards = [
                 </div>
 
                 <!-- Pending Invitations -->
-                <div v-if="pendingUsers.length > 0" class="bg-slate-900 border border-amber-500/20 rounded-xl overflow-hidden">
+                <div v-if="pendingUsers.length > 0" id="tour-admin-pending" class="bg-slate-900 border border-amber-500/20 rounded-xl overflow-hidden">
                     <button @click="pendingOpen = !pendingOpen"
                             class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/2 transition">
                         <div class="flex items-center gap-2">
@@ -262,7 +292,7 @@ const statCards = [
                 </div>
 
                 <!-- Tenant Health Summary -->
-                <div class="bg-slate-900 border border-white/5 rounded-xl p-5">
+                <div id="tour-admin-health" class="bg-slate-900 border border-white/5 rounded-xl p-5">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-semibold text-white">Tenant Health</h3>
                         <Link href="/admin/tenants" class="text-xs text-slate-400 hover:text-violet-300 transition">
@@ -354,7 +384,7 @@ const statCards = [
                 </div>
 
                 <!-- Unresolved Error Logs -->
-                <div :class="unresolvedErrors.total > 0 ? 'border-red-500/20' : 'border-white/5'"
+                <div id="tour-admin-errors" :class="unresolvedErrors.total > 0 ? 'border-red-500/20' : 'border-white/5'"
                      class="bg-slate-900 border rounded-xl overflow-hidden">
                     <button @click="errorsOpen = !errorsOpen"
                             class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/2 transition">
@@ -590,4 +620,6 @@ const statCards = [
             </main>
         </div>
     </div>
+
+    <TourButton @click="startTour" />
 </template>

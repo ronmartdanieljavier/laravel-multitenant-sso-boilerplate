@@ -35,6 +35,8 @@ export default defineConfig({
         globals: true,
         include: ['resources/js/**/*.test.{js,ts}'],
         exclude: ['resources/js/e2e/**'],
+        css: false,
+        setupFiles: ['resources/js/test-setup.js'],
         coverage: {
             provider: 'v8',
             reporter: ['text', 'lcov'],

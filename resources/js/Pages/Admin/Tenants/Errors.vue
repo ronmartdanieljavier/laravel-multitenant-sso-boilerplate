@@ -2,6 +2,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AdminTenantLayout from '../../../Layouts/AdminTenantLayout.vue';
+import TourButton from '../../Partials/TourButton.vue';
+import { useTour } from '../../../composables/useTour';
 
 defineOptions({ layout: AdminTenantLayout });
 
@@ -72,6 +74,26 @@ const stats = computed(() => ({
     critical: props.logs.filter(l => l.severity === 'critical').length,
     errors: props.logs.filter(l => l.severity === 'error').length,
 }));
+
+const { startTour } = useTour('admin-tenant-errors', [
+    {
+        element: '#tour-errors-stats',
+        title: 'Error Summary',
+        description: 'Quick stats showing the total, unresolved, critical, and error-level exceptions recorded for this tenant.',
+    },
+    {
+        element: '#tour-errors-filters',
+        title: 'Filter Errors',
+        description: 'Filter the error log by severity (Critical, Error, Warning) or show only unresolved items to focus on what needs attention.',
+        side: 'bottom',
+    },
+    {
+        element: '#tour-errors-table',
+        title: 'Error Log Table',
+        description: 'Each row is a captured exception. Click the error code to see the full stack trace. Use the Resolve / Unresolve actions to track your investigation progress.',
+        side: 'top',
+    },
+]);
 </script>
 
 <template>
@@ -110,7 +132,7 @@ const stats = computed(() => ({
             </div>
 
             <!-- Stats -->
-            <div class="grid grid-cols-4 gap-4 mb-6">
+            <div id="tour-errors-stats" class="grid grid-cols-4 gap-4 mb-6">
                 <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
                     <p class="text-xs text-slate-500 mb-1">Total</p>
                     <p class="text-2xl font-bold text-white">{{ stats.total }}</p>
@@ -130,7 +152,7 @@ const stats = computed(() => ({
             </div>
 
             <!-- Filters -->
-            <div class="flex items-center gap-4 mb-4">
+            <div id="tour-errors-filters" class="flex items-center gap-4 mb-4">
                 <select v-model="severity" @change="applyFilters"
                         class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
                     <option value="">All severities</option>
@@ -149,7 +171,7 @@ const stats = computed(() => ({
                 <p class="text-slate-400">No error logs found.</p>
             </div>
 
-            <div v-else class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+            <div v-else id="tour-errors-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-white/5">
@@ -220,4 +242,6 @@ const stats = computed(() => ({
                 </table>
             </div>
     </main>
+
+    <TourButton @click="startTour" />
 </template>

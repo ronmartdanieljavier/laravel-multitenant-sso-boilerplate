@@ -2,6 +2,43 @@
 
 ---
 
+## [2.22.0] — 2026-06-26
+
+### Added
+
+- **Tenant switcher — Phase 6.7** — users assigned to more than one tenant under the Tenant app can switch between tenants from a dropdown in the `TenantLayout.vue` sidebar without logging out or returning to the app picker.
+
+  **Backend**
+
+  - `ResolveWebTenantDatabase` middleware — session-based tenant resolver for all web tenant routes; reads the active tenant slug from `session('tenant_app_current_tenant')`, falls back to the user's `is_default` tenant on first visit, verifies access, wires the per-request `tenant` DB connection, and sets `current_app` / `current_tenant` on request attributes
+  - `TenantSwitcherService` — `getTenantsForUser()` returns all accessible (non-maintenance) tenants for a user+app pair with an `isCurrent` flag; `initializeForUser()` seeds the session with the default tenant on first visit; `switchTenant()` validates access and updates the session key
+  - `TenantSwitcherController` — handles `POST /tenant/switch` (web); validates via `SwitchTenantRequest`, delegates to service, redirects to `/tenant`
+  - `TenantSwitcherApiController` — handles `GET /api/v1/tenant/tenants` (list) and `POST /api/v1/tenant/switch` (switch) for API consumers
+  - `UserAppRepository` — two new methods: `getTenantsForUserAndApp(int $userId, string $appSlug)` returns a `Collection<TenantRepositoryData>` excluding maintenance tenants; `getDefaultTenantSlugForUserAndApp()` returns the default tenant slug for session initialisation
+  - `TenantData` DTO (`app/Tenant/Data/`) — `id`, `name`, `slug`, `isCurrent`
+  - `HandleInertiaRequests` — shares `availableTenants` prop (array of `{id, name, slug, isCurrent}`) for authenticated tenant-portal pages when the user has more than one accessible tenant; `null` otherwise
+  - `WebAppPickerController::select()` — calls `TenantSwitcherService::initializeForUser()` when the Tenant app is selected so the session is seeded before the first page load
+  - All web tenant routes (`/tenant`, `/tenant/reports`, `POST /tenant/switch`) now go through `ResolveWebTenantDatabase`
+
+  **Frontend**
+
+  - `TenantSwitcher.vue` (`resources/js/Pages/Partials/`) — dropdown rendered in the sidebar header below the tenant name; shows all accessible tenants; current tenant marked with a checkmark; switching calls `router.post('/tenant/switch', { tenant_slug })` so the dropdown closes before the Inertia visit fires (avoids the "form not connected" browser error)
+  - `TenantLayout.vue` redesigned — tenant switcher moved to the header section directly below the tenant name; bottom of sidebar now shows avatar / name / email as a profile link with a separate logout icon button, matching the admin layout pattern
+
+  **Tests**
+
+  - `TenantSwitcherServiceTest` — 7 PHPUnit tests (list, maintenance filter, session init, no-overwrite, switch, unauthorised, current-flag)
+  - `TenantSwitcherWebTest` — 3 PHPUnit tests (unauthenticated redirect, valid switch, unauthorised tenant error, missing slug validation)
+  - `TenantSwitcherApiTest` — 4 PHPUnit tests (unauthenticated, list, maintenance filter, switch, forbidden)
+  - `TenantLayout.test.js` — 16 Vitest tests (tenant name/slug, nav links, active highlighting, profile link, user name/email, avatar, profile picture, logout button, TenantSwitcher prop)
+  - `TenantSwitcher.test.js` — 11 Vitest tests (hidden with ≤1 tenant, toggle, dropdown list, checkmark, switch post, backdrop close, re-toggle)
+
+  **Postman**
+
+  - New **Tenant Switcher (API)** folder with `GET /api/v1/tenant/tenants` (list) and `POST /api/v1/tenant/switch` (switch) — 200 OK, 403 Forbidden, and 422 Unprocessable example responses
+
+---
+
 ## [2.21.0] — 2026-06-26
 
 ### Changed

@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Admin\Services\SystemSettingsService;
 use App\Models\Central\User;
 use App\Repositories\Central\SystemSettingRepository;
+use App\Tenant\Services\TenantSwitcherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
@@ -45,6 +46,30 @@ class HandleInertiaRequests extends Middleware
         ];
     }
 
+    /** @return list<array{id: int, name: string, slug: string, isCurrent: bool}>|null */
+    private function resolveAvailableTenants(Request $request): ?array
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        if (! $user || $request->attributes->get('current_app') === null) {
+            return null;
+        }
+
+        $tenants = app(TenantSwitcherService::class)->getTenantsForUser($user->id, 'tenant');
+
+        if ($tenants->count() <= 1) {
+            return null;
+        }
+
+        return $tenants->map(fn ($t) => [
+            'id' => $t->id,
+            'name' => $t->name,
+            'slug' => $t->slug,
+            'isCurrent' => $t->isCurrent,
+        ])->values()->all();
+    }
+
     public function version(Request $request): ?string
     {
         return parent::version($request);
@@ -76,6 +101,7 @@ class HandleInertiaRequests extends Middleware
             'tenant' => fn () => $request->attributes->get('current_tenant'),
             'app' => fn () => $request->attributes->get('current_app'),
             'role' => fn () => $request->attributes->get('current_role'),
+            'availableTenants' => fn () => $this->resolveAvailableTenants($request),
         ];
     }
 }

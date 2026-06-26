@@ -2,6 +2,31 @@
 
 ---
 
+## [2.21.0] — 2026-06-26
+
+### Changed
+
+- **Tenant migration clean-up — Phase 6.1** — the `database/migrations/tenant/` directory has been reset to a clean baseline ahead of the Phase 6 Documents module:
+
+  **Removed migrations**
+  - `2026_06_19_104351_create_companies_table.php`
+  - `2026_06_19_104352_create_properties_table.php`
+  - `2026_06_19_104354_create_floors_table.php`
+  - `2026_06_19_104355_create_units_table.php`
+  - `2026_06_19_104356_create_leases_table.php`
+  - `2026_06_19_104357_create_lease_documents_table.php`
+  - `2026_06_19_104358_create_lease_renewals_table.php`
+
+  These were placeholder domain migrations from an earlier proof-of-concept; none were referenced by any model, repository, or service.
+
+  **Retained migration**
+  - `2026_06_20_043736_create_report_subscriptions_table.php` — actively used by the Phase 4 scheduled-report subscription system.
+
+  **Schema reset**
+  - `php artisan tenant:migrate --fresh` was run against all tenant databases; each tenant DB now contains only the `migrations` table and `report_subscriptions`.
+
+---
+
 ## [2.20.0] — 2026-06-26
 
 ### Added

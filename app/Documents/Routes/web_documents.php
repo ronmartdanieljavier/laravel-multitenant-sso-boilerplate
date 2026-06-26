@@ -8,5 +8,6 @@ Route::middleware(['auth', ResolveWebTenantDatabase::class])->group(function ():
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
     Route::get('/documents/{id}/download', [DocumentController::class, 'download'])->name('documents.download');
+    Route::post('/documents/download-zip', [DocumentController::class, 'downloadZip'])->name('documents.download-zip');
     Route::delete('/documents/{id}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 });

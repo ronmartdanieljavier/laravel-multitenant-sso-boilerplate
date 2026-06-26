@@ -12,5 +12,6 @@ Route::middleware(['auth:sanctum', ResolveTenantDatabase::class])
         Route::post('/', [DocumentApiController::class, 'store'])->name('store');
         Route::get('/{id}', [DocumentApiController::class, 'show'])->name('show');
         Route::get('/{id}/download', [DocumentApiController::class, 'download'])->name('download');
+        Route::post('/download-zip', [DocumentApiController::class, 'downloadZip'])->name('download-zip');
         Route::delete('/{id}', [DocumentApiController::class, 'destroy'])->name('destroy');
     });

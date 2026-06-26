@@ -64,6 +64,19 @@ class DocumentController extends Controller
         return $this->documentService->downloadResponse($id, $tenant->id);
     }
 
+    public function downloadZip(Request $request): SymfonyResponse
+    {
+        $request->validate(['ids' => ['required', 'array', 'min:1'], 'ids.*' => ['integer']]);
+
+        /** @var Tenant $tenant */
+        $tenant = $request->attributes->get('current_tenant');
+
+        return $this->documentService->downloadZipResponse(
+            array_map('intval', $request->input('ids')),
+            $tenant->id,
+        );
+    }
+
     public function destroy(Request $request, int $id): RedirectResponse
     {
         /** @var Tenant $tenant */

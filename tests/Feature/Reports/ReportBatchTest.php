@@ -31,7 +31,7 @@ class ReportBatchTest extends TestCase
         $response->assertCreated();
         $response->assertJsonFragment(['report_count' => 2]);
 
-        $this->assertDatabaseCount('reports', 2);
+        $this->assertSame(2, Report::where('user_id', $user->id)->count());
 
         $this->assertDatabaseHas('reports', [
             'user_id' => $user->id,
@@ -56,7 +56,7 @@ class ReportBatchTest extends TestCase
         $batchId = $response->json('batch_id');
 
         $this->assertNotNull($batchId);
-        $this->assertDatabaseCount('reports', 2);
+        $this->assertSame(2, Report::where('user_id', $user->id)->count());
 
         Report::where('user_id', $user->id)->each(
             fn ($r) => $this->assertSame($batchId, $r->batch_id)

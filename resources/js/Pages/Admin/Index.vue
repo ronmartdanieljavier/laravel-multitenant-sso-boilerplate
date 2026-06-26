@@ -137,7 +137,7 @@ const statCards = [
         <!-- Sidebar -->
         <aside class="fixed inset-y-0 left-0 w-60 bg-slate-900 border-r border-white/5 flex flex-col">
             <div class="h-16 flex items-center px-6 border-b border-white/5">
-                <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center mr-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
@@ -145,7 +145,7 @@ const statCards = [
                 <span class="font-semibold text-white">SSO Admin</span>
             </div>
             <nav class="flex-1 px-3 py-4 space-y-1">
-                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition bg-violet-600/20 text-violet-300">
+                <a href="#" class="flex items-center gap-3 py-2 text-sm font-medium transition border-l-2 border-blue-500 rounded-r-lg pl-[10px] pr-3 text-white">
                     Dashboard
                 </a>
                 <Link href="/admin/users"
@@ -182,7 +182,7 @@ const statCards = [
                         <div v-if="page.props.auth.user?.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
                             <img :src="page.props.auth.user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
                         </div>
-                        <div v-else class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        <div v-else class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
                             {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'A' }}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -227,7 +227,7 @@ const statCards = [
                         + Add Tenant
                     </Link>
                     <Link href="/admin/users?invite=1"
-                          class="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition">
+                          class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition">
                         + Invite User
                     </Link>
                 </div>
@@ -292,7 +292,7 @@ const statCards = [
                                             {{ resending === user.id ? 'Sending…' : 'Resend' }}
                                         </button>
                                         <Link :href="`/admin/users?edit=${user.id}`"
-                                              class="text-xs text-violet-400 hover:text-violet-300 transition">
+                                              class="text-xs text-blue-400 hover:text-blue-300 transition">
                                             Edit
                                         </Link>
                                     </td>
@@ -306,7 +306,7 @@ const statCards = [
                 <div id="tour-admin-health" class="bg-slate-900 border border-white/5 rounded-xl p-5">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-semibold text-white">Tenant Health</h3>
-                        <Link href="/admin/tenants" class="text-xs text-slate-400 hover:text-violet-300 transition">
+                        <Link href="/admin/tenants" class="text-xs text-slate-400 hover:text-blue-300 transition">
                             View all {{ healthSummary.total }} tenants →
                         </Link>
                     </div>
@@ -353,7 +353,7 @@ const statCards = [
                 <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
                     <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
                         <h3 class="font-semibold text-white">Recent Users</h3>
-                        <Link href="/admin/users" class="text-xs text-slate-400 hover:text-violet-300 transition">
+                        <Link href="/admin/users" class="text-xs text-slate-400 hover:text-blue-300 transition">
                             View all →
                         </Link>
                     </div>
@@ -382,7 +382,7 @@ const statCards = [
                                 </td>
                                 <td class="px-6 py-4">
                                     <Link :href="`/admin/users?edit=${user.id}`"
-                                          class="text-violet-400 hover:text-violet-300 text-xs transition">
+                                          class="text-blue-400 hover:text-blue-300 text-xs transition">
                                         Edit
                                     </Link>
                                 </td>
@@ -473,7 +473,7 @@ const statCards = [
                                     <td class="px-6 py-4 text-slate-300 font-medium">{{ t.total }}</td>
                                     <td class="px-6 py-4">
                                         <Link :href="`/admin/tenants/${t.tenant_id}/errors`"
-                                              class="text-violet-400 hover:text-violet-300 text-xs transition">
+                                              class="text-blue-400 hover:text-blue-300 text-xs transition">
                                             View errors →
                                         </Link>
                                     </td>
@@ -491,7 +491,7 @@ const statCards = [
                         <div class="flex items-center gap-3">
                             <h3 class="font-semibold text-white">Report Queue</h3>
                             <span v-if="reportQueue.pending > 0"
-                                  class="bg-violet-500/20 text-violet-300 text-xs px-2 py-0.5 rounded-full">
+                                  class="bg-blue-600/20 text-blue-300 text-xs px-2 py-0.5 rounded-full">
                                 {{ reportQueue.pending }} pending
                             </span>
                             <span v-if="reportQueue.processing > 0"
@@ -533,7 +533,7 @@ const statCards = [
                                     <td class="px-6 py-4 font-medium text-white">{{ t.tenant_name }}</td>
                                     <td class="px-6 py-4">
                                         <span v-if="t.pending"
-                                              class="bg-violet-500/20 text-violet-300 text-xs px-2 py-0.5 rounded-full">
+                                              class="bg-blue-600/20 text-blue-300 text-xs px-2 py-0.5 rounded-full">
                                             {{ t.pending }}
                                         </span>
                                         <span v-else class="text-slate-600">—</span>
@@ -554,7 +554,7 @@ const statCards = [
                                     </td>
                                     <td class="px-6 py-4">
                                         <Link :href="`/admin/tenants/${t.tenant_id}/reports`"
-                                              class="text-violet-400 hover:text-violet-300 text-xs transition">
+                                              class="text-blue-400 hover:text-blue-300 text-xs transition">
                                             View reports →
                                         </Link>
                                     </td>
@@ -619,7 +619,7 @@ const statCards = [
                                     <td class="px-6 py-4">
                                         <button @click="runMigration(t)"
                                                 :disabled="migrating === t.id"
-                                                class="text-xs font-medium text-violet-400 hover:text-violet-300 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                                                class="text-xs font-medium text-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition">
                                             {{ migrating === t.id ? 'Running…' : 'Run migrations' }}
                                         </button>
                                     </td>

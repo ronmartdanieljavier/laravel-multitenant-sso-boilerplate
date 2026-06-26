@@ -608,7 +608,7 @@ What's built:
 - **Tenant switcher (Phase 6.7)** — `TenantSwitcherService` + `TenantSwitcherController` (web) + `TenantSwitcherApiController` (API); `ResolveWebTenantDatabase` middleware for session-based tenant resolution; `TenantSwitcher.vue` dropdown component; `availableTenants` Inertia shared prop; 16 PHPUnit + 27 Vitest tests
 - **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
-- **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
+- **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`; unified `blue-600` / `blue-500` accent system across all pages; 2 px left-edge active nav accent as the design signature element; flat `bg-slate-950` auth pages (no gradients)
 - **Vitest unit tests** — component tests for all four page components
 - **Playwright E2E tests** — browser tests for all four pages against a live Laravel server
 - **GitHub Actions CI** — build, unit test, and E2E test jobs on every push and PR

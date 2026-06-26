@@ -120,19 +120,19 @@ describe('TenantLayout', () => {
     it('highlights the Dashboard link when on the dashboard', async () => {
         const wrapper = await mountLayout({ url: '/tenant' });
         const dashLink = wrapper.findAll('a').find(a => a.attributes('href') === '/tenant');
-        expect(dashLink?.classes().join(' ')).toContain('emerald');
+        expect(dashLink?.classes().join(' ')).toContain('blue-500');
     });
 
     it('highlights the Report Queue link when on the reports page', async () => {
         const wrapper = await mountLayout({ url: '/tenant/reports' });
         const reportsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/tenant/reports');
-        expect(reportsLink?.classes().join(' ')).toContain('emerald');
+        expect(reportsLink?.classes().join(' ')).toContain('blue-500');
     });
 
     it('does not highlight Dashboard when on the reports page', async () => {
         const wrapper = await mountLayout({ url: '/tenant/reports' });
         const dashLink = wrapper.findAll('a').find(a => a.attributes('href') === '/tenant');
-        expect(dashLink?.classes().join(' ')).not.toContain('emerald');
+        expect(dashLink?.classes().join(' ')).not.toContain('border-l-2');
     });
 
     it('renders TenantSwitcher with available tenants', async () => {
@@ -178,18 +178,18 @@ describe('TenantLayout', () => {
     it('highlights the Documents link when on the documents page', async () => {
         const wrapper = await mountLayout({ url: '/documents' });
         const docLink = wrapper.findAll('a').find(a => a.attributes('href') === '/documents');
-        expect(docLink?.classes().join(' ')).toContain('emerald');
+        expect(docLink?.classes().join(' ')).toContain('blue-500');
     });
 
     it('highlights the Error Logs link when on the errors page', async () => {
         const wrapper = await mountLayout({ url: '/tenant/errors' });
         const errLink = wrapper.findAll('a').find(a => a.attributes('href') === '/tenant/errors');
-        expect(errLink?.classes().join(' ')).toContain('emerald');
+        expect(errLink?.classes().join(' ')).toContain('blue-500');
     });
 
     it('does not highlight Dashboard when on the documents page', async () => {
         const wrapper = await mountLayout({ url: '/documents' });
         const dashLink = wrapper.findAll('a').find(a => a.attributes('href') === '/tenant');
-        expect(dashLink?.classes().join(' ')).not.toContain('emerald');
+        expect(dashLink?.classes().join(' ')).not.toContain('border-l-2');
     });
 });

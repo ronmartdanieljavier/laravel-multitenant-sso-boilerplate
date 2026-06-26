@@ -16,7 +16,7 @@ const appIcons = {
 };
 
 const appColors = {
-    admin: 'bg-violet-600',
+    admin: 'bg-blue-700',
     tenant: 'bg-blue-600',
 };
 
@@ -28,45 +28,45 @@ function select(slug) {
 <template>
     <Head title="Choose App" />
 
-    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
+    <div class="min-h-screen bg-slate-950 flex items-center justify-center p-4">
         <div class="w-full max-w-lg">
             <!-- Header -->
-            <div class="text-center mb-10">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-xl mb-5">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                 </div>
-                <h1 class="text-2xl font-semibold text-white">Welcome, {{ user.name }}</h1>
-                <p class="text-slate-400 mt-1">Choose an app to continue</p>
+                <h1 class="text-2xl font-semibold text-white tracking-tight">Welcome, {{ user.name }}</h1>
+                <p class="text-slate-500 mt-1 text-sm">Choose an app to continue</p>
             </div>
 
             <!-- App Cards -->
-            <div :class="apps.length === 1 ? 'grid-cols-1' : 'grid-cols-2'" class="grid gap-4">
+            <div :class="apps.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' : 'grid-cols-2'" class="grid gap-3">
                 <button
                     v-for="app in apps"
                     :key="app.slug"
                     @click="select(app.slug)"
-                    class="group bg-white/5 hover:bg-white/10 backdrop-blur border border-white/10 hover:border-white/20 rounded-2xl p-6 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="group bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-xl p-5 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                    <div :class="appColors[app.slug] ?? 'bg-slate-600'" class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-lg transition group-hover:scale-105">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" v-html="appIcons[app.slug] ?? appIcons.tenant" />
+                    <div :class="appColors[app.slug] ?? 'bg-slate-700'" class="w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition group-hover:scale-105">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" v-html="appIcons[app.slug] ?? appIcons.tenant" />
                     </div>
-                    <h2 class="text-white font-semibold text-lg">{{ app.name }}</h2>
-                    <p class="text-slate-400 text-sm mt-1 capitalize">{{ app.role }}</p>
-                    <div class="flex items-center gap-1 mt-4 text-blue-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition">
+                    <h2 class="text-white font-medium text-base">{{ app.name }}</h2>
+                    <p class="text-slate-500 text-xs mt-0.5 capitalize">{{ app.role }}</p>
+                    <div class="flex items-center gap-1 mt-4 text-blue-400 text-xs font-medium opacity-0 group-hover:opacity-100 transition">
                         Open
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </div>
                 </button>
             </div>
 
-            <p class="text-center text-slate-500 text-sm mt-8">
-                Signed in as <span class="text-slate-400">{{ user.email }}</span>
+            <p class="text-center text-slate-600 text-xs mt-7">
+                Signed in as <span class="text-slate-500">{{ user.email }}</span>
                 &mdash;
-                <button @click="router.post('/logout')" class="text-slate-400 hover:text-white underline transition">Sign out</button>
+                <button @click="router.post('/logout')" class="text-slate-500 hover:text-slate-300 underline transition">Sign out</button>
             </p>
         </div>
     </div>

@@ -4,7 +4,9 @@ namespace App\Documents\Tests;
 
 use App\Admin\Services\TenantSettingsService;
 use App\Documents\Data\DocumentData;
+use App\Documents\Enums\DocumentSource;
 use App\Documents\Services\DocumentService;
+use App\Models\Central\Report;
 use App\Models\Central\User;
 use App\Models\Tenant\Document;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -55,6 +57,7 @@ class DocumentServiceTest extends TestCase
                 'mime_type' => 'application/pdf',
                 'uploaded_by_user_id' => 1,
                 'uploaded_by_name' => 'Alice',
+                'source' => DocumentSource::Upload->value,
             ]);
         }
 
@@ -77,6 +80,7 @@ class DocumentServiceTest extends TestCase
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => 1,
             'uploaded_by_name' => 'Alice',
+            'source' => DocumentSource::Upload->value,
         ]);
 
         $result = $this->service->list();
@@ -97,6 +101,7 @@ class DocumentServiceTest extends TestCase
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => 1,
             'uploaded_by_name' => 'Bob',
+            'source' => DocumentSource::Upload->value,
         ]);
 
         $result = $this->service->find($document->id);
@@ -141,6 +146,7 @@ class DocumentServiceTest extends TestCase
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => 1,
             'uploaded_by_name' => 'Eve',
+            'source' => DocumentSource::Upload->value,
         ]);
 
         $response = $this->service->downloadResponse($document->id, 1);
@@ -167,11 +173,120 @@ class DocumentServiceTest extends TestCase
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => 1,
             'uploaded_by_name' => 'Dave',
+            'source' => DocumentSource::Upload->value,
         ]);
 
         $this->service->delete($document->id, 1);
 
         $this->assertDatabaseMissing('documents', ['id' => $document->id], 'tenant');
         $this->fakeDisk->assertMissing('documents/acme/del.pdf');
+    }
+
+    public function test_store_sets_source_as_upload(): void
+    {
+        $user = User::factory()->create(['name' => 'Carol']);
+        $file = UploadedFile::fake()->create('report.pdf', 512, 'application/pdf');
+
+        $result = $this->service->store(
+            title: 'Upload Source Test',
+            description: null,
+            file: $file,
+            userId: $user->id,
+            userName: $user->name,
+            tenantSlug: 'acme',
+            tenantId: 1,
+        );
+
+        $this->assertSame(DocumentSource::Upload, $result->source);
+        $this->assertDatabaseHas('documents', ['title' => 'Upload Source Test', 'source' => 'upload'], 'tenant');
+    }
+
+    public function test_create_from_report_creates_document_with_report_source(): void
+    {
+        Storage::fake('reports');
+
+        $user = User::factory()->create(['name' => 'Bob']);
+        $report = Report::factory()->pdf()->success()->create([
+            'user_id' => $user->id,
+            'file_path' => 'demo/reports/report_test.pdf',
+        ]);
+        Storage::disk('reports')->put('demo/reports/report_test.pdf', 'pdf-content');
+
+        $result = $this->service->createFromReport($report);
+
+        $this->assertInstanceOf(DocumentData::class, $result);
+        $this->assertSame(DocumentSource::Report, $result->source);
+        $this->assertSame('report_test.pdf', $result->fileName);
+        $this->assertDatabaseHas('documents', [
+            'source' => 'report',
+            'file_path' => 'demo/reports/report_test.pdf',
+            'uploaded_by_user_id' => $user->id,
+        ], 'tenant');
+    }
+
+    public function test_create_from_report_uses_report_type_as_title(): void
+    {
+        Storage::fake('reports');
+
+        $user = User::factory()->create();
+        $report = Report::factory()->pdf()->success()->create([
+            'user_id' => $user->id,
+            'type' => 'documents_summary',
+            'file_path' => 'demo/reports/report_abc.pdf',
+        ]);
+        Storage::disk('reports')->put('demo/reports/report_abc.pdf', 'pdf-content');
+
+        $result = $this->service->createFromReport($report);
+
+        $this->assertSame('Documents Summary Report', $result->title);
+    }
+
+    public function test_download_response_for_report_document_uses_reports_disk(): void
+    {
+        Storage::fake('reports');
+        Storage::disk('reports')->put('demo/reports/report.pdf', 'pdf-content');
+
+        $document = Document::on('tenant')->create([
+            'title' => 'Report Document',
+            'description' => null,
+            'file_path' => 'demo/reports/report.pdf',
+            'file_name' => 'report.pdf',
+            'file_size' => 11,
+            'mime_type' => 'application/pdf',
+            'uploaded_by_user_id' => 1,
+            'uploaded_by_name' => 'System',
+            'source' => DocumentSource::Report->value,
+        ]);
+
+        $response = $this->service->downloadResponse($document->id, 1);
+
+        $this->assertInstanceOf(StreamedResponse::class, $response);
+    }
+
+    public function test_download_response_for_upload_document_uses_tenant_disk(): void
+    {
+        $this->fakeDisk->put('acme/documents/uploaded.pdf', 'pdf-content');
+
+        $document = Document::on('tenant')->create([
+            'title' => 'Uploaded Document',
+            'description' => null,
+            'file_path' => 'acme/documents/uploaded.pdf',
+            'file_name' => 'uploaded.pdf',
+            'file_size' => 11,
+            'mime_type' => 'application/pdf',
+            'uploaded_by_user_id' => 1,
+            'uploaded_by_name' => 'Alice',
+            'source' => DocumentSource::Upload->value,
+        ]);
+
+        $response = $this->service->downloadResponse($document->id, 1);
+
+        $this->assertThat(
+            $response,
+            $this->logicalOr(
+                $this->isInstanceOf(StreamedResponse::class),
+                $this->isInstanceOf(RedirectResponse::class),
+            )
+        );
     }
 }

@@ -4,6 +4,7 @@ namespace App\Documents\Tests;
 
 use App\Admin\Services\TenantSettingsService;
 use App\Auth\Enums\Role;
+use App\Documents\Enums\DocumentSource;
 use App\Models\Central\App;
 use App\Models\Central\Tenant;
 use App\Models\Central\User;
@@ -103,6 +104,7 @@ class DocumentApiTest extends TestCase
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => $this->user->id,
             'uploaded_by_name' => $this->user->name,
+            'source' => DocumentSource::Upload->value,
         ]);
 
         $this->withToken($this->token())
@@ -110,7 +112,7 @@ class DocumentApiTest extends TestCase
             ->getJson('/api/v1/documents')
             ->assertOk()
             ->assertJsonStructure([
-                'data' => [['id', 'title', 'file_name', 'file_size', 'mime_type', 'uploaded_by_name', 'created_at']],
+                'data' => [['id', 'title', 'file_name', 'file_size', 'mime_type', 'uploaded_by_name', 'source', 'created_at']],
                 'current_page',
                 'total',
                 'per_page',
@@ -204,6 +206,7 @@ class DocumentApiTest extends TestCase
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => $this->user->id,
             'uploaded_by_name' => $this->user->name,
+            'source' => DocumentSource::Upload->value,
         ]);
 
         $this->withToken($this->token())
@@ -235,5 +238,38 @@ class DocumentApiTest extends TestCase
             ->assertJsonPath('message', 'Document deleted.');
 
         $this->assertDatabaseMissing('documents', ['id' => $document->id], 'tenant');
+    }
+
+    public function test_store_document_source_is_upload(): void
+    {
+        $this->withToken($this->token())
+            ->withHeaders($this->apiHeaders())
+            ->post('/api/v1/documents', [
+                'title' => 'Source Check',
+                'file' => UploadedFile::fake()->create('check.pdf', 128, 'application/pdf'),
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.source', 'upload');
+    }
+
+    public function test_index_includes_source_in_document_data(): void
+    {
+        Document::on('tenant')->create([
+            'title' => 'Report Generated',
+            'description' => null,
+            'file_path' => 'demo/reports/r.pdf',
+            'file_name' => 'r.pdf',
+            'file_size' => 512,
+            'mime_type' => 'application/pdf',
+            'uploaded_by_user_id' => $this->user->id,
+            'uploaded_by_name' => $this->user->name,
+            'source' => DocumentSource::Report->value,
+        ]);
+
+        $this->withToken($this->token())
+            ->withHeaders($this->apiHeaders())
+            ->getJson('/api/v1/documents')
+            ->assertOk()
+            ->assertJsonPath('data.0.source', 'report');
     }
 }

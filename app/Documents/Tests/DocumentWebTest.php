@@ -4,6 +4,7 @@ namespace App\Documents\Tests;
 
 use App\Admin\Services\TenantSettingsService;
 use App\Auth\Enums\Role;
+use App\Documents\Enums\DocumentSource;
 use App\Models\Central\App;
 use App\Models\Central\Tenant;
 use App\Models\Central\User;
@@ -98,6 +99,7 @@ class DocumentWebTest extends TestCase
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => $this->user->id,
             'uploaded_by_name' => $this->user->name,
+            'source' => DocumentSource::Upload->value,
         ]);
 
         $this->actingAs($this->user)
@@ -123,6 +125,7 @@ class DocumentWebTest extends TestCase
                 'mime_type' => 'application/pdf',
                 'uploaded_by_user_id' => $this->user->id,
                 'uploaded_by_name' => $this->user->name,
+                'source' => DocumentSource::Upload->value,
             ]);
         }
 
@@ -243,6 +246,7 @@ class DocumentWebTest extends TestCase
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => $this->user->id,
             'uploaded_by_name' => $this->user->name,
+            'source' => DocumentSource::Upload->value,
         ]);
 
         $this->actingAs($this->user)
@@ -251,5 +255,43 @@ class DocumentWebTest extends TestCase
             ->assertSessionHas('success', 'Document deleted.');
 
         $this->assertDatabaseMissing('documents', ['id' => $document->id], 'tenant');
+    }
+
+    public function test_documents_include_source_field_in_response(): void
+    {
+        Document::on('tenant')->create([
+            'title' => 'Report Doc',
+            'description' => null,
+            'file_path' => 'demo/reports/report.pdf',
+            'file_name' => 'report.pdf',
+            'file_size' => 1024,
+            'mime_type' => 'application/pdf',
+            'uploaded_by_user_id' => $this->user->id,
+            'uploaded_by_name' => $this->user->name,
+            'source' => DocumentSource::Report->value,
+        ]);
+
+        $this->actingAs($this->user)
+            ->get('/documents')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Documents/Index')
+                ->where('documents.data.0.source', 'report')
+            );
+    }
+
+    public function test_uploaded_document_source_defaults_to_upload(): void
+    {
+        $this->actingAs($this->user)
+            ->post('/documents', [
+                'title' => 'Sourced Upload',
+                'file' => UploadedFile::fake()->create('doc.pdf', 128, 'application/pdf'),
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('documents', [
+            'title' => 'Sourced Upload',
+            'source' => 'upload',
+        ], 'tenant');
     }
 }

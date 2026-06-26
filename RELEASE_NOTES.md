@@ -2,6 +2,70 @@
 
 ---
 
+## [2.27.0] — 2026-06-26
+
+### Added
+
+- **Tenant report queue enhancements — Phase 6.4** — the tenant report portal at `/tenant/reports` gains a "Generate Report" quick-action button that opens a modal for selecting report type and format (`screen` / `pdf` / `excel`) and dispatches a `GenerateReportJob` immediately, honouring the tenant's configured queue, timeout, and Redis connection from tenant settings. Failed reports gain a **Retry** button that resets status to `pending`, clears error state, and re-queues the job; a `403` is returned if the report belongs to a different tenant. Subscription management UI lets tenant users create, pause/resume, and delete their scheduled report subscriptions directly in the portal.
+
+  **Backend**
+
+  - `app/Reports/Http/Controllers/TenantReportQueueController.php` — `quickDispatch(QuickReportRequest)` and `retry(Request, string $reportId)` actions added; `index()` now passes `subscriptions` prop; constructor receives `TenantReportSubscriptionService` and `TenantSettingsService`
+  - `app/Reports/Http/Controllers/TenantReportQueueApiController.php` — `quickDispatch` (201 JSON) and `retry` (200 JSON / 403) added; uses `TenantSettingsService` for queue config
+  - `app/Reports/Http/Controllers/TenantReportSubscriptionController.php` — `store`, `toggle`, `destroy` web actions; redirects back with flash success
+  - `app/Reports/Http/Requests/QuickReportRequest.php` — validates `type` (required string) and `format` (required `ReportFormat` enum)
+  - `app/Reports/Services/TenantReportSubscriptionService.php` — `list()`, `create()`, `toggleActive()`, `delete()` over `ReportSubscription::on('tenant')`
+  - `app/Reports/Data/ReportSubscriptionData.php` — Spatie Data DTO for subscription records
+  - `app/Repositories/Central/ReportRepository.php` — `resetForRetry(string $id): ReportRepositoryData` resets `status`, `error_message`, `started_at`, `completed_at`
+  - `app/Tenant/Routes/web_tenant.php` — `POST /tenant/reports/quick`, `POST /tenant/reports/{reportId}/retry`, `GET /tenant/reports/{report}/download`, subscription CRUD routes
+  - `app/Tenant/Routes/api_tenant.php` — `POST /api/v1/tenant/reports/quick`, `POST /api/v1/tenant/reports/{reportId}/retry`
+
+- **Document source tracking** — every document record now carries a `source` field identifying its origin.
+
+  - `app/Documents/Enums/DocumentSource.php` — `Upload`, `Report`, `Subscription` backed by string values `upload`, `report`, `subscription`
+  - Migration `2026_06_26_064112_add_source_to_documents_table.php` — adds `source` string column (default `upload`) to the tenant `documents` table
+  - `app/Models/Tenant/Document.php` — `source` added to `$fillable`; cast to `DocumentSource` enum
+  - `app/Data/Repositories/Central/DocumentRepositoryData.php` — `source: DocumentSource` property added
+  - `app/Documents/Data/DocumentData.php` — `source: DocumentSource` property added
+  - `app/Documents/Services/DocumentService.php` — `store()` explicitly passes `source: upload`; new `createFromReport(Report $report): DocumentData` creates a document record from an already-stored report file (reads file size from `Storage::disk('reports')`, derives MIME from extension, derives title from report type); `downloadResponse()` routes `source === report` documents through `Storage::disk('reports')` instead of the tenant's configured disk
+  - `database/factories/Documents/DocumentFactory.php` — `source` defaulted to `upload`
+
+- **Auto-register report files as Documents** — `GenerateReportJob` calls `DocumentService::createFromReport()` after a successful PDF or Excel generation. The job configures the tenant DB connection (same driver-aware logic as the middleware) before writing the document record, so the tenant's `documents` table is populated automatically without any user action.
+
+  - `app/Reports/Jobs/GenerateReportJob.php` — `registerDocument(Report $report)` private method; `configureTenantConnection(Tenant $tenant)` private method mirrors middleware connection logic; only runs for `pdf` / `excel` formats with a non-null `tenant_id`
+
+- **Dedicated `reports` filesystem disk** — a new `reports` disk added to `config/filesystems.php` with `root => storage_path('app')` fixes download 404s caused by the Laravel 11 `local` disk root change to `storage/app/private/`. All report file operations (`PdfReportGenerator`, `ExcelReportGenerator`, `ReportFileService`, `ReportController`) now use `Storage::disk('reports')`.
+
+- **Tenant PDF header/footer** — `PdfReportGenerator` now injects `TenantSettingsService`, reads `reportPdfHeaderText` and `reportPdfFooterText` for the report's tenant, and passes them to `resources/views/reports/pdf.blade.php` as `$headerText` / `$footerText`. The Blade view renders them using `{!! !!}` so HTML tags in the stored settings are executed rather than escaped.
+
+- **Container-resolved report generators** — `ReportGeneratorFactory` replaced manual `new GeneratorClass($report)` with `app()->make($class, ['report' => $report])` so Laravel's container resolves constructor dependencies automatically for all generator classes.
+
+- **Tenant-scoped storage paths** — documents are stored under `{slug}/documents/` and report files under `{slug}/reports/` (previously `documents/{slug}` and `reports/{userId}`). `ReportFileService::prefix(Report $report)` is a new static method that centralises path computation for all generators and the batch job.
+
+  **Frontend**
+
+  - `resources/js/Pages/Tenant/ReportQueue.vue` — "Generate Report" modal with type select and format radio buttons; subscription management panel with active/paused badges, Pause/Resume/Delete actions, and a create-subscription modal; Retry button visible only on `failed` rows; download link points to `/tenant/reports/{id}/download` (session-auth web route); all paths hardcoded (no `route()` helper — Ziggy not installed)
+  - `resources/js/Pages/Documents/Index.vue` — "Source" column added to the document table; `sourceLabel()` / `sourceClass()` helpers return human-readable label and CSS class per source value; badges: **User Upload** (slate), **Report** (blue), **Subscription** (purple)
+
+  **Tests**
+
+  - `tests/Feature/Reports/TenantReportQueueWebTest.php` — quick dispatch creates report and queues job, validates required fields and format enum, returns flash success, unauthenticated rejected; retry resets failed report, cross-tenant 403, `subscriptions` prop present on index
+  - `tests/Feature/Reports/TenantReportQueueApiTest.php` — quick dispatch 201 with report DTO, validation 422, retry 200 / cross-tenant 403
+  - `tests/Feature/Reports/ReportDownloadTest.php` — updated to fake `reports` disk; asserts 200 OK
+  - `app/Documents/Tests/DocumentServiceTest.php` — 5 new tests: store sets `upload` source, `createFromReport` returns `DocumentData` with `report` source and correct `fileName`, title derived from report type, download for report document uses `reports` disk, download for upload document uses tenant disk
+  - `app/Documents/Tests/DocumentWebTest.php` — 2 new tests: `source` field present in Inertia page data, uploaded document `source` defaults to `upload` in DB
+  - `app/Documents/Tests/DocumentApiTest.php` — 2 new tests: store response includes `source: upload`, index returns `source` per document; `assertJsonStructure` updated to include `source`
+  - `resources/js/Pages/Documents/Index.test.js` — 20 new Vitest tests covering: empty state, document rows, source badge label and CSS class for all 3 sources, download link href, delete confirmation (confirm / cancel), file name/title/size display, total count, pagination visibility
+
+  **Postman**
+
+  - "Tenant Report Queue (API)" folder gains two new requests:
+    - `POST /api/v1/tenant/reports/quick` (Quick Dispatch Report) — Bearer + `X-App: tenant` + `X-Tenant: {{tenant_slug}}`; JSON body `{ "type": "documents_summary", "format": "pdf" }`; 201 response example with pending report DTO
+    - `POST /api/v1/tenant/reports/{{report_id}}/retry` (Retry Failed Report) — 200 response example with reset report DTO; 403 example for cross-tenant access
+  - "Documents (API)" folder description updated to note the new `source` field
+
+---
+
 ## [2.26.0] — 2026-06-26
 
 ### Added

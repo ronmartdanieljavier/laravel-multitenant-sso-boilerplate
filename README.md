@@ -389,7 +389,7 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── create_user_app_tenants_table.php
 │   │   │   ├── create_system_settings_table.php
 │   │   │   └── create_reports_table.php
-│   │   └── tenant/                         # Per-tenant migrations (companies, properties, floors, units, leases, lease_documents, lease_renewals)
+│   │   └── tenant/                         # Per-tenant migrations (report_subscriptions only; cleaned up in Phase 6.1)
 │   └── seeders/
 │       ├── DatabaseSeeder.php
 │       └── TenantSeeder.php
@@ -1073,9 +1073,9 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 
 Phase 6 makes every per-tenant setting configured in Phase 5.7 visible and functional inside the tenant portal. The existing `tenant/` migrations (except `report_subscriptions`) are removed so the tenant database schema starts clean; all tenant-facing data lives through the layered `Controller → Service → Repository → Model` architecture. A fully-featured **Documents** module serves as the canonical sample demonstrating every tenant capability end-to-end.
 
-*6.1 — Tenant migration clean-up*
-- [ ] Remove all existing `database/migrations/tenant/` files except `create_report_subscriptions_table.php`
-- [ ] Re-run `php artisan tenant:migrate --fresh` to apply the clean schema to all tenant databases
+*6.1 — Tenant migration clean-up* *(done)*
+- [x] Remove all existing `database/migrations/tenant/` files except `create_report_subscriptions_table.php`
+- [x] Re-run `php artisan tenant:migrate --fresh` to apply the clean schema to all tenant databases
 
 *6.2 — Documents module (sample tenant feature)*
 - [ ] New `app/Documents/` module following the standard module structure (`Data/`, `Http/Controllers/`, `Http/Requests/`, `Routes/`, `Services/`, `Tests/`)

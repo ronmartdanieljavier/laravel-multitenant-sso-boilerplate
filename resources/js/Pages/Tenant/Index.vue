@@ -54,7 +54,7 @@ const colorMap = {
 <template>
     <Head title="Dashboard" />
 
-    <main class="flex-1 px-8 py-10 max-w-5xl">
+    <main class="flex-1 px-8 py-10">
         <!-- Welcome -->
         <div id="tour-welcome" class="mb-10">
             <h1 class="text-2xl font-bold text-white">{{ greeting() }}, {{ user?.name?.split(' ')[0] ?? 'there' }} 👋</h1>

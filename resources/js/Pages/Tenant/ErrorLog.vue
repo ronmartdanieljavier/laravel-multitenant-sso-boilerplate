@@ -43,7 +43,7 @@ function copyCode() {
 <template>
     <Head :title="`${log.error_code} — Error Detail`" />
 
-    <main class="flex-1 px-8 py-10 max-w-4xl">
+    <main class="flex-1 px-8 py-10">
         <div v-if="flash.success" class="mb-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg px-4 py-3 text-sm">
             {{ flash.success }}
         </div>

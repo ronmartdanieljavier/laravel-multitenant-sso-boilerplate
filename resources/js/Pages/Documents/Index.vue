@@ -26,17 +26,21 @@ const uploadForm = useForm({
     file: null,
 });
 
+const showUploadModal = ref(false);
 const fileInput = ref(null);
 const selectedFileName = ref(null);
+
+function closeUploadModal() {
+    showUploadModal.value = false;
+    uploadForm.reset();
+    selectedFileName.value = null;
+    if (fileInput.value) { fileInput.value.value = ''; }
+}
 
 function submitUpload() {
     uploadForm.post('/documents', {
         preserveScroll: true,
-        onSuccess: () => {
-            uploadForm.reset();
-            selectedFileName.value = null;
-            if (fileInput.value) { fileInput.value.value = ''; }
-        },
+        onSuccess: () => closeUploadModal(),
     });
 }
 
@@ -122,28 +126,84 @@ function sourceLabel(source) {
 function sourceClass(source) {
     return SOURCE_CLASSES[source] ?? 'bg-slate-700 text-slate-300';
 }
+
+const FILE_ICON_CONFIG = {
+    pdf: {
+        color: 'text-red-400',
+        bg: 'bg-red-500/10',
+        path: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+    },
+    word: {
+        color: 'text-blue-400',
+        bg: 'bg-blue-500/10',
+        path: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+    },
+    excel: {
+        color: 'text-emerald-400',
+        bg: 'bg-emerald-500/10',
+        path: 'M3 10h18M3 14h18M10 3v18M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z',
+    },
+    image: {
+        color: 'text-purple-400',
+        bg: 'bg-purple-500/10',
+        path: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
+    },
+    csv: {
+        color: 'text-amber-400',
+        bg: 'bg-amber-500/10',
+        path: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    },
+    text: {
+        color: 'text-slate-300',
+        bg: 'bg-slate-700/50',
+        path: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    },
+    default: {
+        color: 'text-slate-400',
+        bg: 'bg-slate-800',
+        path: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+    },
+};
+
+function fileIconConfig(mimeType) {
+    if (!mimeType) { return FILE_ICON_CONFIG.default; }
+    if (mimeType === 'application/pdf') { return FILE_ICON_CONFIG.pdf; }
+    if (mimeType.includes('word') || mimeType.includes('msword') || mimeType.includes('opendocument.text')) { return FILE_ICON_CONFIG.word; }
+    if (mimeType === 'text/csv') { return FILE_ICON_CONFIG.csv; }
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) { return FILE_ICON_CONFIG.excel; }
+    if (mimeType.startsWith('image/')) { return FILE_ICON_CONFIG.image; }
+    if (mimeType.startsWith('text/')) { return FILE_ICON_CONFIG.text; }
+    return FILE_ICON_CONFIG.default;
+}
 </script>
 
 <template>
     <Head title="Documents" />
 
-    <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center px-8">
+    <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
         <h2 class="text-lg font-semibold">Documents</h2>
+        <button
+            @click="showUploadModal = true"
+            class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+        >
+            Upload Document
+        </button>
     </header>
 
-    <main class="p-8 space-y-6 max-w-6xl">
-
-        <!-- Flash -->
-        <div v-if="$page.props.flash?.success"
-             class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm px-4 py-3 rounded-xl">
-            {{ $page.props.flash.success }}
-        </div>
-
-        <!-- Upload -->
-        <section class="bg-slate-900 border border-white/5 rounded-xl p-6">
-            <h3 class="font-semibold text-white mb-4">Upload Document</h3>
-            <form @submit.prevent="submitUpload" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+    <!-- Upload Modal -->
+    <Teleport to="body">
+        <div v-if="showUploadModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeUploadModal" />
+            <div class="relative bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-xl">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="font-semibold text-white">Upload Document</h3>
+                    <button @click="closeUploadModal" class="text-slate-400 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form @submit.prevent="submitUpload" class="space-y-4">
                     <div>
                         <label class="block text-sm text-slate-400 mb-1.5">Title</label>
                         <input
@@ -153,6 +213,16 @@ function sourceClass(source) {
                             placeholder="Document title"
                         />
                         <p v-if="uploadForm.errors.title" class="text-red-400 text-xs mt-1">{{ uploadForm.errors.title }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1.5">Description <span class="text-slate-600">(optional)</span></label>
+                        <input
+                            v-model="uploadForm.description"
+                            type="text"
+                            class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 transition"
+                            placeholder="Brief description…"
+                        />
+                        <p v-if="uploadForm.errors.description" class="text-red-400 text-xs mt-1">{{ uploadForm.errors.description }}</p>
                     </div>
                     <div>
                         <label class="block text-sm text-slate-400 mb-1.5">File</label>
@@ -170,26 +240,34 @@ function sourceClass(source) {
                         <p class="text-xs text-slate-500 mt-1">{{ allowedHint }}</p>
                         <p v-if="uploadForm.errors.file" class="text-red-400 text-xs mt-1">{{ uploadForm.errors.file }}</p>
                     </div>
-                </div>
-                <div>
-                    <label class="block text-sm text-slate-400 mb-1.5">Description <span class="text-slate-600">(optional)</span></label>
-                    <input
-                        v-model="uploadForm.description"
-                        type="text"
-                        class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 transition"
-                        placeholder="Brief description…"
-                    />
-                    <p v-if="uploadForm.errors.description" class="text-red-400 text-xs mt-1">{{ uploadForm.errors.description }}</p>
-                </div>
-                <button
-                    type="submit"
-                    :disabled="uploadForm.processing || !uploadForm.file || !uploadForm.title"
-                    class="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
-                >
-                    {{ uploadForm.processing ? 'Uploading…' : 'Upload' }}
-                </button>
-            </form>
-        </section>
+                    <div class="flex justify-end gap-3 pt-1">
+                        <button
+                            type="button"
+                            @click="closeUploadModal"
+                            class="text-slate-400 hover:text-white text-sm px-4 py-2 rounded-lg hover:bg-white/5 transition"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="uploadForm.processing || !uploadForm.file || !uploadForm.title"
+                            class="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+                        >
+                            {{ uploadForm.processing ? 'Uploading…' : 'Upload' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </Teleport>
+
+    <main class="p-8 space-y-6">
+
+        <!-- Flash -->
+        <div v-if="$page.props.flash?.success"
+             class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm px-4 py-3 rounded-xl">
+            {{ $page.props.flash.success }}
+        </div>
 
         <!-- Document Table -->
         <section class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
@@ -219,9 +297,9 @@ function sourceClass(source) {
                         <tr v-for="doc in documents.data" :key="doc.id" class="hover:bg-white/[0.02] transition">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center shrink-0">
-                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    <div :class="['w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center shrink-0', fileIconConfig(doc.mime_type).bg]">
+                                        <svg :class="['w-4 h-4', fileIconConfig(doc.mime_type).color]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="fileIconConfig(doc.mime_type).path" />
                                         </svg>
                                     </div>
                                     <span class="text-white font-medium truncate max-w-[200px]">{{ doc.file_name }}</span>

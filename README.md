@@ -19,7 +19,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 | **Admin — Tenant Reports** | `/admin/tenants/{t}/reports` `/api/v1/admin/tenants/{t}/reports` | Admin | Admin view of any tenant's report job queue (status, format, user, duration) |
 | **Admin — Tenant Errors** | `/admin/tenants/{t}/errors` `/api/v1/admin/tenants/{t}/errors` | Admin | Per-tenant exception log: list, filter, detail with stack trace, resolve/reopen, delete; global error-code lookup |
 | **Admin — System Settings** | `/admin/settings` `/api/v1/admin/settings` | Admin | Seven-tab system config: Email, SMS, Push, Storage, Authentication, Security, Branding; amber banner when required settings are unset |
-| **Tenant (Web)** | `/tenant` `/tenant/reports` | Session | Persistent sidebar portal — dashboard and report queue with live 4 s polling |
+| **Tenant (Web)** | `/tenant` `/tenant/reports` `/tenant/documents` `/tenant/errors` | Session | Persistent sidebar portal — dashboard, report queue, document manager, and error log |
 | **Reports (API)** | `/api/v1/reports` | Bearer + X-App + X-Tenant | Dispatch single and batch report jobs; poll status; download files; manage scheduled subscriptions (daily/weekly/monthly, email/S3 delivery) |
 | **Profile (API)** | `/api/v1/profile` | Bearer | Update display name, upload profile picture, change password |
 | **Profile (Web)** | `/profile` | Session | Same self-service actions via Inertia |
@@ -963,7 +963,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Demo Tenant seeded automatically in central migration with encrypted credentials
 - [x] Tenant migrations run against isolated `tenant_demo` database (not central)
 
-**Phase 3 — Frontend & multi-tenancy** *(in progress)*
+**Phase 3 — Frontend & multi-tenancy** *(done)*
 - [x] Inertia.js + Vue 3 installed and configured
 - [x] Landing pages for Login, Admin, Tenant, and Reports modules
 - [x] Vitest unit tests for all four page components
@@ -981,7 +981,7 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Per-tenant scheduled report subscriptions (email/S3 delivery)
 - [x] Tenant health dashboard in admin
 
-**Phase 5 — Authentication UX & admin management** *(in progress)*
+**Phase 5 — Authentication UX & admin management** *(done)*
 
 *5.1 — Authentication flow* *(done)*
 - [x] Authenticated users visiting `/login` are redirected — to `/apps` if they have multiple app accesses, or directly to their app dashboard if they have only one
@@ -1068,6 +1068,55 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] **API parity** — `DELETE /api/v1/admin/tenants/{tenant}/users/{user}/session` via `TenantUsersApiController::forceLogout()`
 - [x] **Tests** — backend: 6 new `TenantUsersWebTest`, 6 new `TenantUsersApiTest`, 1 new `TenantManagementWebTest`; frontend: 10 new Vitest cases in `Index.test.js`
 - [x] **Postman** — `is_logged_in` added to List Users example; Force Logout User request documented with 200/401/404 responses
+
+**Phase 6 — Tenant app & tenant settings integration** *(planned)*
+
+Phase 6 makes every per-tenant setting configured in Phase 5.7 visible and functional inside the tenant portal. The existing `tenant/` migrations (except `report_subscriptions`) are removed so the tenant database schema starts clean; all tenant-facing data lives through the layered `Controller → Service → Repository → Model` architecture. A fully-featured **Documents** module serves as the canonical sample demonstrating every tenant capability end-to-end.
+
+*6.1 — Tenant migration clean-up*
+- [ ] Remove all existing `database/migrations/tenant/` files except `create_report_subscriptions_table.php`
+- [ ] Re-run `php artisan tenant:migrate --fresh` to apply the clean schema to all tenant databases
+
+*6.2 — Documents module (sample tenant feature)*
+- [ ] New `app/Documents/` module following the standard module structure (`Data/`, `Http/Controllers/`, `Http/Requests/`, `Routes/`, `Services/`, `Tests/`)
+- [ ] **Upload documents** — users upload files through the tenant portal; files are stored on the tenant's configured storage disk (falls back to system default via `TenantSettingsService::resolveS3Config()`); metadata persisted to the `documents` tenant table
+- [ ] **Document list** — paginated list with file name, size, upload date, uploader name, and a per-row download button
+- [ ] **Multi-select + ZIP download** — checkboxes on the document list; selecting two or more documents enables a "Download as ZIP" button; `ReportFileService::zip()` packages the selected files; ZIP streamed directly to the browser
+- [ ] **Generate PDF report** — "Generate PDF" button on the document list dispatches a `GenerateReportJob` (format `pdf`, delivery `download`); the PDF is compiled with the tenant's configured header, footer, and logo from `TenantSettingsService`; stored on the tenant's resolved storage disk; the generated file appears in the report queue and is downloadable once complete
+- [ ] **Web routes** — `GET|POST /tenant/documents`, `GET /tenant/documents/{id}/download`, `POST /tenant/documents/zip`, `DELETE /tenant/documents/{id}` (session auth, `ResolveTenantWeb` middleware)
+- [ ] **API parity** — `GET|POST /api/v1/tenant/documents`, `GET /api/v1/tenant/documents/{id}/download`, `POST /api/v1/tenant/documents/zip`, `DELETE /api/v1/tenant/documents/{id}` (Bearer + `X-App` + `X-Tenant` headers, `ResolveTenantDatabase` middleware); responses follow `{ data: {...} }` / `{ data: [...] }` envelope
+- [ ] **Tests** — `DocumentsWebTest`, `DocumentsApiTest`, `DocumentsServiceTest` covering upload, list, download, ZIP, and PDF dispatch
+
+*6.3 — Tenant error log portal view*
+- [ ] New page at `/tenant/errors` — tenant users view error logs for their active tenant; stack traces hidden for non-admin users; admins see full detail
+- [ ] Error list with severity badge, error code, short message, and timestamp; click-through to a detail view at `/tenant/errors/{id}`
+- [ ] **Web routes** — `GET /tenant/errors`, `GET /tenant/errors/{id}` (session auth, `ResolveTenantWeb` middleware)
+- [ ] **API parity** — `GET /api/v1/tenant/errors`, `GET /api/v1/tenant/errors/{id}` (Bearer + `X-App` + `X-Tenant` headers); responses follow `{ data: [...] }` / `{ data: {...} }` envelope
+- [ ] **Tests** — `TenantErrorPortalWebTest`, `TenantErrorPortalApiTest` covering list, detail, auth guard, and stack-trace visibility by role
+
+*6.4 — Tenant report queue enhancements*
+- [ ] Report queue page (`/tenant/reports`) gains a "Generate Report" quick-action button to dispatch a sample report job without leaving the portal
+- [ ] Report type and format selectable from a modal (type: `documents_summary`; format: `screen` / `pdf` / `excel`); dispatched via `GenerateReportJob` honouring tenant queue/timeout/Redis settings
+- [ ] Subscription management UI — create, pause, and delete scheduled report subscriptions directly in the tenant portal
+- [ ] **API parity** — `POST /api/v1/tenant/reports/quick` dispatches a quick report job; `GET|POST|PUT|DELETE /api/v1/reports/subscriptions` already exists from Phase 4 and is surfaced in the UI
+
+*6.5 — Tenant portal navigation update*
+- [ ] `TenantLayout.vue` sidebar updated — adds **Documents** and **Errors** nav items alongside Dashboard and Report Queue
+- [ ] Guided page tours added for Documents and Errors pages (driver.js, `useTour` composable)
+
+*6.6 — Sample report seed migration*
+- [ ] New central migration `seed_sample_reports` inserts sample `Report` records tied to the default admin user and the Demo Tenant so the queue is pre-populated on a fresh install
+- [ ] Two individual reports (one `screen`, one `pdf` format, delivery `download`) are inserted as `pending` and dispatched to Horizon immediately — demonstrating single-job queue flow and PDF regeneration once the PDF package is installed
+- [ ] Two additional reports sharing the same `batch_id` are inserted and dispatched together — demonstrating batch dispatch, parallel processing, and ZIP download on completion
+- [ ] All four reports use `delivery: download` so they appear on the tenant report queue page and can be re-dispatched from the UI
+
+*6.7 — Tenant switcher (multi-tenant access)*
+- [ ] Users assigned to more than one tenant under the **Tenant** app see a switcher dropdown in the `TenantLayout.vue` sidebar header, replacing the static tenant name display
+- [ ] New `ResolveTenantWeb` middleware replaces `ResolveTenantDatabase` on all web tenant routes — resolves the active tenant from `session('tenant_slug')`, falling back to the user's `is_default` tenant in `user_app_tenants`; sets `current_tenant`, `current_app`, and `current_role` on request attributes and wires the per-request `tenant` DB connection (same logic as the API middleware but without `X-App`/`X-Tenant` headers or token ability checks)
+- [ ] New `POST /tenant/switch` route handled by `TenantSwitchController` — validates the requested tenant slug against the user's permitted tenant list, updates the session, and redirects to the current page
+- [ ] `HandleInertiaRequests` shares `accessibleTenants` (id, name, slug) for authenticated tenant-portal pages — powers the switcher dropdown without an extra API call
+- [ ] Switching tenant triggers a full Inertia visit (page reload) so all page props reflect the new tenant context immediately
+- [ ] **API note** — the existing `ResolveTenantDatabase` middleware already handles tenant switching for API consumers via the `X-Tenant` request header; no additional API endpoint is needed for mobile/external clients
 
 ---
 

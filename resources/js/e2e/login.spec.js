@@ -6,7 +6,7 @@ test.describe('Login page', () => {
     });
 
     test('shows the welcome heading', async ({ page }) => {
-        await expect(page.getByText('Welcome back')).toBeVisible();
+        await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
     });
 
     test('shows email and password fields', async ({ page }) => {

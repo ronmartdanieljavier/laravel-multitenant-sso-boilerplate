@@ -225,7 +225,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
         <!-- Sidebar -->
         <aside class="fixed inset-y-0 left-0 w-60 bg-slate-900 border-r border-white/5 flex flex-col">
             <div class="h-16 flex items-center px-6 border-b border-white/5">
-                <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center mr-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
@@ -250,7 +250,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                     Tenants
                 </Link>
                 <Link href="/admin/settings"
-                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition bg-violet-600/20 text-violet-300">
+                      class="flex items-center gap-3 py-2 text-sm font-medium transition border-l-2 border-blue-500 rounded-r-lg pl-[10px] pr-3 text-white">
                     Settings
                 </Link>
             </nav>
@@ -269,7 +269,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                         <div v-if="page.props.auth.user?.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
                             <img :src="page.props.auth.user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
                         </div>
-                        <div v-else class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        <div v-else class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
                             {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'A' }}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -319,7 +319,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                         :key="tab.key"
                         @click="activeTab = tab.key"
                         :class="activeTab === tab.key
-                            ? 'bg-violet-600 text-white shadow'
+                            ? 'bg-blue-600 text-white shadow'
                             : 'text-slate-400 hover:text-slate-200'"
                         class="px-5 py-1.5 rounded-lg text-sm font-medium transition">
                         {{ tab.label }}
@@ -334,19 +334,19 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <p class="text-xs text-slate-400 mb-3">Only one email service can be active at a time.</p>
                                 <div class="flex flex-wrap gap-5">
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="emailForm.email_driver" value="smtp" class="accent-violet-500" />
+                                        <input type="radio" v-model="emailForm.email_driver" value="smtp" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">SMTP</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="emailForm.email_driver" value="postmark" class="accent-violet-500" />
+                                        <input type="radio" v-model="emailForm.email_driver" value="postmark" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Postmark</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="emailForm.email_driver" value="mailgun" class="accent-violet-500" />
+                                        <input type="radio" v-model="emailForm.email_driver" value="mailgun" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Mailgun</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="emailForm.email_driver" value="ses" class="accent-violet-500" />
+                                        <input type="radio" v-model="emailForm.email_driver" value="ses" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Amazon SES</span>
                                     </label>
                                 </div>
@@ -359,29 +359,29 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Host</label>
                                         <input v-model="emailForm.smtp_host" type="text" placeholder="smtp.example.com"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.smtp_host" class="text-xs text-red-400 mt-1">{{ emailForm.errors.smtp_host }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Port</label>
                                         <input v-model="emailForm.smtp_port" type="number" placeholder="587"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.smtp_port" class="text-xs text-red-400 mt-1">{{ emailForm.errors.smtp_port }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Username</label>
                                         <input v-model="emailForm.smtp_username" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Password</label>
                                         <input v-model="emailForm.smtp_password" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Encryption</label>
                                         <select v-model="emailForm.smtp_encryption"
-                                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                             <option value="tls">TLS</option>
                                             <option value="ssl">SSL</option>
                                             <option value="starttls">STARTTLS</option>
@@ -390,12 +390,12 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Name</label>
                                         <input v-model="emailForm.smtp_from_name" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">From Address</label>
                                         <input v-model="emailForm.smtp_from_address" type="email"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.smtp_from_address" class="text-xs text-red-400 mt-1">{{ emailForm.errors.smtp_from_address }}</p>
                                     </div>
                                 </div>
@@ -407,18 +407,18 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">Server Token</label>
                                         <input v-model="emailForm.postmark_token" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.postmark_token" class="text-xs text-red-400 mt-1">{{ emailForm.errors.postmark_token }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Name</label>
                                         <input v-model="emailForm.postmark_from_name" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Address</label>
                                         <input v-model="emailForm.postmark_from_address" type="email"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.postmark_from_address" class="text-xs text-red-400 mt-1">{{ emailForm.errors.postmark_from_address }}</p>
                                     </div>
                                 </div>
@@ -430,19 +430,19 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Domain</label>
                                         <input v-model="emailForm.mailgun_domain" type="text" placeholder="mg.example.com"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.mailgun_domain" class="text-xs text-red-400 mt-1">{{ emailForm.errors.mailgun_domain }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">API Key</label>
                                         <input v-model="emailForm.mailgun_secret" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.mailgun_secret" class="text-xs text-red-400 mt-1">{{ emailForm.errors.mailgun_secret }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Region</label>
                                         <select v-model="emailForm.mailgun_endpoint"
-                                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                             <option value="api.mailgun.net">US (api.mailgun.net)</option>
                                             <option value="api.eu.mailgun.net">EU (api.eu.mailgun.net)</option>
                                         </select>
@@ -451,12 +451,12 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Name</label>
                                         <input v-model="emailForm.mailgun_from_name" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">From Address</label>
                                         <input v-model="emailForm.mailgun_from_address" type="email"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.mailgun_from_address" class="text-xs text-red-400 mt-1">{{ emailForm.errors.mailgun_from_address }}</p>
                                     </div>
                                 </div>
@@ -468,30 +468,30 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Access Key</label>
                                         <input v-model="emailForm.ses_key" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.ses_key" class="text-xs text-red-400 mt-1">{{ emailForm.errors.ses_key }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Secret Key</label>
                                         <input v-model="emailForm.ses_secret" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.ses_secret" class="text-xs text-red-400 mt-1">{{ emailForm.errors.ses_secret }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Region</label>
                                         <input v-model="emailForm.ses_region" type="text" placeholder="us-east-1"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.ses_region" class="text-xs text-red-400 mt-1">{{ emailForm.errors.ses_region }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Name</label>
                                         <input v-model="emailForm.ses_from_name" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">From Address</label>
                                         <input v-model="emailForm.ses_from_address" type="email"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="emailForm.errors.ses_from_address" class="text-xs text-red-400 mt-1">{{ emailForm.errors.ses_from_address }}</p>
                                     </div>
                                 </div>
@@ -517,14 +517,14 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 </label>
                                 <input v-model="emailForm.email_footer_unsubscribe_url" type="url"
                                        placeholder="https://example.com/unsubscribe"
-                                       class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                       class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 <p v-if="emailForm.errors.email_footer_unsubscribe_url" class="text-xs text-red-400 mt-1">{{ emailForm.errors.email_footer_unsubscribe_url }}</p>
                             </div>
                         </div>
 
                         <div class="flex justify-end">
                             <button type="submit" :disabled="emailForm.processing"
-                                    class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                                 {{ emailForm.processing ? 'Saving…' : 'Save Email Settings' }}
                             </button>
                         </div>
@@ -540,15 +540,15 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <p class="text-xs text-slate-400 mb-3">Only one SMS provider can be active at a time.</p>
                                 <div class="flex flex-wrap gap-5">
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="smsForm.sms_driver" value="twilio" class="accent-violet-500" />
+                                        <input type="radio" v-model="smsForm.sms_driver" value="twilio" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Twilio</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="smsForm.sms_driver" value="vonage" class="accent-violet-500" />
+                                        <input type="radio" v-model="smsForm.sms_driver" value="vonage" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Vonage</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="smsForm.sms_driver" value="sns" class="accent-violet-500" />
+                                        <input type="radio" v-model="smsForm.sms_driver" value="sns" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Amazon SNS</span>
                                     </label>
                                 </div>
@@ -561,19 +561,19 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">Account SID</label>
                                         <input v-model="smsForm.twilio_sid" type="text" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="smsForm.errors.twilio_sid" class="text-xs text-red-400 mt-1">{{ smsForm.errors.twilio_sid }}</p>
                                     </div>
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">Auth Token</label>
                                         <input v-model="smsForm.twilio_token" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="smsForm.errors.twilio_token" class="text-xs text-red-400 mt-1">{{ smsForm.errors.twilio_token }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Number</label>
                                         <input v-model="smsForm.twilio_from" type="text" placeholder="+15550001234"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p class="text-xs text-slate-600 mt-1">Twilio phone number in E.164 format.</p>
                                         <p v-if="smsForm.errors.twilio_from" class="text-xs text-red-400 mt-1">{{ smsForm.errors.twilio_from }}</p>
                                     </div>
@@ -586,19 +586,19 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">API Key</label>
                                         <input v-model="smsForm.vonage_key" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="smsForm.errors.vonage_key" class="text-xs text-red-400 mt-1">{{ smsForm.errors.vonage_key }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">API Secret</label>
                                         <input v-model="smsForm.vonage_secret" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="smsForm.errors.vonage_secret" class="text-xs text-red-400 mt-1">{{ smsForm.errors.vonage_secret }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From</label>
                                         <input v-model="smsForm.vonage_from" type="text" placeholder="+15550001234 or MyApp"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p class="text-xs text-slate-600 mt-1">Phone number or alphanumeric sender ID (max 11 chars).</p>
                                         <p v-if="smsForm.errors.vonage_from" class="text-xs text-red-400 mt-1">{{ smsForm.errors.vonage_from }}</p>
                                     </div>
@@ -611,19 +611,19 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Access Key</label>
                                         <input v-model="smsForm.sns_sms_key" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="smsForm.errors.sns_sms_key" class="text-xs text-red-400 mt-1">{{ smsForm.errors.sns_sms_key }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Secret Key</label>
                                         <input v-model="smsForm.sns_sms_secret" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="smsForm.errors.sns_sms_secret" class="text-xs text-red-400 mt-1">{{ smsForm.errors.sns_sms_secret }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Region</label>
                                         <input v-model="smsForm.sns_sms_region" type="text" placeholder="us-east-1"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="smsForm.errors.sns_sms_region" class="text-xs text-red-400 mt-1">{{ smsForm.errors.sns_sms_region }}</p>
                                     </div>
                                     <div>
@@ -632,7 +632,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                         </label>
                                         <input v-model="smsForm.sns_sms_sender_id" type="text" placeholder="MyApp"
                                                maxlength="11"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="smsForm.errors.sns_sms_sender_id" class="text-xs text-red-400 mt-1">{{ smsForm.errors.sns_sms_sender_id }}</p>
                                     </div>
                                 </div>
@@ -642,7 +642,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
 
                         <div class="flex justify-end">
                             <button type="submit" :disabled="smsForm.processing"
-                                    class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                                 {{ smsForm.processing ? 'Saving…' : 'Save SMS Settings' }}
                             </button>
                         </div>
@@ -658,15 +658,15 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <p class="text-xs text-slate-400 mb-3">Only one push notification provider can be active at a time.</p>
                                 <div class="flex flex-wrap gap-5">
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="pushForm.push_driver" value="fcm" class="accent-violet-500" />
+                                        <input type="radio" v-model="pushForm.push_driver" value="fcm" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Firebase (FCM)</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="pushForm.push_driver" value="apns" class="accent-violet-500" />
+                                        <input type="radio" v-model="pushForm.push_driver" value="apns" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Apple (APNs)</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="pushForm.push_driver" value="onesignal" class="accent-violet-500" />
+                                        <input type="radio" v-model="pushForm.push_driver" value="onesignal" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">OneSignal</span>
                                     </label>
                                 </div>
@@ -679,13 +679,13 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Project ID</label>
                                         <input v-model="pushForm.fcm_project_id" type="text" placeholder="my-firebase-project"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="pushForm.errors.fcm_project_id" class="text-xs text-red-400 mt-1">{{ pushForm.errors.fcm_project_id }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Server Key</label>
                                         <input v-model="pushForm.fcm_server_key" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p class="text-xs text-slate-600 mt-1">Found in Firebase Console → Project Settings → Cloud Messaging.</p>
                                         <p v-if="pushForm.errors.fcm_server_key" class="text-xs text-red-400 mt-1">{{ pushForm.errors.fcm_server_key }}</p>
                                     </div>
@@ -698,25 +698,25 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Key ID</label>
                                         <input v-model="pushForm.apns_key_id" type="text" placeholder="ABCDE12345"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="pushForm.errors.apns_key_id" class="text-xs text-red-400 mt-1">{{ pushForm.errors.apns_key_id }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Team ID</label>
                                         <input v-model="pushForm.apns_team_id" type="text" placeholder="ABCDE12345"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="pushForm.errors.apns_team_id" class="text-xs text-red-400 mt-1">{{ pushForm.errors.apns_team_id }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Bundle ID</label>
                                         <input v-model="pushForm.apns_bundle_id" type="text" placeholder="com.example.myapp"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="pushForm.errors.apns_bundle_id" class="text-xs text-red-400 mt-1">{{ pushForm.errors.apns_bundle_id }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Environment</label>
                                         <select v-model="pushForm.apns_environment"
-                                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                             <option value="production">Production</option>
                                             <option value="sandbox">Sandbox</option>
                                         </select>
@@ -725,7 +725,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                         <label class="block text-xs text-slate-400 mb-1">Private Key (.p8)</label>
                                         <textarea v-model="pushForm.apns_private_key" rows="6"
                                                   placeholder="-----BEGIN PRIVATE KEY-----"
-                                                  class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 font-mono focus:outline-none focus:border-violet-500 resize-none"></textarea>
+                                                  class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 font-mono focus:outline-none focus:border-blue-500 resize-none"></textarea>
                                         <p class="text-xs text-slate-600 mt-1">Paste the contents of the .p8 file downloaded from Apple Developer.</p>
                                         <p v-if="pushForm.errors.apns_private_key" class="text-xs text-red-400 mt-1">{{ pushForm.errors.apns_private_key }}</p>
                                     </div>
@@ -738,13 +738,13 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">App ID</label>
                                         <input v-model="pushForm.onesignal_app_id" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="pushForm.errors.onesignal_app_id" class="text-xs text-red-400 mt-1">{{ pushForm.errors.onesignal_app_id }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">REST API Key</label>
                                         <input v-model="pushForm.onesignal_rest_api_key" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="pushForm.errors.onesignal_rest_api_key" class="text-xs text-red-400 mt-1">{{ pushForm.errors.onesignal_rest_api_key }}</p>
                                     </div>
                                 </div>
@@ -754,7 +754,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
 
                         <div class="flex justify-end">
                             <button type="submit" :disabled="pushForm.processing"
-                                    class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                                 {{ pushForm.processing ? 'Saving…' : 'Save Push Settings' }}
                             </button>
                         </div>
@@ -771,27 +771,27 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <p class="text-xs text-slate-400 mb-3">Only one storage provider can be active at a time.</p>
                                 <div class="flex flex-wrap gap-5">
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="storageForm.storage_driver" value="local" class="accent-violet-500" />
+                                        <input type="radio" v-model="storageForm.storage_driver" value="local" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Local</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="storageForm.storage_driver" value="s3" class="accent-violet-500" />
+                                        <input type="radio" v-model="storageForm.storage_driver" value="s3" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Amazon S3</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="storageForm.storage_driver" value="r2" class="accent-violet-500" />
+                                        <input type="radio" v-model="storageForm.storage_driver" value="r2" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Cloudflare R2</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="storageForm.storage_driver" value="gcs" class="accent-violet-500" />
+                                        <input type="radio" v-model="storageForm.storage_driver" value="gcs" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Google Cloud Storage</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="storageForm.storage_driver" value="ftp" class="accent-violet-500" />
+                                        <input type="radio" v-model="storageForm.storage_driver" value="ftp" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">FTP</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="storageForm.storage_driver" value="sftp" class="accent-violet-500" />
+                                        <input type="radio" v-model="storageForm.storage_driver" value="sftp" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">SFTP</span>
                                     </label>
                                 </div>
@@ -802,11 +802,11 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                             <template v-if="storageForm.storage_driver === 'local'">
                                 <div class="border-t border-white/5 pt-5">
                                     <div class="flex items-start gap-3 bg-slate-800/50 rounded-lg px-4 py-3">
-                                        <svg class="w-4 h-4 text-violet-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 text-blue-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         <div class="text-sm text-slate-300 space-y-1">
-                                            <p>Files will be stored in <code class="text-violet-300 bg-slate-900 px-1 py-0.5 rounded text-xs">storage/app/</code> on the server.</p>
+                                            <p>Files will be stored in <code class="text-blue-300 bg-slate-900 px-1 py-0.5 rounded text-xs">storage/app/</code> on the server.</p>
                                             <p class="text-slate-500 text-xs">No credentials required. Best for development or single-server setups. Not suitable for multi-server deployments.</p>
                                         </div>
                                     </div>
@@ -819,25 +819,25 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Access Key</label>
                                         <input v-model="storageForm.s3_key" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.s3_key" class="text-xs text-red-400 mt-1">{{ storageForm.errors.s3_key }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Secret Key</label>
                                         <input v-model="storageForm.s3_secret" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.s3_secret" class="text-xs text-red-400 mt-1">{{ storageForm.errors.s3_secret }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Region</label>
                                         <input v-model="storageForm.s3_region" type="text" placeholder="us-east-1"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.s3_region" class="text-xs text-red-400 mt-1">{{ storageForm.errors.s3_region }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Bucket</label>
                                         <input v-model="storageForm.s3_bucket" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.s3_bucket" class="text-xs text-red-400 mt-1">{{ storageForm.errors.s3_bucket }}</p>
                                     </div>
                                     <div class="col-span-2">
@@ -845,7 +845,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                             Custom URL <span class="text-slate-600 ml-1">optional</span>
                                         </label>
                                         <input v-model="storageForm.s3_url" type="url" placeholder="https://cdn.example.com"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.s3_url" class="text-xs text-red-400 mt-1">{{ storageForm.errors.s3_url }}</p>
                                     </div>
                                 </div>
@@ -857,26 +857,26 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">Account ID</label>
                                         <input v-model="storageForm.r2_account_id" type="text" placeholder="abc123def456..."
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p class="text-xs text-slate-600 mt-1">Found in the Cloudflare dashboard under R2 → Overview.</p>
                                         <p v-if="storageForm.errors.r2_account_id" class="text-xs text-red-400 mt-1">{{ storageForm.errors.r2_account_id }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Access Key ID</label>
                                         <input v-model="storageForm.r2_access_key" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.r2_access_key" class="text-xs text-red-400 mt-1">{{ storageForm.errors.r2_access_key }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Secret Access Key</label>
                                         <input v-model="storageForm.r2_secret" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.r2_secret" class="text-xs text-red-400 mt-1">{{ storageForm.errors.r2_secret }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Bucket</label>
                                         <input v-model="storageForm.r2_bucket" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.r2_bucket" class="text-xs text-red-400 mt-1">{{ storageForm.errors.r2_bucket }}</p>
                                     </div>
                                     <div>
@@ -884,7 +884,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                             Public URL <span class="text-slate-600 ml-1">optional</span>
                                         </label>
                                         <input v-model="storageForm.r2_url" type="url" placeholder="https://pub.example.com"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.r2_url" class="text-xs text-red-400 mt-1">{{ storageForm.errors.r2_url }}</p>
                                     </div>
                                 </div>
@@ -896,20 +896,20 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Project ID</label>
                                         <input v-model="storageForm.gcs_project_id" type="text" placeholder="my-gcp-project"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.gcs_project_id" class="text-xs text-red-400 mt-1">{{ storageForm.errors.gcs_project_id }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Bucket</label>
                                         <input v-model="storageForm.gcs_bucket" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.gcs_bucket" class="text-xs text-red-400 mt-1">{{ storageForm.errors.gcs_bucket }}</p>
                                     </div>
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">Service Account Key JSON</label>
                                         <textarea v-model="storageForm.gcs_key_json" rows="6"
                                                   placeholder='{"type":"service_account","project_id":"...","private_key":"...","client_email":"..."}'
-                                                  class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 font-mono focus:outline-none focus:border-violet-500 resize-none"></textarea>
+                                                  class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 font-mono focus:outline-none focus:border-blue-500 resize-none"></textarea>
                                         <p class="text-xs text-slate-600 mt-1">Paste the full JSON from your GCP service account key file.</p>
                                         <p v-if="storageForm.errors.gcs_key_json" class="text-xs text-red-400 mt-1">{{ storageForm.errors.gcs_key_json }}</p>
                                     </div>
@@ -918,7 +918,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                             Custom URL <span class="text-slate-600 ml-1">optional</span>
                                         </label>
                                         <input v-model="storageForm.gcs_url" type="url" placeholder="https://cdn.example.com"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.gcs_url" class="text-xs text-red-400 mt-1">{{ storageForm.errors.gcs_url }}</p>
                                     </div>
                                 </div>
@@ -930,33 +930,33 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Host</label>
                                         <input v-model="storageForm.ftp_host" type="text" placeholder="ftp.example.com"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.ftp_host" class="text-xs text-red-400 mt-1">{{ storageForm.errors.ftp_host }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Port</label>
                                         <input v-model="storageForm.ftp_port" type="number"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.ftp_port" class="text-xs text-red-400 mt-1">{{ storageForm.errors.ftp_port }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Username</label>
                                         <input v-model="storageForm.ftp_username" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Password</label>
                                         <input v-model="storageForm.ftp_password" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Root Path</label>
                                         <input v-model="storageForm.ftp_root" type="text" placeholder="/"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div class="flex items-center gap-3 pt-5">
                                         <label class="flex items-center gap-2.5 cursor-pointer">
-                                            <input type="checkbox" v-model="storageForm.ftp_passive" class="accent-violet-500 w-4 h-4" />
+                                            <input type="checkbox" v-model="storageForm.ftp_passive" class="accent-blue-500 w-4 h-4" />
                                             <span class="text-sm text-slate-300">Passive mode</span>
                                         </label>
                                     </div>
@@ -969,31 +969,31 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Host</label>
                                         <input v-model="storageForm.sftp_host" type="text" placeholder="sftp.example.com"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.sftp_host" class="text-xs text-red-400 mt-1">{{ storageForm.errors.sftp_host }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Port</label>
                                         <input v-model="storageForm.sftp_port" type="number"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <p v-if="storageForm.errors.sftp_port" class="text-xs text-red-400 mt-1">{{ storageForm.errors.sftp_port }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Username</label>
                                         <input v-model="storageForm.sftp_username" type="text"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">
                                             Password <span class="text-slate-600 ml-1">optional if using private key</span>
                                         </label>
                                         <input v-model="storageForm.sftp_password" type="password"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Root Path</label>
                                         <input v-model="storageForm.sftp_root" type="text" placeholder="/"
-                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">
@@ -1001,7 +1001,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                         </label>
                                         <textarea v-model="storageForm.sftp_private_key" rows="5"
                                                   placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"
-                                                  class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 font-mono focus:outline-none focus:border-violet-500 resize-none"></textarea>
+                                                  class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 font-mono focus:outline-none focus:border-blue-500 resize-none"></textarea>
                                         <p v-if="storageForm.errors.sftp_private_key" class="text-xs text-red-400 mt-1">{{ storageForm.errors.sftp_private_key }}</p>
                                     </div>
                                 </div>
@@ -1023,13 +1023,13 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                         <input type="checkbox"
                                                :checked="allowedTypeSet.has(group.key)"
                                                @change="toggleType(group.key)"
-                                               class="accent-violet-500 w-4 h-4" />
+                                               class="accent-blue-500 w-4 h-4" />
                                         <span class="text-sm text-slate-300">{{ group.label }}</span>
                                     </label>
                                     <div class="flex items-center gap-2" :class="{ 'opacity-40 pointer-events-none': !allowedTypeSet.has(group.key) }">
                                         <input v-model="storageForm[`upload_max_size_${group.key}`]"
                                                type="number" min="1" max="100"
-                                               class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                               class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500" />
                                         <span class="text-sm text-slate-400">MB max</span>
                                         <p v-if="storageForm.errors[`upload_max_size_${group.key}`]" class="text-xs text-red-400">{{ storageForm.errors[`upload_max_size_${group.key}`] }}</p>
                                     </div>
@@ -1039,7 +1039,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
 
                         <div class="flex justify-end">
                             <button type="submit" :disabled="storageForm.processing"
-                                    class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                                 {{ storageForm.processing ? 'Saving…' : 'Save Storage Settings' }}
                             </button>
                         </div>
@@ -1059,22 +1059,22 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                         <label class="text-sm text-slate-300 w-40 shrink-0">Minimum length</label>
                                         <div class="flex items-center gap-2">
                                             <input v-model="securityForm.password_min_length" type="number" min="6" max="128"
-                                                   class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                                   class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                             <span class="text-sm text-slate-400">characters</span>
                                         </div>
                                         <p v-if="securityForm.errors.password_min_length" class="text-xs text-red-400">{{ securityForm.errors.password_min_length }}</p>
                                     </div>
                                     <div class="space-y-2.5">
                                         <label class="flex items-center gap-3 cursor-pointer group">
-                                            <input type="checkbox" v-model="securityForm.password_require_uppercase" class="accent-violet-500 w-4 h-4" />
+                                            <input type="checkbox" v-model="securityForm.password_require_uppercase" class="accent-blue-500 w-4 h-4" />
                                             <span class="text-sm text-slate-300 group-hover:text-white transition">Require uppercase letter (A–Z)</span>
                                         </label>
                                         <label class="flex items-center gap-3 cursor-pointer group">
-                                            <input type="checkbox" v-model="securityForm.password_require_digit" class="accent-violet-500 w-4 h-4" />
+                                            <input type="checkbox" v-model="securityForm.password_require_digit" class="accent-blue-500 w-4 h-4" />
                                             <span class="text-sm text-slate-300 group-hover:text-white transition">Require digit (0–9)</span>
                                         </label>
                                         <label class="flex items-center gap-3 cursor-pointer group">
-                                            <input type="checkbox" v-model="securityForm.password_require_symbol" class="accent-violet-500 w-4 h-4" />
+                                            <input type="checkbox" v-model="securityForm.password_require_symbol" class="accent-blue-500 w-4 h-4" />
                                             <span class="text-sm text-slate-300 group-hover:text-white transition">Require symbol (!@#$…)</span>
                                         </label>
                                     </div>
@@ -1083,7 +1083,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                         <div class="flex items-center gap-2">
                                             <input v-model="securityForm.password_expiry_days" type="number" min="0" max="365"
                                                    placeholder="0"
-                                                   class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                                   class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                             <span class="text-sm text-slate-400">days (0 = never)</span>
                                         </div>
                                         <p v-if="securityForm.errors.password_expiry_days" class="text-xs text-red-400">{{ securityForm.errors.password_expiry_days }}</p>
@@ -1096,15 +1096,15 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <h4 class="text-sm font-medium text-white mb-3">Two-Factor Authentication</h4>
                                 <div class="flex gap-6">
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="securityForm.two_factor_auth" value="off" class="accent-violet-500" />
+                                        <input type="radio" v-model="securityForm.two_factor_auth" value="off" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Off</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="securityForm.two_factor_auth" value="optional" class="accent-violet-500" />
+                                        <input type="radio" v-model="securityForm.two_factor_auth" value="optional" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Optional</span>
                                     </label>
                                     <label class="flex items-center gap-2.5 cursor-pointer group">
-                                        <input type="radio" v-model="securityForm.two_factor_auth" value="required" class="accent-violet-500" />
+                                        <input type="radio" v-model="securityForm.two_factor_auth" value="required" class="accent-blue-500" />
                                         <span class="text-sm text-slate-300 group-hover:text-white transition">Required for all users</span>
                                     </label>
                                 </div>
@@ -1117,7 +1117,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <div class="flex items-center gap-3 mt-2">
                                     <input v-model="securityForm.session_concurrency_limit" type="number" min="0" max="100"
                                            placeholder="0"
-                                           class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                           class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                     <span class="text-sm text-slate-400">active sessions per user (0 = unlimited)</span>
                                 </div>
                                 <p v-if="securityForm.errors.session_concurrency_limit" class="text-xs text-red-400 mt-1">{{ securityForm.errors.session_concurrency_limit }}</p>
@@ -1127,7 +1127,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
 
                         <div class="flex justify-end">
                             <button type="submit" :disabled="securityForm.processing"
-                                    class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                                 {{ securityForm.processing ? 'Saving…' : 'Save Security Settings' }}
                             </button>
                         </div>
@@ -1142,7 +1142,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">App Name</label>
                                 <input v-model="brandingForm.app_name" type="text" placeholder="My SaaS App"
-                                       class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                       class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 <p v-if="brandingForm.errors.app_name" class="text-xs text-red-400 mt-1">{{ brandingForm.errors.app_name }}</p>
                             </div>
 
@@ -1150,13 +1150,13 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Support Email</label>
                                     <input v-model="brandingForm.support_email" type="email" placeholder="support@example.com"
-                                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                     <p v-if="brandingForm.errors.support_email" class="text-xs text-red-400 mt-1">{{ brandingForm.errors.support_email }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Support URL</label>
                                     <input v-model="brandingForm.support_url" type="url" placeholder="https://help.example.com"
-                                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                     <p v-if="brandingForm.errors.support_url" class="text-xs text-red-400 mt-1">{{ brandingForm.errors.support_url }}</p>
                                 </div>
                             </div>
@@ -1167,7 +1167,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                         Logo URL <span class="text-slate-600 ml-1">optional</span>
                                     </label>
                                     <input v-model="brandingForm.logo_url" type="url" placeholder="https://cdn.example.com/logo.png"
-                                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                     <p v-if="brandingForm.errors.logo_url" class="text-xs text-red-400 mt-1">{{ brandingForm.errors.logo_url }}</p>
                                     <div v-if="brandingForm.logo_url" class="mt-2">
                                         <img :src="brandingForm.logo_url" alt="Logo preview" class="h-10 object-contain rounded" @error="e => e.target.style.display = 'none'" />
@@ -1178,7 +1178,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                         Favicon URL <span class="text-slate-600 ml-1">optional</span>
                                     </label>
                                     <input v-model="brandingForm.favicon_url" type="url" placeholder="https://cdn.example.com/favicon.ico"
-                                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                     <p v-if="brandingForm.errors.favicon_url" class="text-xs text-red-400 mt-1">{{ brandingForm.errors.favicon_url }}</p>
                                     <div v-if="brandingForm.favicon_url" class="mt-2 flex items-center gap-2">
                                         <img :src="brandingForm.favicon_url" alt="Favicon preview" class="w-6 h-6 object-contain rounded" @error="e => e.target.style.display = 'none'" />
@@ -1191,7 +1191,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
 
                         <div class="flex justify-end">
                             <button type="submit" :disabled="brandingForm.processing"
-                                    class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                                 {{ brandingForm.processing ? 'Saving…' : 'Save Branding Settings' }}
                             </button>
                         </div>
@@ -1207,7 +1207,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <label class="block text-sm font-medium text-white mb-1">Idle Session Timeout</label>
                                 <div class="flex items-center gap-3">
                                     <input v-model="authForm.authentication_idle_time" type="number" min="1" max="1440"
-                                           class="w-32 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                           class="w-32 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     <span class="text-sm text-slate-400">minutes</span>
                                 </div>
                                 <p v-if="authForm.errors.authentication_idle_time" class="text-xs text-red-400 mt-1">{{ authForm.errors.authentication_idle_time }}</p>
@@ -1218,7 +1218,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 <label class="block text-sm font-medium text-white mb-1">Max Login Attempts</label>
                                 <div class="flex items-center gap-3">
                                     <input v-model="authForm.max_login_attempts" type="number" min="1" max="100"
-                                           class="w-32 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                           class="w-32 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     <span class="text-sm text-slate-400">attempts</span>
                                 </div>
                                 <p v-if="authForm.errors.max_login_attempts" class="text-xs text-red-400 mt-1">{{ authForm.errors.max_login_attempts }}</p>
@@ -1229,7 +1229,7 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
 
                         <div class="flex justify-end">
                             <button type="submit" :disabled="authForm.processing"
-                                    class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                                 {{ authForm.processing ? 'Saving…' : 'Save Authentication Settings' }}
                             </button>
                         </div>

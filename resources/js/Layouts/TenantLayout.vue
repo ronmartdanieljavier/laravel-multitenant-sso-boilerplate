@@ -79,10 +79,10 @@ function isActive(href) {
                     :key="item.href"
                     :href="item.href"
                     :class="[
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition',
+                        'flex items-center gap-3 py-2 text-sm font-medium transition',
                         isActive(item.href)
-                            ? 'bg-emerald-600/20 text-emerald-300'
-                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5',
+                            ? 'border-l-2 border-blue-500 rounded-r-lg pl-[10px] pr-3 text-white'
+                            : 'px-3 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5',
                     ]"
                 >
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

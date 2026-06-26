@@ -92,7 +92,7 @@ function copyCode() {
                 </div>
                 <div class="flex gap-2">
                     <button v-if="!log.resolved" @click="resolve"
-                            class="px-4 py-2 text-sm rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 transition">
+                            class="px-4 py-2 text-sm rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-500/30 transition">
                         Mark Resolved
                     </button>
                     <button v-else @click="unresolve"
@@ -118,7 +118,7 @@ function copyCode() {
                         <div>
                             <p class="text-xs text-slate-500 mb-1">Location</p>
                             <p class="font-mono text-xs text-slate-300 break-all">
-                                {{ log.file ?? '—' }}<span v-if="log.line" class="text-violet-400">:{{ log.line }}</span>
+                                {{ log.file ?? '—' }}<span v-if="log.line" class="text-blue-400">:{{ log.line }}</span>
                             </p>
                         </div>
                         <div class="col-span-2">
@@ -134,7 +134,7 @@ function copyCode() {
                     <div class="grid grid-cols-3 gap-4 mb-4">
                         <div>
                             <p class="text-xs text-slate-500 mb-1">Method</p>
-                            <span class="inline-block px-2 py-0.5 rounded bg-slate-800 font-mono text-xs text-violet-300">
+                            <span class="inline-block px-2 py-0.5 rounded bg-slate-800 font-mono text-xs text-blue-300">
                                 {{ log.request_method ?? '—' }}
                             </span>
                         </div>
@@ -178,7 +178,7 @@ function copyCode() {
                              class="flex gap-3 py-1.5 border-b border-white/5 last:border-0">
                             <span class="text-slate-600 text-xs font-mono w-5 shrink-0 text-right">{{ i }}</span>
                             <div class="min-w-0">
-                                <p v-if="frame.function" class="font-mono text-xs text-violet-300">{{ frame.function }}</p>
+                                <p v-if="frame.function" class="font-mono text-xs text-blue-300">{{ frame.function }}</p>
                                 <p v-if="frame.file" class="font-mono text-xs text-slate-500 break-all">
                                     {{ frame.file }}<span v-if="frame.line" class="text-slate-400">:{{ frame.line }}</span>
                                 </p>

@@ -77,7 +77,7 @@ describe('AdminTenantLayout', () => {
     it('highlights the Settings link when on the settings page', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/settings');
         const settingsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/settings');
-        expect(settingsLink?.classes().join(' ')).toContain('violet');
+        expect(settingsLink?.classes().join(' ')).toContain('blue-500');
     });
 
     it('highlights the Reports link when on the reports page', async () => {
@@ -89,13 +89,13 @@ describe('AdminTenantLayout', () => {
     it('highlights the Errors link when on the errors page', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/errors');
         const errorsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/errors');
-        expect(errorsLink?.classes().join(' ')).toContain('red');
+        expect(errorsLink?.classes().join(' ')).toContain('blue-500');
     });
 
     it('highlights the Errors link when on an error detail page', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/errors/abc-123');
         const errorsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/errors');
-        expect(errorsLink?.classes().join(' ')).toContain('red');
+        expect(errorsLink?.classes().join(' ')).toContain('blue-500');
     });
 
     it('renders a sign out button that posts to /logout', async () => {
@@ -124,7 +124,7 @@ describe('AdminTenantLayout', () => {
     it('strips query strings when computing active state', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/settings?tab=email');
         const settingsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/settings');
-        expect(settingsLink?.classes().join(' ')).toContain('violet');
+        expect(settingsLink?.classes().join(' ')).toContain('blue-500');
     });
 
     it('renders the App Selection link pointing to /apps', async () => {

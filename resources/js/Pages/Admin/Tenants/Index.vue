@@ -235,7 +235,7 @@ const { startTour } = useTour('admin-tenants', [
         <!-- Sidebar -->
         <aside class="fixed inset-y-0 left-0 w-60 bg-slate-900 border-r border-white/5 flex flex-col">
             <div class="h-16 flex items-center px-6 border-b border-white/5">
-                <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center mr-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
@@ -256,7 +256,7 @@ const { startTour } = useTour('admin-tenants', [
                     Apps
                 </Link>
                 <Link href="/admin/tenants"
-                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition bg-violet-600/20 text-violet-300">
+                      class="flex items-center gap-3 py-2 text-sm font-medium transition border-l-2 border-blue-500 rounded-r-lg pl-[10px] pr-3 text-white">
                     Tenants
                 </Link>
                 <Link href="/admin/settings"
@@ -279,7 +279,7 @@ const { startTour } = useTour('admin-tenants', [
                         <div v-if="page.props.auth.user?.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
                             <img :src="page.props.auth.user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
                         </div>
-                        <div v-else class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        <div v-else class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
                             {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'A' }}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -337,7 +337,7 @@ const { startTour } = useTour('admin-tenants', [
                         Maintenance: All Off
                     </button>
                     <button @click="openCreate"
-                            class="text-sm px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition">
+                            class="text-sm px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition">
                         + Add Tenant
                     </button>
                 </div>
@@ -431,7 +431,7 @@ const { startTour } = useTour('admin-tenants', [
                                     <span :class="tenant.failed_reports > 0 ? 'text-red-400' : 'text-slate-400'">{{ tenant.failed_reports }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span :class="tenant.has_read_replica ? 'bg-violet-500/20 text-violet-300' : 'bg-slate-500/20 text-slate-500'"
+                                    <span :class="tenant.has_read_replica ? 'bg-blue-600/20 text-blue-300' : 'bg-slate-500/20 text-slate-500'"
                                           class="text-xs px-2 py-0.5 rounded-full">
                                         {{ tenant.has_read_replica ? 'Yes' : 'No' }}
                                     </span>
@@ -445,7 +445,7 @@ const { startTour } = useTour('admin-tenants', [
                                                 Edit
                                             </button>
                                             <Link :href="`/admin/tenants/${tenant.id}/settings`"
-                                                  class="text-xs px-2 py-1 rounded bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 transition">
+                                                  class="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-300 hover:bg-blue-500/30 transition">
                                                 Settings
                                             </Link>
                                             <Link :href="`/admin/tenants/${tenant.id}/users`"
@@ -517,14 +517,14 @@ const { startTour } = useTour('admin-tenants', [
                         <label class="block text-xs text-slate-400 mb-1">Name *</label>
                         <input v-model="createForm.name" @input="autoSlug"
                                type="text" placeholder="Acme Corp"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="createForm.errors.name" class="text-red-400 text-xs mt-1">{{ createForm.errors.name }}</p>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Slug *</label>
                         <input v-model="createForm.slug"
                                type="text" placeholder="acme-corp"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="createForm.errors.slug" class="text-red-400 text-xs mt-1">{{ createForm.errors.slug }}</p>
                     </div>
                 </div>
@@ -535,14 +535,14 @@ const { startTour } = useTour('admin-tenants', [
                         <label class="block text-xs text-slate-400 mb-1">Host</label>
                         <input v-model="createForm.db_host"
                                type="text" placeholder="127.0.0.1"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="createForm.errors.db_host" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_host }}</p>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Port</label>
                         <input v-model="createForm.db_port"
                                type="number" placeholder="5432"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="createForm.errors.db_port" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_port }}</p>
                     </div>
                 </div>
@@ -551,14 +551,14 @@ const { startTour } = useTour('admin-tenants', [
                         <label class="block text-xs text-slate-400 mb-1">Database Name</label>
                         <input v-model="createForm.db_name"
                                type="text" placeholder="tenant_acme"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="createForm.errors.db_name" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_name }}</p>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Username</label>
                         <input v-model="createForm.db_username"
                                type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="createForm.errors.db_username" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_username }}</p>
                     </div>
                 </div>
@@ -566,13 +566,13 @@ const { startTour } = useTour('admin-tenants', [
                     <label class="block text-xs text-slate-400 mb-1">Password</label>
                     <input v-model="createForm.db_password"
                            type="password"
-                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                     <p v-if="createForm.errors.db_password" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_password }}</p>
                 </div>
 
                 <!-- Read Replica toggle -->
                 <button type="button" @click="showCreateReadReplica = !showCreateReadReplica"
-                        class="text-xs text-violet-400 hover:text-violet-300 transition flex items-center gap-1">
+                        class="text-xs text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
                     <svg :class="showCreateReadReplica ? 'rotate-90' : ''" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -585,24 +585,24 @@ const { startTour } = useTour('admin-tenants', [
                         <div class="col-span-2">
                             <label class="block text-xs text-slate-400 mb-1">Host</label>
                             <input v-model="createForm.read_replica_host" type="text"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Port</label>
                             <input v-model="createForm.read_replica_port" type="number"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Username</label>
                             <input v-model="createForm.read_replica_username" type="text"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Password</label>
                             <input v-model="createForm.read_replica_password" type="password"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         </div>
                     </div>
                 </div>
@@ -613,7 +613,7 @@ const { startTour } = useTour('admin-tenants', [
                         Cancel
                     </button>
                     <button type="submit" :disabled="createForm.processing"
-                            class="px-4 py-2 text-sm rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition disabled:opacity-50">
+                            class="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition disabled:opacity-50">
                         {{ createForm.processing ? 'Creating…' : 'Create Tenant' }}
                     </button>
                 </div>
@@ -638,13 +638,13 @@ const { startTour } = useTour('admin-tenants', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Name *</label>
                         <input v-model="editForm.name" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="editForm.errors.name" class="text-red-400 text-xs mt-1">{{ editForm.errors.name }}</p>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Slug *</label>
                         <input v-model="editForm.slug" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="editForm.errors.slug" class="text-red-400 text-xs mt-1">{{ editForm.errors.slug }}</p>
                     </div>
                 </div>
@@ -654,13 +654,13 @@ const { startTour } = useTour('admin-tenants', [
                     <div class="col-span-2">
                         <label class="block text-xs text-slate-400 mb-1">Host</label>
                         <input v-model="editForm.db_host" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="editForm.errors.db_host" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_host }}</p>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Port</label>
                         <input v-model="editForm.db_port" type="number"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="editForm.errors.db_port" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_port }}</p>
                     </div>
                 </div>
@@ -668,13 +668,13 @@ const { startTour } = useTour('admin-tenants', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Database Name</label>
                         <input v-model="editForm.db_name" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="editForm.errors.db_name" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_name }}</p>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Username</label>
                         <input v-model="editForm.db_username" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         <p v-if="editForm.errors.db_username" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_username }}</p>
                     </div>
                 </div>
@@ -684,13 +684,13 @@ const { startTour } = useTour('admin-tenants', [
                         <span v-if="editingTenant?.is_password_set" class="text-slate-500 ml-1">(leave blank to keep existing)</span>
                     </label>
                     <input v-model="editForm.db_password" type="password"
-                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                     <p v-if="editForm.errors.db_password" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_password }}</p>
                 </div>
 
                 <!-- Read Replica toggle -->
                 <button type="button" @click="showEditReadReplica = !showEditReadReplica"
-                        class="text-xs text-violet-400 hover:text-violet-300 transition flex items-center gap-1">
+                        class="text-xs text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
                     <svg :class="showEditReadReplica ? 'rotate-90' : ''" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -703,24 +703,24 @@ const { startTour } = useTour('admin-tenants', [
                         <div class="col-span-2">
                             <label class="block text-xs text-slate-400 mb-1">Host</label>
                             <input v-model="editForm.read_replica_host" type="text"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Port</label>
                             <input v-model="editForm.read_replica_port" type="number"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Username</label>
                             <input v-model="editForm.read_replica_username" type="text"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Password <span class="text-slate-500">(blank = keep existing)</span></label>
                             <input v-model="editForm.read_replica_password" type="password"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
                         </div>
                     </div>
                 </div>
@@ -731,7 +731,7 @@ const { startTour } = useTour('admin-tenants', [
                         Cancel
                     </button>
                     <button type="submit" :disabled="editForm.processing"
-                            class="px-4 py-2 text-sm rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition disabled:opacity-50">
+                            class="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition disabled:opacity-50">
                         {{ editForm.processing ? 'Saving…' : 'Save Changes' }}
                     </button>
                 </div>

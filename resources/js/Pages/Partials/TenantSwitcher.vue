@@ -26,7 +26,7 @@ function switchTo(slug) {
             class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5 transition"
         >
             <div class="flex items-center gap-2 min-w-0">
-                <svg class="w-4 h-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 shrink-0 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
                 <span class="truncate text-xs">{{ current()?.name ?? 'Switch tenant' }}</span>
@@ -46,7 +46,7 @@ function switchTo(slug) {
         >
             <div class="py-1">
                 <template v-for="tenant in tenants" :key="tenant.slug">
-                    <div v-if="tenant.isCurrent" class="flex items-center gap-2 px-3 py-2 text-xs text-emerald-400 font-medium">
+                    <div v-if="tenant.isCurrent" class="flex items-center gap-2 px-3 py-2 text-xs text-blue-400 font-medium">
                         <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                         </svg>

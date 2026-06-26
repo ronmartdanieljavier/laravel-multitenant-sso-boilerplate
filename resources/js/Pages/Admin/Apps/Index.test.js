@@ -136,7 +136,7 @@ describe('Admin/Apps/Index', () => {
 
     it('renders the Apps nav item as active', () => {
         const wrapper = mountPage();
-        const activeLink = wrapper.find('.bg-violet-600\\/20');
-        expect(activeLink.text()).toContain('Apps');
+        const activeLink = wrapper.findAll('a').find(a => a.classes().includes('border-blue-500'));
+        expect(activeLink?.text()).toContain('Apps');
     });
 });

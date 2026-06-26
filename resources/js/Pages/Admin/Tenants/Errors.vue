@@ -154,14 +154,14 @@ const { startTour } = useTour('admin-tenant-errors', [
             <!-- Filters -->
             <div id="tour-errors-filters" class="flex items-center gap-4 mb-4">
                 <select v-model="severity" @change="applyFilters"
-                        class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                        class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                     <option value="">All severities</option>
                     <option value="critical">Critical</option>
                     <option value="error">Error</option>
                     <option value="warning">Warning</option>
                 </select>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" v-model="unresolvedOnly" @change="applyFilters" class="accent-violet-500" />
+                    <input type="checkbox" v-model="unresolvedOnly" @change="applyFilters" class="accent-blue-500" />
                     <span class="text-sm text-slate-300">Unresolved only</span>
                 </label>
             </div>
@@ -190,7 +190,7 @@ const { startTour } = useTour('admin-tenant-errors', [
                             class="hover:bg-white/2 transition">
                             <td class="px-5 py-3">
                                 <Link :href="`/admin/tenants/${tenant.id}/errors/${log.id}`"
-                                      class="font-mono text-xs text-violet-400 hover:text-violet-300 transition">
+                                      class="font-mono text-xs text-blue-400 hover:text-blue-300 transition">
                                     {{ log.error_code }}
                                 </Link>
                             </td>

@@ -50,6 +50,9 @@ class SystemSettingsService
             'password_require_symbol', 'password_expiry_days',
             'two_factor_auth', 'session_concurrency_limit',
             'app_name', 'support_email', 'support_url', 'logo_url', 'favicon_url',
+            'upload_allowed_types',
+            'upload_max_size_pdf', 'upload_max_size_doc', 'upload_max_size_text',
+            'upload_max_size_excel', 'upload_max_size_image', 'upload_max_size_csv',
         ];
 
         $rows = SystemSetting::whereIn('key', $keys)->pluck('value', 'key');

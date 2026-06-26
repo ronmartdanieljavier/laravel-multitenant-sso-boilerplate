@@ -1,6 +1,6 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import TenantLayout from '../../Layouts/TenantLayout.vue';
 
 defineOptions({ layout: TenantLayout });
@@ -14,6 +14,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    uploadConstraints: {
+        type: Object,
+        default: () => ({ allowedTypes: ['pdf', 'doc', 'text', 'excel', 'image', 'csv'], maxSizes: {} }),
+    },
 });
 
 const uploadForm = useForm({
@@ -24,13 +28,6 @@ const uploadForm = useForm({
 
 const fileInput = ref(null);
 const selectedFileName = ref(null);
-
-function onFileSelected(event) {
-    const file = event.target.files[0];
-    if (!file) { return; }
-    uploadForm.file = file;
-    selectedFileName.value = file.name;
-}
 
 function submitUpload() {
     uploadForm.post('/documents', {
@@ -63,6 +60,47 @@ function formatDate(iso) {
     return new Date(iso).toLocaleDateString(undefined, {
         year: 'numeric', month: 'short', day: 'numeric',
     });
+}
+
+const TYPE_LABELS = {
+    pdf: 'PDF',
+    doc: 'Word (DOC/DOCX)',
+    text: 'Text',
+    excel: 'Excel (XLS/XLSX)',
+    image: 'Images (JPG/PNG/GIF/WebP)',
+    csv: 'CSV',
+};
+
+const TYPE_EXTENSIONS = {
+    pdf: '.pdf',
+    doc: '.doc,.docx',
+    text: '.txt',
+    excel: '.xls,.xlsx',
+    image: '.jpg,.jpeg,.png,.gif,.webp',
+    csv: '.csv',
+};
+
+const allowedExtensions = computed(() => {
+    return props.uploadConstraints.allowedTypes
+        .map(t => TYPE_EXTENSIONS[t] ?? '')
+        .filter(Boolean)
+        .join(',');
+});
+
+const allowedHint = computed(() => {
+    const parts = props.uploadConstraints.allowedTypes.map(t => {
+        const label = TYPE_LABELS[t] ?? t.toUpperCase();
+        const maxMb = props.uploadConstraints.maxSizes?.[t] ?? 5;
+        return `${label} (max ${maxMb} MB)`;
+    });
+    return parts.join(', ');
+});
+
+function onFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) { return; }
+    uploadForm.file = file;
+    selectedFileName.value = file.name;
 }
 </script>
 
@@ -99,7 +137,7 @@ function formatDate(iso) {
                     <div>
                         <label class="block text-sm text-slate-400 mb-1.5">File</label>
                         <div class="flex items-center gap-3">
-                            <input ref="fileInput" type="file" class="hidden" @change="onFileSelected" />
+                            <input ref="fileInput" type="file" class="hidden" :accept="allowedExtensions" @change="onFileSelected" />
                             <button
                                 type="button"
                                 @click="fileInput.click()"
@@ -109,6 +147,7 @@ function formatDate(iso) {
                             </button>
                             <span class="text-sm text-slate-400 truncate">{{ selectedFileName ?? 'No file chosen' }}</span>
                         </div>
+                        <p class="text-xs text-slate-500 mt-1">{{ allowedHint }}</p>
                         <p v-if="uploadForm.errors.file" class="text-red-400 text-xs mt-1">{{ uploadForm.errors.file }}</p>
                     </div>
                 </div>

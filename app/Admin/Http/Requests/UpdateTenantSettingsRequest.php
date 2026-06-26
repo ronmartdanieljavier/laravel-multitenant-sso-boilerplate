@@ -58,6 +58,13 @@ class UpdateTenantSettingsRequest extends FormRequest
             'app_name' => ['nullable', 'string', 'max:255'],
             'support_email' => ['nullable', 'email', 'max:255'],
             'support_url' => ['nullable', 'url', 'max:255'],
+            'upload_allowed_types' => ['nullable', 'string', 'max:255'],
+            'upload_max_size_pdf' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'upload_max_size_doc' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'upload_max_size_text' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'upload_max_size_excel' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'upload_max_size_image' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'upload_max_size_csv' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
 }

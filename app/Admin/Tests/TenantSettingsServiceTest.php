@@ -155,4 +155,92 @@ class TenantSettingsServiceTest extends TestCase
         $this->assertSame('postmark', $config['transport']);
         $this->assertSame('system-token', $config['token']);
     }
+
+    public function test_resolve_upload_constraints_returns_hardcoded_defaults_when_nothing_is_set(): void
+    {
+        $tenant = $this->tenant();
+        $constraints = $this->service->resolveUploadConstraints($tenant->id);
+
+        $this->assertEqualsCanonicalizing(
+            ['pdf', 'doc', 'text', 'excel', 'image', 'csv'],
+            $constraints['allowedTypes']
+        );
+
+        foreach (['pdf', 'doc', 'text', 'excel', 'image', 'csv'] as $type) {
+            $this->assertSame(5, $constraints['maxSizes'][$type]);
+        }
+    }
+
+    public function test_resolve_upload_constraints_uses_system_setting_over_hardcoded_default(): void
+    {
+        SystemSetting::set('upload_allowed_types', 'pdf,image');
+        SystemSetting::set('upload_max_size_pdf', '20');
+        SystemSetting::set('upload_max_size_image', '3');
+
+        $tenant = $this->tenant();
+        $constraints = $this->service->resolveUploadConstraints($tenant->id);
+
+        $this->assertEqualsCanonicalizing(['pdf', 'image'], $constraints['allowedTypes']);
+        $this->assertSame(20, $constraints['maxSizes']['pdf']);
+        $this->assertSame(3, $constraints['maxSizes']['image']);
+        $this->assertArrayNotHasKey('doc', $constraints['maxSizes']);
+    }
+
+    public function test_resolve_upload_constraints_uses_tenant_override_over_system_setting(): void
+    {
+        SystemSetting::set('upload_allowed_types', 'pdf,doc,image');
+        SystemSetting::set('upload_max_size_pdf', '10');
+
+        $tenant = $this->tenant();
+        $this->service->updateSettings($tenant->id, [
+            'upload_allowed_types' => 'pdf',
+            'upload_max_size_pdf' => '15',
+        ]);
+
+        $constraints = $this->service->resolveUploadConstraints($tenant->id);
+
+        $this->assertSame(['pdf'], $constraints['allowedTypes']);
+        $this->assertSame(15, $constraints['maxSizes']['pdf']);
+        $this->assertArrayNotHasKey('doc', $constraints['maxSizes']);
+    }
+
+    public function test_resolve_upload_constraints_only_includes_max_sizes_for_allowed_types(): void
+    {
+        $tenant = $this->tenant();
+        $this->service->updateSettings($tenant->id, [
+            'upload_allowed_types' => 'pdf,csv',
+        ]);
+
+        $constraints = $this->service->resolveUploadConstraints($tenant->id);
+
+        $this->assertSame(['pdf', 'csv'], $constraints['allowedTypes']);
+        $this->assertArrayHasKey('pdf', $constraints['maxSizes']);
+        $this->assertArrayHasKey('csv', $constraints['maxSizes']);
+        $this->assertArrayNotHasKey('image', $constraints['maxSizes']);
+        $this->assertArrayNotHasKey('excel', $constraints['maxSizes']);
+    }
+
+    public function test_effective_upload_allowed_types_falls_back_to_system_setting(): void
+    {
+        SystemSetting::set('upload_allowed_types', 'pdf,image');
+
+        $tenant = $this->tenant();
+        $settings = $this->service->getSettings($tenant->id);
+
+        $this->assertNull($settings->uploadAllowedTypes);
+        $this->assertSame('pdf,image', $settings->effectiveUploadAllowedTypes);
+    }
+
+    public function test_effective_upload_max_size_uses_tenant_override(): void
+    {
+        SystemSetting::set('upload_max_size_pdf', '10');
+
+        $tenant = $this->tenant();
+        $this->service->updateSettings($tenant->id, ['upload_max_size_pdf' => '25']);
+
+        $settings = $this->service->getSettings($tenant->id);
+
+        $this->assertSame('25', $settings->uploadMaxSizePdf);
+        $this->assertSame('25', $settings->effectiveUploadMaxSizePdf);
+    }
 }

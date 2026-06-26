@@ -25,6 +25,9 @@ class TenantSettingsService
         'report_pdf_header_text', 'report_pdf_footer_text', 'report_logo_path',
         'report_queue', 'report_timeout', 'report_connection',
         'app_name', 'support_email', 'support_url',
+        'upload_allowed_types',
+        'upload_max_size_pdf', 'upload_max_size_doc', 'upload_max_size_text',
+        'upload_max_size_excel', 'upload_max_size_image', 'upload_max_size_csv',
     ];
 
     public function __construct(
@@ -87,8 +90,22 @@ class TenantSettingsService
             appName: $t('app_name'),
             supportEmail: $t('support_email'),
             supportUrl: $t('support_url'),
+            uploadAllowedTypes: $t('upload_allowed_types'),
+            uploadMaxSizePdf: $t('upload_max_size_pdf'),
+            uploadMaxSizeDoc: $t('upload_max_size_doc'),
+            uploadMaxSizeText: $t('upload_max_size_text'),
+            uploadMaxSizeExcel: $t('upload_max_size_excel'),
+            uploadMaxSizeImage: $t('upload_max_size_image'),
+            uploadMaxSizeCsv: $t('upload_max_size_csv'),
             effectiveEmailDriver: $t('email_driver') ?? $systemEmail,
             effectiveStorageDriver: $t('storage_driver') ?? $systemStorage,
+            effectiveUploadAllowedTypes: $t('upload_allowed_types') ?? SystemSetting::get('upload_allowed_types', 'pdf,doc,text,excel,image,csv'),
+            effectiveUploadMaxSizePdf: $t('upload_max_size_pdf') ?? SystemSetting::get('upload_max_size_pdf', '5'),
+            effectiveUploadMaxSizeDoc: $t('upload_max_size_doc') ?? SystemSetting::get('upload_max_size_doc', '5'),
+            effectiveUploadMaxSizeText: $t('upload_max_size_text') ?? SystemSetting::get('upload_max_size_text', '5'),
+            effectiveUploadMaxSizeExcel: $t('upload_max_size_excel') ?? SystemSetting::get('upload_max_size_excel', '5'),
+            effectiveUploadMaxSizeImage: $t('upload_max_size_image') ?? SystemSetting::get('upload_max_size_image', '5'),
+            effectiveUploadMaxSizeCsv: $t('upload_max_size_csv') ?? SystemSetting::get('upload_max_size_csv', '5'),
         );
     }
 
@@ -198,6 +215,35 @@ class TenantSettingsService
             'region' => $t('s3_region') ?? SystemSetting::get('s3_region', 'us-east-1'),
             'bucket' => $t('s3_bucket') ?? SystemSetting::get('s3_bucket'),
             'url' => $t('s3_url') ?? SystemSetting::get('s3_url'),
+        ];
+    }
+
+    /**
+     * Resolve the effective upload constraints for a tenant.
+     *
+     * Returns which file type groups are allowed and their per-group max sizes in MB.
+     * Tenant settings override system defaults.
+     *
+     * @return array{allowedTypes: string[], maxSizes: array<string, int>}
+     */
+    public function resolveUploadConstraints(int $tenantId): array
+    {
+        $tenant = $this->repository->allForTenant($tenantId);
+        $t = fn (string $key): ?string => $tenant[$key] ?? null;
+
+        $allowedTypesRaw = $t('upload_allowed_types') ?? SystemSetting::get('upload_allowed_types', 'pdf,doc,text,excel,image,csv');
+        $allowedTypes = array_filter(array_map('trim', explode(',', $allowedTypesRaw)));
+
+        $sizeFor = fn (string $group): int => (int) ($t("upload_max_size_{$group}") ?? SystemSetting::get("upload_max_size_{$group}", '5'));
+
+        $maxSizes = [];
+        foreach ($allowedTypes as $type) {
+            $maxSizes[$type] = $sizeFor($type);
+        }
+
+        return [
+            'allowedTypes' => array_values($allowedTypes),
+            'maxSizes' => $maxSizes,
         ];
     }
 

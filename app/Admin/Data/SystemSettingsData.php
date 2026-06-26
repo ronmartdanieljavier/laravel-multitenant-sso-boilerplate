@@ -99,5 +99,13 @@ class SystemSettingsData extends Data
         public ?string $supportUrl,
         public ?string $logoUrl,
         public ?string $faviconUrl,
+        // Upload
+        public ?string $uploadAllowedTypes,
+        public ?string $uploadMaxSizePdf,
+        public ?string $uploadMaxSizeDoc,
+        public ?string $uploadMaxSizeText,
+        public ?string $uploadMaxSizeExcel,
+        public ?string $uploadMaxSizeImage,
+        public ?string $uploadMaxSizeCsv,
     ) {}
 }

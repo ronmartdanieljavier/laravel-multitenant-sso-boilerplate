@@ -40,9 +40,7 @@ class DocumentWebTest extends TestCase
         Storage::fake('local');
         $this->fakeDisk = Storage::disk('local');
 
-        $settingsService = \Mockery::mock(TenantSettingsService::class);
-        $settingsService->allows('resolveDisk')->andReturn($this->fakeDisk);
-        $this->app->instance(TenantSettingsService::class, $settingsService);
+        $this->mockSettingsService();
 
         $this->tenantApp = App::where('slug', 'tenant')->first() ?? App::factory()->create(['slug' => 'tenant', 'is_active' => true]);
         $this->tenant = Tenant::factory()->create(['is_active' => true, 'is_maintenance' => false]);
@@ -57,6 +55,23 @@ class DocumentWebTest extends TestCase
         ]);
 
         $this->setFakeTenant($this->tenant);
+    }
+
+    /**
+     * @param  string[]  $allowedTypes
+     * @param  array<string, int>  $maxSizes
+     */
+    private function mockSettingsService(
+        array $allowedTypes = ['pdf', 'doc', 'text', 'excel', 'image', 'csv'],
+        array $maxSizes = ['pdf' => 5, 'doc' => 5, 'text' => 5, 'excel' => 5, 'image' => 5, 'csv' => 5],
+    ): void {
+        $settingsService = \Mockery::mock(TenantSettingsService::class);
+        $settingsService->allows('resolveDisk')->andReturn($this->fakeDisk);
+        $settingsService->allows('resolveUploadConstraints')->andReturn([
+            'allowedTypes' => $allowedTypes,
+            'maxSizes' => $maxSizes,
+        ]);
+        $this->app->instance(TenantSettingsService::class, $settingsService);
     }
 
     public function test_guest_is_redirected_from_documents(): void
@@ -122,6 +137,19 @@ class DocumentWebTest extends TestCase
             );
     }
 
+    public function test_index_page_passes_upload_constraints_prop(): void
+    {
+        $this->actingAs($this->user)
+            ->get('/documents')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Documents/Index')
+                ->has('uploadConstraints')
+                ->has('uploadConstraints.allowedTypes')
+                ->has('uploadConstraints.maxSizes')
+            );
+    }
+
     public function test_user_can_upload_a_document(): void
     {
         $this->actingAs($this->user)
@@ -151,6 +179,55 @@ class DocumentWebTest extends TestCase
                 'title' => 'No File',
             ])
             ->assertSessionHasErrors('file');
+    }
+
+    public function test_store_rejects_disallowed_file_type(): void
+    {
+        $this->mockSettingsService(
+            allowedTypes: ['pdf'],
+            maxSizes: ['pdf' => 5],
+        );
+
+        $this->actingAs($this->user)
+            ->post('/documents', [
+                'title' => 'Wrong Type',
+                'file' => UploadedFile::fake()->create('spreadsheet.xlsx', 100, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+            ])
+            ->assertSessionHasErrors('file');
+    }
+
+    public function test_store_rejects_file_exceeding_per_type_max_size(): void
+    {
+        $this->mockSettingsService(
+            allowedTypes: ['pdf'],
+            maxSizes: ['pdf' => 1],
+        );
+
+        // 1.5 MB — over the 1 MB limit
+        $this->actingAs($this->user)
+            ->post('/documents', [
+                'title' => 'Oversized PDF',
+                'file' => UploadedFile::fake()->create('big.pdf', 1536, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors('file');
+    }
+
+    public function test_store_accepts_allowed_file_type_within_size_limit(): void
+    {
+        $this->mockSettingsService(
+            allowedTypes: ['image'],
+            maxSizes: ['image' => 5],
+        );
+
+        $this->actingAs($this->user)
+            ->post('/documents', [
+                'title' => 'Profile Photo',
+                'file' => UploadedFile::fake()->create('photo.png', 512, 'image/png'),
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('documents', ['title' => 'Profile Photo'], 'tenant');
     }
 
     public function test_user_can_delete_a_document(): void

@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useIdleTimeout } from '../../../composables/useIdleTimeout';
 import TourButton from '../../Partials/TourButton.vue';
 import { useTour } from '../../../composables/useTour';
@@ -110,6 +110,32 @@ const brandingForm = useForm({
     favicon_url: props.settings.favicon_url ?? '',
 });
 
+const FILE_TYPE_GROUPS = [
+    { key: 'pdf',   label: 'PDF' },
+    { key: 'doc',   label: 'Word (DOC/DOCX)' },
+    { key: 'text',  label: 'Plain Text' },
+    { key: 'excel', label: 'Excel (XLS/XLSX)' },
+    { key: 'image', label: 'Images (JPG/PNG/GIF/WebP)' },
+    { key: 'csv',   label: 'CSV' },
+];
+
+const ALL_TYPE_KEYS = FILE_TYPE_GROUPS.map(g => g.key);
+
+function parseAllowedTypes(raw) {
+    if (!raw) { return new Set(ALL_TYPE_KEYS); }
+    return new Set(raw.split(',').map(s => s.trim()).filter(Boolean));
+}
+
+const allowedTypeSet = ref(parseAllowedTypes(props.settings.upload_allowed_types));
+
+function toggleType(key) {
+    if (allowedTypeSet.value.has(key)) {
+        allowedTypeSet.value.delete(key);
+    } else {
+        allowedTypeSet.value.add(key);
+    }
+}
+
 const storageForm = useForm({
     storage_driver: props.settings.storage_driver ?? null,
     s3_key: props.settings.s3_key ?? '',
@@ -138,6 +164,13 @@ const storageForm = useForm({
     sftp_password: props.settings.sftp_password ?? '',
     sftp_private_key: props.settings.sftp_private_key ?? '',
     sftp_root: props.settings.sftp_root ?? '/',
+    upload_allowed_types: props.settings.upload_allowed_types ?? 'pdf,doc,text,excel,image,csv',
+    upload_max_size_pdf: props.settings.upload_max_size_pdf ?? '5',
+    upload_max_size_doc: props.settings.upload_max_size_doc ?? '5',
+    upload_max_size_text: props.settings.upload_max_size_text ?? '5',
+    upload_max_size_excel: props.settings.upload_max_size_excel ?? '5',
+    upload_max_size_image: props.settings.upload_max_size_image ?? '5',
+    upload_max_size_csv: props.settings.upload_max_size_csv ?? '5',
 });
 
 const authForm = useForm({
@@ -165,7 +198,12 @@ function saveBranding() {
     brandingForm.put('/admin/settings');
 }
 
+watch(allowedTypeSet, (set) => {
+    storageForm.upload_allowed_types = [...set].join(',');
+}, { deep: true });
+
 function saveStorage() {
+    storageForm.upload_allowed_types = [...allowedTypeSet.value].join(',');
     storageForm.put('/admin/settings');
 }
 
@@ -960,6 +998,34 @@ const missingSettings = page.props.missingRequiredSettings ?? [];
                                 </div>
                             </template>
 
+                        </div>
+
+                        <!-- Upload Settings -->
+                        <div class="bg-slate-900 border border-white/5 rounded-xl p-6 space-y-5">
+                            <div>
+                                <h3 class="font-semibold text-white">Document Upload Settings</h3>
+                                <p class="text-xs text-slate-400 mt-1">Set which file types are allowed and the maximum upload size per type. Tenants can override these in their settings.</p>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div v-for="group in FILE_TYPE_GROUPS" :key="group.key"
+                                     class="flex items-center gap-4 py-2 border-b border-white/5 last:border-0">
+                                    <label class="flex items-center gap-2.5 cursor-pointer w-52 shrink-0">
+                                        <input type="checkbox"
+                                               :checked="allowedTypeSet.has(group.key)"
+                                               @change="toggleType(group.key)"
+                                               class="accent-violet-500 w-4 h-4" />
+                                        <span class="text-sm text-slate-300">{{ group.label }}</span>
+                                    </label>
+                                    <div class="flex items-center gap-2" :class="{ 'opacity-40 pointer-events-none': !allowedTypeSet.has(group.key) }">
+                                        <input v-model="storageForm[`upload_max_size_${group.key}`]"
+                                               type="number" min="1" max="100"
+                                               class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <span class="text-sm text-slate-400">MB max</span>
+                                        <p v-if="storageForm.errors[`upload_max_size_${group.key}`]" class="text-xs text-red-400">{{ storageForm.errors[`upload_max_size_${group.key}`] }}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="flex justify-end">

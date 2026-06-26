@@ -52,12 +52,14 @@ class TenantReportQueueController extends Controller
 
         abort_if($dto->tenantId !== $tenant->id, 403);
 
-        GenerateReportJob::dispatch(
+        $job = new GenerateReportJob(
             $dto->id,
             $settings->reportQueue ?: 'reports',
             $settings->reportTimeout ? (int) $settings->reportTimeout : null,
             $settings->reportConnection ?: null,
         );
+        GenerateReportJob::initTracking($job, $tenant->id, $request->user()->id, 'Report: '.$dto->type);
+        dispatch($job);
 
         return back()->with('success', 'Report queued for retry.');
     }
@@ -79,12 +81,14 @@ class TenantReportQueueController extends Controller
             'status' => ReportStatus::Pending,
         ]);
 
-        GenerateReportJob::dispatch(
+        $job = new GenerateReportJob(
             $dto->id,
             $settings->reportQueue ?: 'reports',
             $settings->reportTimeout ? (int) $settings->reportTimeout : null,
             $settings->reportConnection ?: null,
         );
+        GenerateReportJob::initTracking($job, $tenant->id, $request->user()->id, 'Report: '.$dto->type);
+        dispatch($job);
 
         return back()->with('success', 'Report queued successfully.');
     }

@@ -304,7 +304,7 @@ function fileIconConfig(mimeType) {
                         <input
                             v-model="uploadForm.title"
                             type="text"
-                            class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 transition"
+                            class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 transition"
                             placeholder="Document title"
                         />
                         <p v-if="uploadForm.errors.title" class="text-red-400 text-xs mt-1">{{ uploadForm.errors.title }}</p>
@@ -314,7 +314,7 @@ function fileIconConfig(mimeType) {
                         <input
                             v-model="uploadForm.description"
                             type="text"
-                            class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 transition"
+                            class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 transition"
                             placeholder="Brief description…"
                         />
                         <p v-if="uploadForm.errors.description" class="text-red-400 text-xs mt-1">{{ uploadForm.errors.description }}</p>
@@ -384,7 +384,7 @@ function fileIconConfig(mimeType) {
                                     type="checkbox"
                                     :checked="allSelected"
                                     @change="toggleSelectAll"
-                                    class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                                    class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-blue-500 focus:ring-offset-0"
                                 />
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">File name</th>
@@ -403,7 +403,7 @@ function fileIconConfig(mimeType) {
                                     type="checkbox"
                                     :checked="selectedIds.has(doc.id)"
                                     @change="toggleSelect(doc.id)"
-                                    class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                                    class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-blue-500 focus:ring-offset-0"
                                 />
                             </td>
                             <td class="px-6 py-4">

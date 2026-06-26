@@ -61,7 +61,7 @@ function setLink() {
 </script>
 
 <template>
-    <div class="bg-slate-800 border border-white/10 rounded-lg overflow-hidden focus-within:border-violet-500 transition">
+    <div class="bg-slate-800 border border-white/10 rounded-lg overflow-hidden focus-within:border-blue-500 transition">
         <!-- Toolbar -->
         <div class="flex items-center gap-1 px-2 py-1.5 border-b border-white/10 flex-wrap">
             <button type="button" title="Bold"

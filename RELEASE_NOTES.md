@@ -2,6 +2,35 @@
 
 ---
 
+## [2.33.0] — 2026-06-27
+
+### Changed
+
+- **Frontend redesign — unified blue accent, flat dark UI** — all Vue pages and layouts redesigned for a cleaner, more professional aesthetic with consistent branding across every surface.
+
+  **Design system changes**
+
+  - Unified the three previous accent colors (emerald for tenant, violet for admin, blue for auth) into a single `blue-600` / `blue-500` system — no more surface-specific color identities
+  - Removed gradient backgrounds from auth pages (`Login/Index.vue`, `Auth/AppPicker.vue`) in favor of flat `bg-slate-950`
+  - Login and app picker cards simplified: removed `backdrop-blur`, reduced padding, replaced `bg-white/5` with `bg-slate-900 border border-slate-800`; labels now uppercase tracking-wide `text-xs text-slate-500`; inputs use `bg-slate-800 border-slate-700`
+
+  **Signature element: left-edge nav accent**
+
+  - Active navigation items across all sidebars now use a 2 px left-edge `border-l-2 border-blue-500` accent with no background fill, replacing the old background-fill active states
+  - Inactive items retain `hover:bg-white/5` for subtle interactivity without visual noise
+  - Applied consistently in `TenantLayout.vue`, `AdminTenantLayout.vue`, and all five admin pages with inline sidebars (`Admin/Index.vue`, `Admin/Users/Index.vue`, `Admin/Apps/Index.vue`, `Admin/Tenants/Index.vue`, `Admin/Settings/Index.vue`)
+
+  **Component-level updates**
+
+  - `TenantLayout.vue` — logo mark `bg-emerald-600` → `bg-blue-600`; avatar `bg-emerald-600` → `bg-blue-600`; active nav rewritten from background-fill to left-bar accent
+  - `AdminTenantLayout.vue` — removed `activeColors` and `hoverColors` JS objects and `color:` keys from nav config; active sub-nav tabs use `border-b-2 border-blue-500 text-white`; logo mark `bg-violet-600` → `bg-blue-600`
+  - `Pages/Partials/TenantSwitcher.vue` — switcher icon `text-emerald-400` → `text-blue-400`
+  - `Pages/Partials/TourButton.vue` — driver.js popover accent updated to blue: `rgba(53, 99, 233, ...)` and `#93b4fd` for button text
+  - `Admin/Tenants/ErrorDetail.vue` — Mark Resolved button `bg-blue-600/20 text-blue-400`; HTTP method badge `text-blue-300`
+  - Global: all remaining `bg-emerald-*`, `bg-violet-*`, `text-violet-*`, `focus:ring-violet-*`, `accent-emerald-*` / `accent-violet-*`, `border-violet-*`, `bg-violet-*/20` → blue equivalents across every page component
+
+---
+
 ## [2.32.0] — 2026-06-27
 
 ### Added

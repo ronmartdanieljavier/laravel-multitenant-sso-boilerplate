@@ -243,7 +243,7 @@ const flash = computed(() => page.props.flash ?? {});
                 <button v-for="tab in tabs" :key="tab.key"
                         @click="activeTab = tab.key"
                         :class="activeTab === tab.key
-                            ? 'border-b-2 border-violet-500 text-violet-300'
+                            ? 'border-b-2 border-blue-500 text-blue-300'
                             : 'text-slate-400 hover:text-slate-200'"
                         class="px-4 py-2 text-sm font-medium -mb-px transition">
                     {{ tab.label }}
@@ -263,7 +263,7 @@ const flash = computed(() => page.props.flash ?? {});
                             <div class="flex flex-wrap gap-3">
                                 <label v-for="d in [null, 'smtp', 'postmark', 'mailgun', 'ses']" :key="String(d)"
                                        class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="radio" v-model="emailForm.email_driver" :value="d" class="accent-violet-500" />
+                                    <input type="radio" v-model="emailForm.email_driver" :value="d" class="accent-blue-500" />
                                     <span class="text-sm text-slate-300 group-hover:text-white transition">{{ d ?? 'Use system default' }}</span>
                                 </label>
                             </div>
@@ -274,23 +274,23 @@ const flash = computed(() => page.props.flash ?? {});
                             <div class="border-t border-white/5 pt-4 grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Host</label>
-                                    <input v-model="emailForm.smtp_host" type="text" placeholder="smtp.example.com" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="emailForm.smtp_host" type="text" placeholder="smtp.example.com" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Port</label>
-                                    <input v-model="emailForm.smtp_port" type="number" placeholder="587" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="emailForm.smtp_port" type="number" placeholder="587" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Username</label>
-                                    <input v-model="emailForm.smtp_username" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="emailForm.smtp_username" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Password</label>
-                                    <input v-model="emailForm.smtp_password" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="emailForm.smtp_password" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Encryption</label>
-                                    <select v-model="emailForm.smtp_encryption" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                    <select v-model="emailForm.smtp_encryption" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                         <option value="tls">TLS</option>
                                         <option value="ssl">SSL</option>
                                         <option value="starttls">STARTTLS</option>
@@ -298,11 +298,11 @@ const flash = computed(() => page.props.flash ?? {});
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">From Address</label>
-                                    <input v-model="emailForm.smtp_from_address" type="email" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="emailForm.smtp_from_address" type="email" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-xs text-slate-400 mb-1">From Name</label>
-                                    <input v-model="emailForm.smtp_from_name" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="emailForm.smtp_from_name" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                             </div>
                         </template>
@@ -312,16 +312,16 @@ const flash = computed(() => page.props.flash ?? {});
                             <div class="border-t border-white/5 pt-4 space-y-4">
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Server Token</label>
-                                    <input v-model="emailForm.postmark_token" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <input v-model="emailForm.postmark_token" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Address</label>
-                                        <input v-model="emailForm.postmark_from_address" type="email" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.postmark_from_address" type="email" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Name</label>
-                                        <input v-model="emailForm.postmark_from_name" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.postmark_from_name" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                 </div>
                             </div>
@@ -333,26 +333,26 @@ const flash = computed(() => page.props.flash ?? {});
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Domain</label>
-                                        <input v-model="emailForm.mailgun_domain" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.mailgun_domain" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Secret</label>
-                                        <input v-model="emailForm.mailgun_secret" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.mailgun_secret" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Endpoint</label>
-                                        <select v-model="emailForm.mailgun_endpoint" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                        <select v-model="emailForm.mailgun_endpoint" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                             <option value="api.mailgun.net">US (api.mailgun.net)</option>
                                             <option value="api.eu.mailgun.net">EU (api.eu.mailgun.net)</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Address</label>
-                                        <input v-model="emailForm.mailgun_from_address" type="email" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.mailgun_from_address" type="email" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">From Name</label>
-                                        <input v-model="emailForm.mailgun_from_name" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.mailgun_from_name" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                 </div>
                             </div>
@@ -364,23 +364,23 @@ const flash = computed(() => page.props.flash ?? {});
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Access Key</label>
-                                        <input v-model="emailForm.ses_key" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.ses_key" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Secret</label>
-                                        <input v-model="emailForm.ses_secret" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.ses_secret" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Region</label>
-                                        <input v-model="emailForm.ses_region" type="text" placeholder="us-east-1" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.ses_region" type="text" placeholder="us-east-1" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">From Address</label>
-                                        <input v-model="emailForm.ses_from_address" type="email" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.ses_from_address" type="email" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                     <div class="col-span-2">
                                         <label class="block text-xs text-slate-400 mb-1">From Name</label>
-                                        <input v-model="emailForm.ses_from_name" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                        <input v-model="emailForm.ses_from_name" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     </div>
                                 </div>
                             </div>
@@ -389,7 +389,7 @@ const flash = computed(() => page.props.flash ?? {});
 
                     <div class="flex justify-end">
                         <button type="submit" :disabled="emailForm.processing"
-                                class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                             {{ emailForm.processing ? 'Saving…' : 'Save Email Settings' }}
                         </button>
                     </div>
@@ -408,7 +408,7 @@ const flash = computed(() => page.props.flash ?? {});
                             <label class="block text-xs text-slate-400 mb-2">Storage Driver Override</label>
                             <div class="flex flex-wrap gap-3">
                                 <label v-for="d in [null, 's3', 'r2']" :key="String(d)" class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="radio" v-model="storageForm.storage_driver" :value="d" class="accent-violet-500" />
+                                    <input type="radio" v-model="storageForm.storage_driver" :value="d" class="accent-blue-500" />
                                     <span class="text-sm text-slate-300 group-hover:text-white transition">{{ d ?? 'Use system default' }}</span>
                                 </label>
                             </div>
@@ -419,23 +419,23 @@ const flash = computed(() => page.props.flash ?? {});
                             <div class="border-t border-white/5 pt-4 grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Access Key</label>
-                                    <input v-model="storageForm.s3_key" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.s3_key" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Secret</label>
-                                    <input v-model="storageForm.s3_secret" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.s3_secret" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Region</label>
-                                    <input v-model="storageForm.s3_region" type="text" placeholder="us-east-1" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.s3_region" type="text" placeholder="us-east-1" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Bucket</label>
-                                    <input v-model="storageForm.s3_bucket" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.s3_bucket" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-xs text-slate-400 mb-1">URL <span class="text-slate-600">optional</span></label>
-                                    <input v-model="storageForm.s3_url" type="url" placeholder="https://cdn.example.com" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.s3_url" type="url" placeholder="https://cdn.example.com" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                             </div>
                         </template>
@@ -445,23 +445,23 @@ const flash = computed(() => page.props.flash ?? {});
                             <div class="border-t border-white/5 pt-4 grid grid-cols-2 gap-4">
                                 <div class="col-span-2">
                                     <label class="block text-xs text-slate-400 mb-1">Account ID</label>
-                                    <input v-model="storageForm.r2_account_id" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.r2_account_id" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Access Key</label>
-                                    <input v-model="storageForm.r2_access_key" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.r2_access_key" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Secret</label>
-                                    <input v-model="storageForm.r2_secret" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.r2_secret" type="password" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Bucket</label>
-                                    <input v-model="storageForm.r2_bucket" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.r2_bucket" type="text" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-1">Public URL <span class="text-slate-600">optional</span></label>
-                                    <input v-model="storageForm.r2_url" type="url" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                    <input v-model="storageForm.r2_url" type="url" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 </div>
                             </div>
                         </template>
@@ -479,7 +479,7 @@ const flash = computed(() => page.props.flash ?? {});
                                 <input type="checkbox"
                                        :checked="tenantAllowedTypeSet !== null"
                                        @change="tenantAllowedTypeSet = tenantAllowedTypeSet === null ? new Set(ALL_TYPE_KEYS) : null"
-                                       class="accent-violet-500 w-4 h-4" />
+                                       class="accent-blue-500 w-4 h-4" />
                                 <span class="text-sm text-slate-300">Override allowed file types for this tenant</span>
                             </label>
                         </div>
@@ -491,14 +491,14 @@ const flash = computed(() => page.props.flash ?? {});
                                     <input type="checkbox"
                                            :checked="tenantAllowedTypeSet.has(group.key)"
                                            @change="toggleTenantType(group.key)"
-                                           class="accent-violet-500 w-4 h-4" />
+                                           class="accent-blue-500 w-4 h-4" />
                                     <span class="text-sm text-slate-300">{{ group.label }}</span>
                                 </label>
                                 <div class="flex items-center gap-2" :class="{ 'opacity-40 pointer-events-none': !tenantAllowedTypeSet.has(group.key) }">
                                     <input v-model="storageForm[`upload_max_size_${group.key}`]"
                                            type="number" min="1" max="100"
                                            :placeholder="s[`effective_upload_max_size_${group.key}`] ?? '5'"
-                                           class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                           class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500" />
                                     <span class="text-sm text-slate-400">MB max</span>
                                     <span class="text-xs text-slate-600">blank = system default</span>
                                 </div>
@@ -509,7 +509,7 @@ const flash = computed(() => page.props.flash ?? {});
 
                     <div class="flex justify-end">
                         <button type="submit" :disabled="storageForm.processing"
-                                class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                             {{ storageForm.processing ? 'Saving…' : 'Save Storage Settings' }}
                         </button>
                     </div>
@@ -543,7 +543,7 @@ const flash = computed(() => page.props.flash ?? {});
 
                             <button v-if="logoFile" @click="uploadLogo" type="button"
                                     :disabled="logoUploadForm.processing"
-                                    class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+                                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
                                 {{ logoUploadForm.processing ? 'Uploading…' : 'Save Logo' }}
                             </button>
                         </div>
@@ -569,7 +569,7 @@ const flash = computed(() => page.props.flash ?? {});
 
                             <div class="flex justify-end">
                                 <button type="submit" :disabled="reportForm.processing"
-                                        class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                        class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                                     {{ reportForm.processing ? 'Saving…' : 'Save Report Settings' }}
                                 </button>
                             </div>
@@ -617,7 +617,7 @@ const flash = computed(() => page.props.flash ?? {});
                             <label class="block text-xs text-slate-400 mb-1">Queue name</label>
                             <input v-model="reportServerForm.report_queue" type="text"
                                    placeholder="reports"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                             <p class="text-xs text-slate-600 mt-1">The Horizon queue that report generation jobs will be pushed onto.</p>
                             <p v-if="reportServerForm.errors.report_queue" class="text-xs text-red-400 mt-1">{{ reportServerForm.errors.report_queue }}</p>
                         </div>
@@ -626,7 +626,7 @@ const flash = computed(() => page.props.flash ?? {});
                             <label class="block text-xs text-slate-400 mb-1">Timeout (seconds)</label>
                             <input v-model="reportServerForm.report_timeout" type="number" min="10" max="3600"
                                    placeholder="300"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                             <p class="text-xs text-slate-600 mt-1">Max seconds a report job may run before it is killed (10–3600).</p>
                             <p v-if="reportServerForm.errors.report_timeout" class="text-xs text-red-400 mt-1">{{ reportServerForm.errors.report_timeout }}</p>
                         </div>
@@ -637,7 +637,7 @@ const flash = computed(() => page.props.flash ?? {});
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Connection name</label>
                                 <select v-model="reportServerForm.report_connection"
-                                        class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                        class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                     <option value="">— use default —</option>
                                     <option v-for="conn in redisConnections" :key="conn" :value="conn">{{ conn }}</option>
                                 </select>
@@ -649,7 +649,7 @@ const flash = computed(() => page.props.flash ?? {});
 
                     <div class="flex justify-end">
                         <button type="submit" :disabled="reportServerForm.processing"
-                                class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                             {{ reportServerForm.processing ? 'Saving…' : 'Save Report Server Settings' }}
                         </button>
                     </div>
@@ -665,7 +665,7 @@ const flash = computed(() => page.props.flash ?? {});
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">App Name</label>
                             <input v-model="brandingForm.app_name" type="text" placeholder="My Tenant App"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                             <p v-if="brandingForm.errors.app_name" class="text-xs text-red-400 mt-1">{{ brandingForm.errors.app_name }}</p>
                         </div>
 
@@ -673,13 +673,13 @@ const flash = computed(() => page.props.flash ?? {});
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Support Email</label>
                                 <input v-model="brandingForm.support_email" type="email" placeholder="support@tenant.com"
-                                       class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                       class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 <p v-if="brandingForm.errors.support_email" class="text-xs text-red-400 mt-1">{{ brandingForm.errors.support_email }}</p>
                             </div>
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Support URL</label>
                                 <input v-model="brandingForm.support_url" type="url" placeholder="https://help.tenant.com"
-                                       class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500" />
+                                       class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500" />
                                 <p v-if="brandingForm.errors.support_url" class="text-xs text-red-400 mt-1">{{ brandingForm.errors.support_url }}</p>
                             </div>
                         </div>
@@ -687,7 +687,7 @@ const flash = computed(() => page.props.flash ?? {});
 
                     <div class="flex justify-end">
                         <button type="submit" :disabled="brandingForm.processing"
-                                class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                                class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                             {{ brandingForm.processing ? 'Saving…' : 'Save Branding' }}
                         </button>
                     </div>

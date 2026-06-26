@@ -108,14 +108,14 @@ defineEmits(['click']);
 
 .app-tour-popover .driver-popover-next-btn,
 .app-tour-popover .driver-popover-done-btn {
-    background: rgba(124, 58, 237, 0.3) !important;
-    border-color: rgba(124, 58, 237, 0.4) !important;
-    color: #c4b5fd !important;
+    background: rgba(53, 99, 233, 0.3) !important;
+    border-color: rgba(53, 99, 233, 0.4) !important;
+    color: #93b4fd !important;
 }
 
 .app-tour-popover .driver-popover-next-btn:hover,
 .app-tour-popover .driver-popover-done-btn:hover {
-    background: rgba(124, 58, 237, 0.45) !important;
+    background: rgba(53, 99, 233, 0.45) !important;
 }
 
 .app-tour-popover .driver-popover-close-btn {

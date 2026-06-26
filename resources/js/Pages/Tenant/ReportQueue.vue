@@ -40,7 +40,7 @@ function statusBadge(status) {
 const formatConfig = {
     pdf:    { label: 'PDF',    cls: 'bg-red-500/20 text-red-300' },
     excel:  { label: 'Excel',  cls: 'bg-emerald-500/20 text-emerald-300' },
-    screen: { label: 'Screen', cls: 'bg-violet-500/20 text-violet-300' },
+    screen: { label: 'Screen', cls: 'bg-blue-500/20 text-blue-300' },
 };
 
 function formatBadge(format) {
@@ -204,7 +204,7 @@ const { startTour } = useTour('tenant-report-queue', [
                 </div>
                 <button id="tour-rq-generate"
                         @click="showGenerateModal = true"
-                        class="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition">
+                        class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition">
                     Generate Report
                 </button>
             </div>
@@ -385,7 +385,7 @@ const { startTour } = useTour('tenant-report-queue', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1.5">Report Type</label>
                         <select v-model="quickForm.type"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option v-for="rt in reportTypes" :key="rt.value" :value="rt.value">{{ rt.label }}</option>
                         </select>
                         <p v-if="quickForm.errors.type" class="mt-1 text-xs text-red-400">{{ quickForm.errors.type }}</p>
@@ -397,7 +397,7 @@ const { startTour } = useTour('tenant-report-queue', [
                             <label v-for="rf in reportFormats" :key="rf.value"
                                    :class="['flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition',
                                             quickForm.format === rf.value
-                                                ? 'border-violet-500 bg-violet-500/10 text-violet-300'
+                                                ? 'border-blue-500 bg-blue-500/10 text-blue-300'
                                                 : 'border-white/10 text-slate-400 hover:border-white/20']">
                                 <input type="radio" :value="rf.value" v-model="quickForm.format" class="sr-only" />
                                 {{ rf.label }}
@@ -413,7 +413,7 @@ const { startTour } = useTour('tenant-report-queue', [
                         </button>
                         <button type="submit"
                                 :disabled="quickForm.processing"
-                                class="flex-1 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium transition">
+                                class="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition">
                             {{ quickForm.processing ? 'Dispatching…' : 'Dispatch Job' }}
                         </button>
                     </div>
@@ -434,7 +434,7 @@ const { startTour } = useTour('tenant-report-queue', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1.5">Report Type</label>
                         <select v-model="subForm.type"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option v-for="rt in reportTypes" :key="rt.value" :value="rt.value">{{ rt.label }}</option>
                         </select>
                         <p v-if="subForm.errors.type" class="mt-1 text-xs text-red-400">{{ subForm.errors.type }}</p>
@@ -446,7 +446,7 @@ const { startTour } = useTour('tenant-report-queue', [
                             <label v-for="rf in reportFormats" :key="rf.value"
                                    :class="['flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition',
                                             subForm.format === rf.value
-                                                ? 'border-violet-500 bg-violet-500/10 text-violet-300'
+                                                ? 'border-blue-500 bg-blue-500/10 text-blue-300'
                                                 : 'border-white/10 text-slate-400 hover:border-white/20']">
                                 <input type="radio" :value="rf.value" v-model="subForm.format" class="sr-only" />
                                 {{ rf.label }}
@@ -457,7 +457,7 @@ const { startTour } = useTour('tenant-report-queue', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1.5">Frequency</label>
                         <select v-model="subForm.frequency"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option v-for="f in frequencies" :key="f.value" :value="f.value">{{ f.label }}</option>
                         </select>
                         <p v-if="subForm.errors.frequency" class="mt-1 text-xs text-red-400">{{ subForm.errors.frequency }}</p>
@@ -466,7 +466,7 @@ const { startTour } = useTour('tenant-report-queue', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1.5">Delivery</label>
                         <select v-model="subForm.delivery"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option v-for="d in deliveries" :key="d.value" :value="d.value">{{ d.label }}</option>
                         </select>
                     </div>
@@ -474,7 +474,7 @@ const { startTour } = useTour('tenant-report-queue', [
                     <div v-if="subForm.delivery === 'email' || subForm.delivery === 'email_and_s3'">
                         <label class="block text-xs text-slate-400 mb-1.5">Recipients <span class="text-slate-600">(comma-separated)</span></label>
                         <input v-model="subForm.recipients" type="text" placeholder="admin@example.com, ops@example.com"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         <p v-if="subForm.errors.recipients" class="mt-1 text-xs text-red-400">{{ subForm.errors.recipients }}</p>
                     </div>
 
@@ -485,7 +485,7 @@ const { startTour } = useTour('tenant-report-queue', [
                         </button>
                         <button type="submit"
                                 :disabled="subForm.processing"
-                                class="flex-1 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium transition">
+                                class="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition">
                             {{ subForm.processing ? 'Saving…' : 'Create Subscription' }}
                         </button>
                     </div>

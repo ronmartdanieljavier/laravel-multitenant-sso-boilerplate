@@ -153,7 +153,7 @@ const { startTour } = useTour('admin-users', [
         <!-- Sidebar -->
         <aside class="fixed inset-y-0 left-0 w-60 bg-slate-900 border-r border-white/5 flex flex-col">
             <div class="h-16 flex items-center px-6 border-b border-white/5">
-                <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center mr-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
@@ -166,7 +166,7 @@ const { startTour } = useTour('admin-users', [
                     Dashboard
                 </Link>
                 <Link href="/admin/users"
-                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition bg-violet-600/20 text-violet-300">
+                      class="flex items-center gap-3 py-2 text-sm font-medium transition border-l-2 border-blue-500 rounded-r-lg pl-[10px] pr-3 text-white">
                     Users
                 </Link>
                 <Link href="/admin/apps"
@@ -197,7 +197,7 @@ const { startTour } = useTour('admin-users', [
                         <div v-if="page.props.auth.user?.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
                             <img :src="page.props.auth.user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
                         </div>
-                        <div v-else class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        <div v-else class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
                             {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'A' }}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -233,7 +233,7 @@ const { startTour } = useTour('admin-users', [
             <header id="tour-users-header" class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
                 <h2 class="text-lg font-semibold">User Management</h2>
                 <button @click="openInvite"
-                        class="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+                        class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
                     Invite User
                 </button>
             </header>
@@ -290,7 +290,7 @@ const { startTour } = useTour('admin-users', [
                                 </td>
                                 <td class="px-6 py-4">
                                     <button @click="openEdit(user)"
-                                            class="text-violet-400 hover:text-violet-300 text-xs transition">
+                                            class="text-blue-400 hover:text-blue-300 text-xs transition">
                                         Edit
                                     </button>
                                 </td>
@@ -325,7 +325,7 @@ const { startTour } = useTour('admin-users', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Name</label>
                         <input v-model="inviteForm.name" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                                :class="{ 'border-red-500': inviteForm.errors.name }"
                                placeholder="Full name" />
                         <p v-if="inviteForm.errors.name" class="text-red-400 text-xs mt-1">{{ inviteForm.errors.name }}</p>
@@ -334,7 +334,7 @@ const { startTour } = useTour('admin-users', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Email</label>
                         <input v-model="inviteForm.email" type="email"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                                :class="{ 'border-red-500': inviteForm.errors.email }"
                                placeholder="user@example.com" />
                         <p v-if="inviteForm.errors.email" class="text-red-400 text-xs mt-1">{{ inviteForm.errors.email }}</p>
@@ -345,7 +345,7 @@ const { startTour } = useTour('admin-users', [
                         <div class="flex items-center justify-between mb-2">
                             <label class="text-xs text-slate-400">App Access</label>
                             <button type="button" @click="addApp(inviteForm)"
-                                    class="text-xs text-violet-400 hover:text-violet-300 transition">
+                                    class="text-xs text-blue-400 hover:text-blue-300 transition">
                                 + Add App
                             </button>
                         </div>
@@ -355,7 +355,7 @@ const { startTour } = useTour('admin-users', [
                             <div class="flex gap-2">
                                 <div class="flex-1">
                                     <select v-model="appEntry.app_id"
-                                            class="w-full bg-slate-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                            class="w-full bg-slate-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                         <option :value="null" disabled>Select app</option>
                                         <option v-for="app in apps" :key="app.id" :value="app.id"
                                                 :disabled="usedAppIds(inviteForm, index).includes(app.id)">
@@ -365,7 +365,7 @@ const { startTour } = useTour('admin-users', [
                                 </div>
                                 <div>
                                     <select v-model="appEntry.role"
-                                            class="bg-slate-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                            class="bg-slate-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                         <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
                                     </select>
                                 </div>
@@ -384,7 +384,7 @@ const { startTour } = useTour('admin-users', [
                                             type="button"
                                             @click="toggleTenant(inviteForm, index, tenant.id)"
                                             :class="isTenantSelected(inviteForm, index, tenant.id)
-                                                ? 'bg-violet-600/30 border-violet-500/50 text-violet-300'
+                                                ? 'bg-blue-600/30 border-blue-500/50 text-blue-300'
                                                 : 'bg-slate-700/40 border-white/5 text-slate-400 hover:border-white/20'"
                                             class="text-xs px-2 py-0.5 rounded-full border transition">
                                         {{ tenant.name }}
@@ -399,7 +399,7 @@ const { startTour } = useTour('admin-users', [
                     <div class="flex items-center gap-3 pt-2">
                         <button type="submit"
                                 :disabled="inviteForm.processing"
-                                class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+                                class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
                             Send Invitation
                         </button>
                         <button type="button" @click="closeInvite"
@@ -431,7 +431,7 @@ const { startTour } = useTour('admin-users', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Name</label>
                         <input v-model="editForm.name" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                                :class="{ 'border-red-500': editForm.errors.name }"
                                placeholder="Full name" />
                         <p v-if="editForm.errors.name" class="text-red-400 text-xs mt-1">{{ editForm.errors.name }}</p>
@@ -440,7 +440,7 @@ const { startTour } = useTour('admin-users', [
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Email</label>
                         <input v-model="editForm.email" type="email"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                                :class="{ 'border-red-500': editForm.errors.email }"
                                placeholder="user@example.com" />
                         <p v-if="editForm.errors.email" class="text-red-400 text-xs mt-1">{{ editForm.errors.email }}</p>
@@ -451,7 +451,7 @@ const { startTour } = useTour('admin-users', [
                         <div class="flex items-center justify-between mb-2">
                             <label class="text-xs text-slate-400">App Access</label>
                             <button type="button" @click="addApp(editForm)"
-                                    class="text-xs text-violet-400 hover:text-violet-300 transition">
+                                    class="text-xs text-blue-400 hover:text-blue-300 transition">
                                 + Add App
                             </button>
                         </div>
@@ -461,7 +461,7 @@ const { startTour } = useTour('admin-users', [
                             <div class="flex gap-2">
                                 <div class="flex-1">
                                     <select v-model="appEntry.app_id"
-                                            class="w-full bg-slate-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                            class="w-full bg-slate-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                         <option :value="null" disabled>Select app</option>
                                         <option v-for="app in apps" :key="app.id" :value="app.id"
                                                 :disabled="usedAppIds(editForm, index).includes(app.id)">
@@ -471,7 +471,7 @@ const { startTour } = useTour('admin-users', [
                                 </div>
                                 <div>
                                     <select v-model="appEntry.role"
-                                            class="bg-slate-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500">
+                                            class="bg-slate-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                                         <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
                                     </select>
                                 </div>
@@ -490,7 +490,7 @@ const { startTour } = useTour('admin-users', [
                                             type="button"
                                             @click="toggleTenant(editForm, index, tenant.id)"
                                             :class="isTenantSelected(editForm, index, tenant.id)
-                                                ? 'bg-violet-600/30 border-violet-500/50 text-violet-300'
+                                                ? 'bg-blue-600/30 border-blue-500/50 text-blue-300'
                                                 : 'bg-slate-700/40 border-white/5 text-slate-400 hover:border-white/20'"
                                             class="text-xs px-2 py-0.5 rounded-full border transition">
                                         {{ tenant.name }}
@@ -505,7 +505,7 @@ const { startTour } = useTour('admin-users', [
                     <div class="flex items-center gap-3 pt-2">
                         <button type="submit"
                                 :disabled="editForm.processing"
-                                class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+                                class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
                             Save Changes
                         </button>
                         <button type="button" @click="closeEdit"

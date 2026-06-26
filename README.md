@@ -60,9 +60,9 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
         │  reports  error_logs │  └─────────────┘  │  ScheduledReports     │
         └──────────┬───────────┘                   └───────────────────────┘
                    │
-                   │  ResolveTenantDatabase middleware
-                   │  X-Tenant header → per-request DB connection
-                   │  from credentials stored in Central DB
+                   │  ResolveTenantDatabase (API) — X-Tenant header
+                   │  ResolveWebTenantDatabase (Web) — session key
+                   │  → per-request DB connection from Central DB
                    │
         ┌──────────┼──────────────┐
         │          │              │
@@ -126,6 +126,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 **Tenant portal**
 - Persistent sidebar layout (`TenantLayout.vue`) so users navigate between Dashboard and Report Queue without page flicker
 - Report queue page at `/tenant/reports` — live status polling every 4 s, stat cards, format/status badges, download links
+- **Tenant switcher** — users assigned to more than one tenant see a dropdown in the sidebar below the tenant name; selecting a tenant posts to `POST /tenant/switch`, updates `session('tenant_app_current_tenant')`, and reloads the page with the new tenant's DB connection wired in
 
 **Inertia.js + Vue 3 frontend**
 - Vue 3 page components served via Inertia.js — no separate frontend server
@@ -248,9 +249,10 @@ laravel-multitenant-sso-boilerplate/
 │   │
 │   ├── Http/
 │   │   ├── Controllers/Controller.php
-│   │   ├── Middleware/HandleInertiaRequests.php # Inertia shared props — auth (closure), flash, tenant, app, role, missingRequiredSettings
+│   │   ├── Middleware/HandleInertiaRequests.php     # Inertia shared props — auth, flash, tenant, app, role, availableTenants, missingRequiredSettings
 │   │   ├── Middleware/RequireRole.php
-│   │   ├── Middleware/ResolveTenantDatabase.php
+│   │   ├── Middleware/ResolveTenantDatabase.php     # API — resolves tenant from X-App + X-Tenant headers
+│   │   ├── Middleware/ResolveWebTenantDatabase.php  # Web — resolves tenant from session key
 │   │   └── Requests/Admin/
 │   │       └── UpdateSystemSettingsRequest.php  # 80+ validation rules across all 7 setting tabs
 │   ├── Http/Resources/
@@ -364,12 +366,27 @@ laravel-multitenant-sso-boilerplate/
 │   │       ├── ReportRepository.php        # create()→ReportRepositoryData, listForUser()→LengthAwarePaginator<ReportRepositoryData>
 │   │       ├── SystemSettingRepository.php # get(), set()
 │   │       ├── TenantRepository.php        # allWithMigrationVersions(), listActive(), listOrdered(), find(), create(), update(), setActive(), delete(), dropDatabase(), getUserIdsForTenant() — all return TenantRepositoryData or void
-│   │       ├── UserAppRepository.php       # syncPermissions()
+│   │       ├── UserAppRepository.php       # syncPermissions(), getTenantsForUserAndApp(), getDefaultTenantSlugForUserAndApp()
 │   │       └── UserRepository.php          # find(), listWithPermissions(), findWithPermissions(), createInvited(), updateProfile(), activateInvitation(), … — all return DTOs
 │   │
 │   └── Tenant/
-│       └── Routes/
-│           └── api_tenant.php              # Tenant API routes
+│       ├── Data/
+│       │   └── TenantData.php              # Spatie Data — { id, name, slug, isCurrent }
+│       ├── Http/
+│       │   ├── Controllers/
+│       │   │   ├── TenantSwitcherController.php     # POST /tenant/switch (web)
+│       │   │   └── TenantSwitcherApiController.php  # GET /api/v1/tenant/tenants, POST /api/v1/tenant/switch
+│       │   └── Requests/
+│       │       └── SwitchTenantRequest.php          # tenant_slug (required, string)
+│       ├── Routes/
+│       │   ├── web_tenant.php              # Tenant web routes (all via ResolveWebTenantDatabase)
+│       │   └── api_tenant.php              # Tenant API routes
+│       ├── Services/
+│       │   └── TenantSwitcherService.php   # getTenantsForUser(), initializeForUser(), switchTenant()
+│       └── Tests/
+│           ├── TenantSwitcherApiTest.php   # 4 PHPUnit tests — API surface
+│           ├── TenantSwitcherServiceTest.php # 7 PHPUnit tests — service layer
+│           └── TenantSwitcherWebTest.php   # 3 PHPUnit tests — web surface
 │
 ├── database/
 │   ├── factories/
@@ -399,8 +416,8 @@ laravel-multitenant-sso-boilerplate/
 │   │   ├── Layouts/
 │   │   │   ├── AdminTenantLayout.vue       # Persistent layout for admin tenant pages — main sidebar + tenant sub-nav (Settings/Users/Reports/Errors)
 │   │   │   ├── AdminTenantLayout.test.js   # 13 Vitest tests
-│   │   │   ├── TenantLayout.vue            # Persistent layout for tenant portal — sidebar with Dashboard + Report Queue nav
-│   │   │   └── TenantLayout.test.js        # Vitest tests
+│   │   │   ├── TenantLayout.vue            # Persistent layout for tenant portal — tenant switcher, nav, user profile + logout icon
+│   │   │   └── TenantLayout.test.js        # 16 Vitest tests
 │   │   ├── Pages/
 │   │   │   ├── Admin/Index.vue             # Admin landing page (missing-settings banner)
 │   │   │   ├── Admin/Index.test.js
@@ -435,6 +452,8 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── Profile/Index.vue           # User profile page (name, picture, password)
 │   │   │   └── Profile/Index.test.js
 │   │   ├── Pages/Partials/
+│   │   │   ├── TenantSwitcher.vue          # Tenant switcher dropdown — lists accessible tenants, posts to /tenant/switch
+│   │   │   ├── TenantSwitcher.test.js      # 11 Vitest tests
 │   │   │   └── TourButton.vue              # Floating ? button (Teleport to body) — triggers page tours; dark-theme driver.js CSS overrides
 │   │   ├── composables/
 │   │   │   ├── useIdleTimeout.js           # Idle session timeout composable
@@ -534,7 +553,8 @@ What's built:
 - **Tenant maintenance mode (Phase 5.9)** — admin can put any individual tenant or all tenants simultaneously into maintenance mode; enabling immediately revokes all Sanctum tokens for affected tenant users (force logout), hides the tenant from the app picker (`AppService.loadApps()`), and returns HTTP 503 on all API requests resolved through that tenant; admin UI on `/admin/tenants` includes per-row toggle buttons and "Maintenance: All On / All Off" bulk buttons; a dedicated "In Maintenance" summary card appears on both the tenant list and admin dashboard; full REST API via `PATCH /api/v1/admin/tenants/{id}/maintenance` and `PATCH /api/v1/admin/tenants/maintenance/all`
 - **App tour system** — every page has a guided tour (driver.js) that auto-starts on first visit, can be skipped, and retriggered via a floating `?` button; tour-seen state persisted per page in `localStorage`; 12 pages covered (admin dashboard, tenants, apps, users, settings, tenant settings/users/reports/errors, tenant portal dashboard and report queue, user profile); `useTour` composable + `TourButton.vue` component; all 217 Vitest tests pass with a global driver.js mock in `test-setup.js`
 - **Tenant logged-in users (Phase 5.10)** — admin can see how many users are currently online per tenant (green "X online" dot on the tenant list) and view per-user live session status on the tenant users page; Force Logout button immediately revokes all Sanctum tokens for a specific user; `TenantData` gains `loggedInCount`, `UserData` gains `isLoggedIn`; powered by `TenantRepository::loggedInUserCountByTenant()` and `loggedInUserIdsForTenant()` (join on `personal_access_tokens`); full REST API via `DELETE /api/v1/admin/tenants/{tenant}/users/{user}/session`
-- **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (Dashboard + Report Queue sidebar); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
+- **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (tenant switcher + Dashboard + Report Queue sidebar + user profile/logout footer); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
+- **Tenant switcher (Phase 6.7)** — `TenantSwitcherService` + `TenantSwitcherController` (web) + `TenantSwitcherApiController` (API); `ResolveWebTenantDatabase` middleware for session-based tenant resolution; `TenantSwitcher.vue` dropdown component; `availableTenants` Inertia shared prop; 16 PHPUnit + 27 Vitest tests
 - **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
 - **Frontend landing pages** — dark-themed Vue 3 SFCs for Login, Admin, Tenant, and Reports at `/login`, `/admin`, `/tenant`, `/reports`
@@ -643,6 +663,13 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `POST` | `/api/v1/admin/tenants/{tenant}/migrate` | Bearer | Run pending migrations for a single tenant |
 | `POST` | `/api/v1/admin/tenants/migrate-all` | Bearer | Run pending migrations across all tenant databases |
 | `DELETE` | `/api/v1/admin/tenants/{tenant}` | Bearer | Delete a tenant — revokes tokens, drops DB, removes all central records |
+
+**Tenant Switcher (API — Bearer token auth)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/tenant/tenants` | Bearer | List all tenants accessible to the authenticated user (excludes maintenance); each entry includes `is_current` |
+| `POST` | `/api/v1/tenant/switch` | Bearer | Switch the active tenant by slug; updates session; returns 403 if not assigned |
 
 **Tenant Report Queue (API — Bearer + X-App + X-Tenant headers)**
 
@@ -852,6 +879,7 @@ public function share(Request $request): array
         'tenant'              => fn () => $request->attributes->get('current_tenant'),
         'app'                 => fn () => $request->attributes->get('current_app'),
         'role'                => fn () => $request->attributes->get('current_role'),
+        'availableTenants'    => fn () => $this->resolveAvailableTenants($request),
         'idleTimeoutMinutes'  => fn () => $request->user()
             ? (int) SystemSetting::get('authentication_idle_time', 30)
             : null,
@@ -1110,13 +1138,13 @@ Phase 6 makes every per-tenant setting configured in Phase 5.7 visible and funct
 - [ ] Two additional reports sharing the same `batch_id` are inserted and dispatched together — demonstrating batch dispatch, parallel processing, and ZIP download on completion
 - [ ] All four reports use `delivery: download` so they appear on the tenant report queue page and can be re-dispatched from the UI
 
-*6.7 — Tenant switcher (multi-tenant access)*
-- [ ] Users assigned to more than one tenant under the **Tenant** app see a switcher dropdown in the `TenantLayout.vue` sidebar header, replacing the static tenant name display
-- [ ] New `ResolveTenantWeb` middleware replaces `ResolveTenantDatabase` on all web tenant routes — resolves the active tenant from `session('tenant_slug')`, falling back to the user's `is_default` tenant in `user_app_tenants`; sets `current_tenant`, `current_app`, and `current_role` on request attributes and wires the per-request `tenant` DB connection (same logic as the API middleware but without `X-App`/`X-Tenant` headers or token ability checks)
-- [ ] New `POST /tenant/switch` route handled by `TenantSwitchController` — validates the requested tenant slug against the user's permitted tenant list, updates the session, and redirects to the current page
-- [ ] `HandleInertiaRequests` shares `accessibleTenants` (id, name, slug) for authenticated tenant-portal pages — powers the switcher dropdown without an extra API call
-- [ ] Switching tenant triggers a full Inertia visit (page reload) so all page props reflect the new tenant context immediately
-- [ ] **API note** — the existing `ResolveTenantDatabase` middleware already handles tenant switching for API consumers via the `X-Tenant` request header; no additional API endpoint is needed for mobile/external clients
+*6.7 — Tenant switcher (multi-tenant access)* *(done)*
+- [x] Users assigned to more than one tenant under the **Tenant** app see a switcher dropdown in the `TenantLayout.vue` sidebar header directly below the tenant name
+- [x] New `ResolveWebTenantDatabase` middleware on all web tenant routes — resolves the active tenant from `session('tenant_app_current_tenant')`, falling back to the user's `is_default` tenant in `user_app_tenants`; sets `current_tenant` and `current_app` on request attributes and wires the per-request `tenant` DB connection
+- [x] `POST /tenant/switch` route handled by `TenantSwitcherController` — validates the requested tenant slug against the user's permitted tenant list, updates the session, and redirects to `/tenant`
+- [x] `HandleInertiaRequests` shares `availableTenants` (`{id, name, slug, isCurrent}[]`) for authenticated tenant-portal pages when the user has more than one accessible tenant
+- [x] Switching tenant triggers a full Inertia visit so all page props reflect the new tenant context immediately
+- [x] **API** — `GET /api/v1/tenant/tenants` lists accessible tenants; `POST /api/v1/tenant/switch` switches the active tenant for API consumers
 
 ---
 

@@ -215,4 +215,84 @@ class TenantSettingsWebTest extends TestCase
                 ->where('tenant.id', $tenant->id)
             );
     }
+
+    public function test_upload_settings_appear_in_tenant_settings_payload(): void
+    {
+        $user = User::factory()->create();
+        $tenant = $this->tenant();
+
+        $this->actingAs($user)
+            ->get(route('admin.tenants.settings', $tenant))
+            ->assertInertia(fn ($page) => $page
+                ->has('settings', fn ($s) => $s
+                    ->has('upload_allowed_types')
+                    ->has('upload_max_size_pdf')
+                    ->has('upload_max_size_doc')
+                    ->has('upload_max_size_text')
+                    ->has('upload_max_size_excel')
+                    ->has('upload_max_size_image')
+                    ->has('upload_max_size_csv')
+                    ->has('effective_upload_allowed_types')
+                    ->has('effective_upload_max_size_pdf')
+                    ->etc()
+                )
+            );
+    }
+
+    public function test_tenant_upload_settings_can_be_saved(): void
+    {
+        $user = User::factory()->create();
+        $tenant = $this->tenant();
+
+        $this->actingAs($user)
+            ->put(route('admin.tenants.settings.update', $tenant), [
+                'upload_allowed_types' => 'pdf,csv',
+                'upload_max_size_pdf' => 8,
+                'upload_max_size_csv' => 2,
+            ])
+            ->assertRedirect(route('admin.tenants.settings', $tenant));
+
+        $this->assertDatabaseHas('tenant_settings', [
+            'tenant_id' => $tenant->id,
+            'key' => 'upload_allowed_types',
+            'value' => 'pdf,csv',
+        ]);
+
+        $this->assertDatabaseHas('tenant_settings', [
+            'tenant_id' => $tenant->id,
+            'key' => 'upload_max_size_pdf',
+            'value' => '8',
+        ]);
+    }
+
+    public function test_tenant_upload_max_size_above_100_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $tenant = $this->tenant();
+
+        $this->actingAs($user)
+            ->put(route('admin.tenants.settings.update', $tenant), [
+                'upload_max_size_excel' => 101,
+            ])
+            ->assertSessionHasErrors('upload_max_size_excel');
+    }
+
+    public function test_clearing_tenant_upload_settings_removes_rows(): void
+    {
+        $user = User::factory()->create();
+        $tenant = $this->tenant();
+
+        TenantSetting::create(['tenant_id' => $tenant->id, 'key' => 'upload_allowed_types', 'value' => 'pdf']);
+
+        $this->actingAs($user)
+            ->put(route('admin.tenants.settings.update', $tenant), [
+                'upload_allowed_types' => null,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('tenant_settings', [
+            'tenant_id' => $tenant->id,
+            'key' => 'upload_allowed_types',
+        ]);
+    }
 }

@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import RichTextEditor from '../Settings/RichTextEditor.vue';
 import AdminTenantLayout from '../../../Layouts/AdminTenantLayout.vue';
 import TourButton from '../../Partials/TourButton.vue';
@@ -74,6 +74,35 @@ function saveEmail() {
 
 // ── Storage ───────────────────────────────────────────────────────────────────
 
+const FILE_TYPE_GROUPS = [
+    { key: 'pdf',   label: 'PDF' },
+    { key: 'doc',   label: 'Word (DOC/DOCX)' },
+    { key: 'text',  label: 'Plain Text' },
+    { key: 'excel', label: 'Excel (XLS/XLSX)' },
+    { key: 'image', label: 'Images (JPG/PNG/GIF/WebP)' },
+    { key: 'csv',   label: 'CSV' },
+];
+
+const ALL_TYPE_KEYS = FILE_TYPE_GROUPS.map(g => g.key);
+
+function parseAllowedTypes(raw) {
+    if (!raw) { return null; }
+    return new Set(raw.split(',').map(x => x.trim()).filter(Boolean));
+}
+
+const tenantAllowedTypeSet = ref(parseAllowedTypes(s.upload_allowed_types));
+
+function toggleTenantType(key) {
+    if (tenantAllowedTypeSet.value === null) {
+        tenantAllowedTypeSet.value = new Set(ALL_TYPE_KEYS);
+    }
+    if (tenantAllowedTypeSet.value.has(key)) {
+        tenantAllowedTypeSet.value.delete(key);
+    } else {
+        tenantAllowedTypeSet.value.add(key);
+    }
+}
+
 const storageForm = useForm({
     storage_driver: s.storage_driver ?? null,
     s3_key: s.s3_key ?? '',
@@ -86,9 +115,21 @@ const storageForm = useForm({
     r2_secret: s.r2_secret ?? '',
     r2_bucket: s.r2_bucket ?? '',
     r2_url: s.r2_url ?? '',
+    upload_allowed_types: s.upload_allowed_types ?? null,
+    upload_max_size_pdf: s.upload_max_size_pdf ?? '',
+    upload_max_size_doc: s.upload_max_size_doc ?? '',
+    upload_max_size_text: s.upload_max_size_text ?? '',
+    upload_max_size_excel: s.upload_max_size_excel ?? '',
+    upload_max_size_image: s.upload_max_size_image ?? '',
+    upload_max_size_csv: s.upload_max_size_csv ?? '',
 });
 
+watch(tenantAllowedTypeSet, (set) => {
+    storageForm.upload_allowed_types = set ? [...set].join(',') : null;
+}, { deep: true });
+
 function saveStorage() {
+    storageForm.upload_allowed_types = tenantAllowedTypeSet.value ? [...tenantAllowedTypeSet.value].join(',') : null;
     storageForm.put(`/admin/tenants/${props.tenant.id}/settings`);
 }
 
@@ -424,6 +465,46 @@ const flash = computed(() => page.props.flash ?? {});
                                 </div>
                             </div>
                         </template>
+                    </div>
+
+                    <!-- Upload Settings -->
+                    <div class="bg-slate-900 border border-white/5 rounded-xl p-6 space-y-5">
+                        <div>
+                            <h3 class="font-semibold text-white">Document Upload Settings</h3>
+                            <p class="text-xs text-slate-400 mt-1">Override the system-wide upload settings for this tenant. Leave the override toggle off to inherit from system defaults.</p>
+                        </div>
+
+                        <div class="flex items-center gap-3 mb-2">
+                            <label class="flex items-center gap-2.5 cursor-pointer">
+                                <input type="checkbox"
+                                       :checked="tenantAllowedTypeSet !== null"
+                                       @change="tenantAllowedTypeSet = tenantAllowedTypeSet === null ? new Set(ALL_TYPE_KEYS) : null"
+                                       class="accent-violet-500 w-4 h-4" />
+                                <span class="text-sm text-slate-300">Override allowed file types for this tenant</span>
+                            </label>
+                        </div>
+
+                        <div v-if="tenantAllowedTypeSet !== null" class="space-y-3 pl-6 border-l border-white/5">
+                            <div v-for="group in FILE_TYPE_GROUPS" :key="group.key"
+                                 class="flex items-center gap-4 py-2 border-b border-white/5 last:border-0">
+                                <label class="flex items-center gap-2.5 cursor-pointer w-52 shrink-0">
+                                    <input type="checkbox"
+                                           :checked="tenantAllowedTypeSet.has(group.key)"
+                                           @change="toggleTenantType(group.key)"
+                                           class="accent-violet-500 w-4 h-4" />
+                                    <span class="text-sm text-slate-300">{{ group.label }}</span>
+                                </label>
+                                <div class="flex items-center gap-2" :class="{ 'opacity-40 pointer-events-none': !tenantAllowedTypeSet.has(group.key) }">
+                                    <input v-model="storageForm[`upload_max_size_${group.key}`]"
+                                           type="number" min="1" max="100"
+                                           :placeholder="s[`effective_upload_max_size_${group.key}`] ?? '5'"
+                                           class="w-20 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-violet-500" />
+                                    <span class="text-sm text-slate-400">MB max</span>
+                                    <span class="text-xs text-slate-600">blank = system default</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-else class="text-xs text-slate-500 pl-6">Using system-wide upload settings.</p>
                     </div>
 
                     <div class="flex justify-end">

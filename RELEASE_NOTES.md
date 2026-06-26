@@ -2,6 +2,40 @@
 
 ---
 
+## [2.24.0] — 2026-06-26
+
+### Added
+
+- **Document upload constraints — Phase 6.3** — configurable allowed file types and per-type maximum file sizes for tenant document uploads, enforced at both the system level and per-tenant override level.
+
+  **Backend**
+
+  - `SystemSettingsData` — 7 new nullable props: `uploadAllowedTypes`, `uploadMaxSizePdf`, `uploadMaxSizeDoc`, `uploadMaxSizeText`, `uploadMaxSizeExcel`, `uploadMaxSizeImage`, `uploadMaxSizeCsv`
+  - `SystemSettingsService::getSettings()` — reads all 7 new keys from `system_settings`
+  - `UpdateSystemSettingsRequest` — 7 new nullable validation rules (`upload_allowed_types`: string max:255; per-type sizes: integer 1–100)
+  - `TenantSettingsData` — 7 tenant override props + 7 effective value props (e.g. `effectiveUploadAllowedTypes`, `effectiveUploadMaxSizePdf`, …)
+  - `TenantSettingsService::getSettings()` — populates new upload props and resolves effective values (tenant override → system setting → hardcoded default)
+  - `TenantSettingsService::resolveUploadConstraints(int $tenantId): array` — new method returning `{ allowedTypes: string[], maxSizes: Record<string, int> }`; resolves tenant override → system setting → hardcoded default (`pdf,doc,text,excel,image,csv` @ 5 MB each)
+  - `UpdateTenantSettingsRequest` — same 7 nullable validation rules as system settings
+  - `StoreDocumentRequest` — dynamically builds validation rules at request time by calling `TenantSettingsService::resolveUploadConstraints()`; uses a `mimetypes:` rule for the resolved MIME groups and a Closure rule that detects the file's MIME group and enforces the per-type size limit (bytes = MB × 1024 × 1024)
+  - `DocumentController::index()` — now injects `TenantSettingsService` and passes `uploadConstraints` as an Inertia prop
+
+  **Frontend**
+
+  - `resources/js/Pages/Admin/Settings/Index.vue` — new "Document Upload Settings" card in the Storage tab: checkbox group to toggle allowed file type groups (pdf, doc, text, excel, image, csv) and a number input per group for the max file size in MB
+  - `resources/js/Pages/Admin/Tenants/Settings.vue` — new "Document Upload Settings" card in the Storage tab: a master override toggle, then per-type checkboxes and MB inputs that are visible only when the override is active; `null` fields revert to system defaults at runtime
+  - `resources/js/Pages/Documents/Index.vue` — consumes `uploadConstraints` prop; the file `<input>` gets a dynamic `:accept` attribute (mapped from type groups to extensions); a hint line below the input lists allowed types and their size caps
+
+  **Tests**
+
+  - `DocumentWebTest` — 4 new tests: upload constraint prop present, disallowed MIME type rejected (422), file exceeding per-type size rejected (422), allowed type within limit accepted
+  - `DocumentApiTest` — 3 new tests: disallowed MIME type rejected, oversized file rejected, allowed type within limit accepted
+  - `SystemSettingsWebTest` — 4 new tests: upload fields present in settings payload, upload settings can be saved, max size > 100 rejected, upload settings update endpoint responds correctly
+  - `TenantSettingsWebTest` — 4 new tests: upload fields present in tenant settings payload, tenant upload settings can be saved, max size > 100 rejected, clearing settings removes DB rows
+  - `TenantSettingsServiceTest` — 6 new tests: hardcoded defaults returned when nothing set, system settings override hardcoded defaults, tenant override wins over system setting, only allowed-type sizes included in result, effective allowed types falls back to system setting, effective max size uses tenant override
+
+---
+
 ## [2.23.0] — 2026-06-26
 
 ### Added

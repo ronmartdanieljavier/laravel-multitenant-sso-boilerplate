@@ -150,4 +150,16 @@ describe('TenantLayout', () => {
         const switcher = wrapper.find('[data-testid="tenant-switcher"]');
         expect(switcher.exists()).toBe(true);
     });
+
+    it('renders the App Selection link pointing to /apps', async () => {
+        const wrapper = await mountLayout();
+        const links = wrapper.findAll('a').map(a => a.attributes('href'));
+        expect(links).toContain('/apps');
+    });
+
+    it('App Selection link displays correct label', async () => {
+        const wrapper = await mountLayout();
+        const appLink = wrapper.findAll('a').find(a => a.attributes('href') === '/apps');
+        expect(appLink?.text()).toMatch(/app selection/i);
+    });
 });

@@ -82,6 +82,20 @@ describe('Admin/Index', () => {
         expect(wrapper.text()).toContain('Dashboard');
     });
 
+    it('renders the App Selection link pointing to /apps', () => {
+        const wrapper = mount(AdminPage, { props: defaultProps });
+        const hrefs = wrapper.findAll('a').map(l => l.attributes('href'));
+
+        expect(hrefs).toContain('/apps');
+    });
+
+    it('App Selection link displays correct label', () => {
+        const wrapper = mount(AdminPage, { props: defaultProps });
+        const appLink = wrapper.findAll('a').find(a => a.attributes('href') === '/apps');
+
+        expect(appLink?.text()).toMatch(/app selection/i);
+    });
+
     it('renders all four stat cards', () => {
         const wrapper = mount(AdminPage, { props: defaultProps });
         const cards = wrapper.findAll('.grid > div');

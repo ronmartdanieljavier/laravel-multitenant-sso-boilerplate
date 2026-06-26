@@ -2,10 +2,12 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useIdleTimeout } from '../composables/useIdleTimeout';
+import TenantSwitcher from '../Pages/Partials/TenantSwitcher.vue';
 
 const page = usePage();
 const tenant = computed(() => page.props.tenant);
 const user = computed(() => page.props.auth?.user);
+const availableTenants = computed(() => page.props.availableTenants ?? []);
 
 useIdleTimeout(page.props.idleTimeoutMinutes);
 
@@ -38,16 +40,21 @@ function isActive(href) {
         <!-- Sidebar -->
         <aside class="fixed inset-y-0 left-0 w-60 bg-slate-900 border-r border-white/5 flex flex-col z-20">
             <!-- Logo / tenant name -->
-            <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5 shrink-0">
-                <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+            <div class="px-5 pt-5 pb-3 border-b border-white/5 shrink-0">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-white truncate">{{ tenant?.name ?? 'Tenant Portal' }}</p>
+                        <p class="text-xs text-slate-500 truncate">{{ tenant?.slug }}</p>
+                    </div>
                 </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-semibold text-white truncate">{{ tenant?.name ?? 'Tenant Portal' }}</p>
-                    <p class="text-xs text-slate-500 truncate">{{ tenant?.slug }}</p>
-                </div>
+
+                <!-- Tenant switcher sits just below the tenant name -->
+                <TenantSwitcher :tenants="availableTenants" />
             </div>
 
             <!-- Nav links -->
@@ -72,27 +79,25 @@ function isActive(href) {
 
             <!-- User / sign-out -->
             <div class="p-3 border-t border-white/5 shrink-0">
-                <Link href="/profile" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition group">
-                    <div v-if="user?.profile_picture_url" class="w-7 h-7 rounded-full overflow-hidden shrink-0">
-                        <img :src="user.profile_picture_url" class="w-full h-full object-cover" alt="Avatar" />
-                    </div>
-                    <div v-else class="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-xs font-bold shrink-0">
-                        {{ user?.name?.[0]?.toUpperCase() ?? 'U' }}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-xs font-medium text-slate-300 truncate group-hover:text-white transition">{{ user?.name }}</p>
-                        <p class="text-xs text-slate-500 truncate">{{ user?.email }}</p>
-                    </div>
-                </Link>
-                <button
-                    @click="logout"
-                    class="mt-1 w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-white hover:bg-white/5 transition"
-                >
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Sign out
-                </button>
+                <div class="flex items-center gap-2 px-2 py-2">
+                    <Link href="/profile" class="flex items-center gap-3 min-w-0 flex-1 group">
+                        <div v-if="user?.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                            <img :src="user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
+                        </div>
+                        <div v-else class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                            {{ user?.name?.[0]?.toUpperCase() ?? 'U' }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-white truncate group-hover:text-emerald-300 transition">{{ user?.name }}</p>
+                            <p class="text-xs text-slate-400 truncate">{{ user?.email }}</p>
+                        </div>
+                    </Link>
+                    <button @click="logout" title="Sign out" class="text-slate-400 hover:text-white transition shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </aside>
 

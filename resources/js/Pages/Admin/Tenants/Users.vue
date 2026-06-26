@@ -149,7 +149,7 @@ const { startTour } = useTour('admin-tenant-users', [
             <!-- User table -->
             <div v-if="users.length === 0" class="bg-slate-900 border border-white/5 rounded-xl p-12 text-center">
                 <p class="text-slate-400">No users in this tenant yet.</p>
-                <Link href="/admin/users" class="mt-3 inline-block text-sm text-violet-400 hover:text-violet-300 transition">
+                <Link href="/admin/users" class="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300 transition">
                     Invite users from User Management →
                 </Link>
             </div>
@@ -172,7 +172,7 @@ const { startTour } = useTour('admin-tenant-users', [
                                     <div v-if="user.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
                                         <img :src="user.profile_picture_url" class="w-full h-full object-cover" alt="" />
                                     </div>
-                                    <div v-else class="w-8 h-8 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-xs font-bold shrink-0">
+                                    <div v-else class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-300 flex items-center justify-center text-xs font-bold shrink-0">
                                         {{ user.name[0].toUpperCase() }}
                                     </div>
                                     <div>
@@ -200,7 +200,7 @@ const { startTour } = useTour('admin-tenant-users', [
                                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 text-xs text-slate-300">
                                         {{ app.app_name }}
                                         <span class="text-slate-500">·</span>
-                                        <span class="text-violet-400 capitalize">{{ app.role }}</span>
+                                        <span class="text-blue-400 capitalize">{{ app.role }}</span>
                                     </span>
                                 </div>
                             </td>
@@ -212,7 +212,7 @@ const { startTour } = useTour('admin-tenant-users', [
                                         Force Logout
                                     </button>
                                     <button @click="openEdit(user)"
-                                            class="text-sm text-slate-400 hover:text-violet-300 transition">
+                                            class="text-sm text-slate-400 hover:text-blue-300 transition">
                                         Edit
                                     </button>
                                 </div>
@@ -235,13 +235,13 @@ const { startTour } = useTour('admin-tenant-users', [
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Name</label>
                     <input v-model="editForm.name" type="text" required
-                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                     <p v-if="editForm.errors.name" class="text-xs text-red-400 mt-1">{{ editForm.errors.name }}</p>
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Email</label>
                     <input v-model="editForm.email" type="email" required
-                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500" />
+                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                     <p v-if="editForm.errors.email" class="text-xs text-red-400 mt-1">{{ editForm.errors.email }}</p>
                 </div>
 
@@ -250,13 +250,13 @@ const { startTour } = useTour('admin-tenant-users', [
                     <div class="flex items-center justify-between mb-3">
                         <label class="text-xs text-slate-400">App Permissions</label>
                         <button type="button" @click="addApp(editForm)"
-                                class="text-xs text-violet-400 hover:text-violet-300 transition">+ Add app</button>
+                                class="text-xs text-blue-400 hover:text-blue-300 transition">+ Add app</button>
                     </div>
 
                     <div v-for="(appEntry, index) in editForm.apps" :key="index" class="bg-slate-800/50 rounded-lg p-3 mb-2 space-y-2">
                         <div class="flex gap-2">
                             <select v-model="appEntry.app_id"
-                                    class="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-violet-500">
+                                    class="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500">
                                 <option :value="null">Select app…</option>
                                 <option v-for="app in apps" :key="app.id" :value="app.id"
                                         :disabled="usedAppIds(editForm, index).includes(app.id)">
@@ -264,7 +264,7 @@ const { startTour } = useTour('admin-tenant-users', [
                                 </option>
                             </select>
                             <select v-model="appEntry.role"
-                                    class="w-28 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-violet-500">
+                                    class="w-28 bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500">
                                 <option v-for="role in ['admin', 'user', 'viewer']" :key="role" :value="role">
                                     {{ role }}
                                 </option>
@@ -277,7 +277,7 @@ const { startTour } = useTour('admin-tenant-users', [
                             <button type="button" v-for="t in tenants" :key="t.id"
                                     @click="toggleTenant(editForm, index, t.id)"
                                     :class="isTenantSelected(editForm, index, t.id)
-                                        ? 'bg-violet-600/30 border-violet-500/50 text-violet-300'
+                                        ? 'bg-blue-600/30 border-blue-500/50 text-blue-300'
                                         : 'bg-slate-800 border-white/10 text-slate-400 hover:text-slate-200'"
                                     class="px-2 py-0.5 rounded border text-xs transition">
                                 {{ t.name }}
@@ -290,7 +290,7 @@ const { startTour } = useTour('admin-tenant-users', [
                     <button type="button" @click="closeEdit"
                             class="px-4 py-2 text-sm text-slate-400 hover:text-white transition">Cancel</button>
                     <button type="submit" :disabled="editForm.processing"
-                            class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
+                            class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                         {{ editForm.processing ? 'Saving…' : 'Save Changes' }}
                     </button>
                 </div>

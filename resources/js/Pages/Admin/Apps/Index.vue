@@ -59,7 +59,7 @@ const { startTour } = useTour('admin-apps', [
         <!-- Sidebar -->
         <aside class="fixed inset-y-0 left-0 w-60 bg-slate-900 border-r border-white/5 flex flex-col">
             <div class="h-16 flex items-center px-6 border-b border-white/5">
-                <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center mr-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
@@ -76,7 +76,7 @@ const { startTour } = useTour('admin-apps', [
                     Users
                 </Link>
                 <Link href="/admin/apps"
-                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition bg-violet-600/20 text-violet-300">
+                      class="flex items-center gap-3 py-2 text-sm font-medium transition border-l-2 border-blue-500 rounded-r-lg pl-[10px] pr-3 text-white">
                     Apps
                 </Link>
                 <Link href="/admin/tenants"
@@ -103,7 +103,7 @@ const { startTour } = useTour('admin-apps', [
                         <div v-if="page.props.auth.user?.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
                             <img :src="page.props.auth.user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
                         </div>
-                        <div v-else class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        <div v-else class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
                             {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'A' }}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -170,7 +170,7 @@ const { startTour } = useTour('admin-apps', [
                                     </td>
                                     <td class="px-6 py-4">
                                         <button @click="startEdit(app)"
-                                                class="text-violet-400 hover:text-violet-300 text-xs transition">
+                                                class="text-blue-400 hover:text-blue-300 text-xs transition">
                                             Edit
                                         </button>
                                     </td>
@@ -185,7 +185,7 @@ const { startTour } = useTour('admin-apps', [
                                                     <label class="block text-xs text-slate-400 mb-1">Name</label>
                                                     <input v-model="form.name"
                                                            type="text"
-                                                           class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+                                                           class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                                                            :class="{ 'border-red-500': form.errors.name }"
                                                            placeholder="App name" />
                                                     <p v-if="form.errors.name" class="text-red-400 text-xs mt-1">{{ form.errors.name }}</p>
@@ -194,7 +194,7 @@ const { startTour } = useTour('admin-apps', [
                                                     <label class="block text-xs text-slate-400 mb-1">Description</label>
                                                     <input v-model="form.description"
                                                            type="text"
-                                                           class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+                                                           class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                                                            :class="{ 'border-red-500': form.errors.description }"
                                                            placeholder="Optional description" />
                                                     <p v-if="form.errors.description" class="text-red-400 text-xs mt-1">{{ form.errors.description }}</p>
@@ -203,7 +203,7 @@ const { startTour } = useTour('admin-apps', [
                                             <div class="flex items-center gap-3">
                                                 <button type="submit"
                                                         :disabled="form.processing"
-                                                        class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition">
+                                                        class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition">
                                                     Save
                                                 </button>
                                                 <button type="button"

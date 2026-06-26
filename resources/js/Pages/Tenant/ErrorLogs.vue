@@ -116,14 +116,14 @@ const { startTour } = useTour('tenant-error-logs', [
         <!-- Filters -->
         <div id="tour-el-filters" class="flex items-center gap-4 mb-4">
             <select v-model="severity" @change="applyFilters"
-                    class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                 <option value="">All severities</option>
                 <option value="critical">Critical</option>
                 <option value="error">Error</option>
                 <option value="warning">Warning</option>
             </select>
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" v-model="unresolvedOnly" @change="applyFilters" class="accent-emerald-500" />
+                <input type="checkbox" v-model="unresolvedOnly" @change="applyFilters" class="accent-blue-500" />
                 <span class="text-sm text-slate-300">Unresolved only</span>
             </label>
         </div>

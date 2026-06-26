@@ -35,7 +35,7 @@ function statusBadge(status) {
 const formatConfig = {
     pdf:    { label: 'PDF',    cls: 'bg-red-500/20 text-red-300' },
     excel:  { label: 'Excel',  cls: 'bg-emerald-500/20 text-emerald-300' },
-    screen: { label: 'Screen', cls: 'bg-violet-500/20 text-violet-300' },
+    screen: { label: 'Screen', cls: 'bg-blue-500/20 text-blue-300' },
 };
 
 function formatBadge(format) {

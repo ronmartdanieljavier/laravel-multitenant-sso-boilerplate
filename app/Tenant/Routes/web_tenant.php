@@ -4,16 +4,14 @@ use App\Http\Middleware\ResolveWebTenantDatabase;
 use App\Reports\Http\Controllers\ReportController;
 use App\Reports\Http\Controllers\TenantReportQueueController;
 use App\Reports\Http\Controllers\TenantReportSubscriptionController;
+use App\Tenant\Http\Controllers\TenantDashboardController;
 use App\Tenant\Http\Controllers\TenantSwitcherController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware('auth')->group(function () {
 
     Route::middleware(ResolveWebTenantDatabase::class)->group(function () {
-        Route::get('/tenant', function () {
-            return Inertia::render('Tenant/Index');
-        })->name('tenant');
+        Route::get('/tenant', [TenantDashboardController::class, 'index'])->name('tenant');
 
         Route::get('/tenant/reports', [TenantReportQueueController::class, 'index'])->name('tenant.reports');
         Route::post('/tenant/reports/quick', [TenantReportQueueController::class, 'quickDispatch'])->name('tenant.reports.quick');

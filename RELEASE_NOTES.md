@@ -2,6 +2,79 @@
 
 ---
 
+## [2.30.0] — 2026-06-26
+
+### Added
+
+- **Functional tenant dashboard — Phase 6** — `Tenant/Index.vue` is replaced with a fully data-driven dashboard backed by live backend data. The page shows real stats cards, quick action links, and three recent-activity tables — all wired to the same Controller → Service → Repository → DTO pipeline used across every other module.
+
+  **Stats cards**
+
+  | Card | Metric |
+  |---|---|
+  | Active Reports | `pending_reports + processing_reports`; sub-label shows `success_reports_this_month` |
+  | Failed Reports | `failed_reports`; sub-label shows "All clear" when 0 |
+  | Open Errors | `unresolved_errors`; sub-label shows `critical_errors` count when > 0 |
+  | Documents | `total_documents` |
+
+  **Quick actions** — three `<Link>` buttons: Queue Report (`/tenant/reports`), Browse Documents (`/documents`), Review Errors (`/tenant/errors`)
+
+  **Recent Reports** — table of up to 5 latest reports with type, format, status badge (Pending / Processing / Done / Failed), and a "View all" link to `/tenant/reports`; empty state shown when no reports exist
+
+  **Recent Errors** — table of up to 5 unresolved errors with error code (linked to detail page), short exception class name, message, and severity badge; empty state when no open errors; section header shows critical count badge when `critical_errors > 0`
+
+  **Recent Documents** — list of up to 5 latest documents with title, formatted file size, and download link (`/documents/{id}/download`); empty state when no documents exist
+
+  **Guided tour** — 6 steps: Welcome, Stats, Quick Actions, Recent Reports, Recent Errors, Recent Documents; tour ID `tenant-dashboard`; retrigger via floating `TourButton`
+
+  **Backend**
+
+  - `app/Repositories/Central/ReportRepository.php` — two new methods: `summaryForTenant(int $tenantId): array` (returns `pending`, `processing`, `failed`, `successThisMonth` counts); `recentForTenant(int $tenantId, int $limit = 5): Collection<ReportRepositoryData>`
+  - `app/Repositories/Central/DocumentRepository.php` — two new methods: `countAll(): int` (queries tenant DB connection); `recentList(int $limit = 5): Collection<DocumentRepositoryData>`
+  - `app/Tenant/Data/TenantDashboardStatsData.php` — new Spatie Data DTO with 7 integer fields (`pendingReports`, `processingReports`, `failedReports`, `successReportsThisMonth`, `unresolvedErrors`, `criticalErrors`, `totalDocuments`); serialised as snake_case JSON via global `SnakeCaseMapper`
+  - `app/Tenant/Data/TenantDashboardData.php` — new Spatie Data DTO wrapping `TenantDashboardStatsData $stats` plus three `Collection` properties (`recentReports`, `recentErrors`, `recentDocuments`)
+  - `app/Tenant/Services/TenantDashboardService.php` — new service: `getDashboard(int $tenantId): TenantDashboardData`; aggregates all four data sources; filters errors to unresolved-only; caps each list at 5
+  - `app/Tenant/Http/Controllers/TenantDashboardController.php` — web controller rendering `Tenant/Index` with `stats`, `recentReports`, `recentErrors`, `recentDocuments` props
+  - `app/Tenant/Http/Controllers/TenantDashboardApiController.php` — API controller returning `{ "data": { stats, recentReports, recentErrors, recentDocuments } }`; 404 if no tenant context
+  - `app/Tenant/Routes/web_tenant.php` — `/tenant` route changed from inline closure to `TenantDashboardController::index`
+  - `app/Tenant/Routes/api_tenant.php` — `GET /api/v1/tenant/dashboard` added inside the `ResolveTenantDatabase` middleware group; named `tenant.api.dashboard`
+
+  **Bug fix — silent zero stats** — all stats were read in camelCase in `Tenant/Index.vue` (e.g. `props.stats.pendingReports`) but Spatie Data's global `SnakeCaseMapper` serialises them as snake_case JSON. The dashboard would have displayed zeros for every stat in production. Fixed by updating every property access in `Index.vue` to snake_case (`stats.pending_reports`, etc.) and aligning the Vitest fixture data to match.
+
+  **Frontend**
+
+  - `resources/js/Pages/Tenant/Index.vue` — complete rewrite; all stats accessed as snake_case; tour with 6 steps; greeting computed from time of day; file-size formatting helper; error code detail links to `/tenant/errors/{id}`
+
+  **Tests**
+
+  - `app/Tenant/Tests/TenantDashboardServiceTest.php` — 10 PHPUnit tests: returns correct DTO types; pending/failed counts; unresolved/critical error counts; unresolved-only filter for recent errors; 5-item cap on errors and reports; tenant scoping; processing count; success-this-month excludes prior months; all-zeros baseline
+  - `app/Tenant/Tests/TenantDashboardWebTest.php` — 9 PHPUnit tests: unauthenticated redirect; dashboard renders correct component; pending/failed stats; error counts; tenant scoping for reports; unresolved-only filter for recent errors; all-zeros baseline; 5-item cap; processing stat — all assertions use snake_case keys (`stats.pending_reports`, etc.)
+  - `app/Tenant/Tests/TenantDashboardApiTest.php` — 12 PHPUnit tests: 401 guard; data shape; stats keys; pending/failed/critical error stats; 404 without tenant context; tenant scoping for recent reports; unresolved-only error filter; 200 status code
+  - `resources/js/Pages/Tenant/Index.test.js` — 38 Vitest tests (complete rewrite): greeting by time of day (2), stats cards — active sum, failed, unresolved errors, total docs, critical sub-label, all-clear sub-label, completed-this-month sub-label (8), quick action links (3), recent reports — empty state, row count, type/format/status badges, view-all link (7), recent errors — all-clear empty state, row count, error code link, short class name, message, severity badge, critical badge in header, view-all link (9), recent documents — empty state, list item count, title, file size, download link, view-all link (6), tour button (1)
+
+  **Postman**
+
+  - New **Tenant Dashboard (API)** folder with `GET /api/v1/tenant/dashboard` — Bearer + `X-App: tenant` + `X-Tenant: {{tenant_slug}}`; 200 example with full `data.stats`, `data.recentReports`, `data.recentErrors`, `data.recentDocuments` payload; 401 example
+
+---
+
+## [2.29.0] — 2026-06-26
+
+### Added
+
+- **Tenant portal navigation update and guided tours — Phase 6.5**
+
+  **Navigation**
+
+  - `resources/js/Layouts/TenantLayout.vue` — **Documents** nav link (between Report Queue and Error Logs) and **Error Logs** nav link added to the sidebar; both were previously absent from the persistent layout, meaning users had to navigate directly by URL after the respective modules were added in earlier phases
+
+  **Guided tours**
+
+  - `resources/js/Pages/Documents/Index.vue` — tour key `tenant-documents`; 4 steps targeting the upload button (`#tour-el-upload-btn`), document table (`#tour-el-doc-table`), Source column header (`#tour-el-source-col`), and Actions column header (`#tour-el-actions-col`)
+  - `resources/js/Pages/Tenant/ErrorLogs.vue` — tour updated/confirmed for the Errors page via `useTour` composable; retrigger via `TourButton`
+
+---
+
 ## [2.28.0] — 2026-06-26
 
 ### Changed

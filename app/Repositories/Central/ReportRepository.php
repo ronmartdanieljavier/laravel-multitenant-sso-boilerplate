@@ -110,6 +110,49 @@ class ReportRepository
         return ReportRepositoryData::from($this->model->create($data));
     }
 
+    /**
+     * Return status counts + this-month success count for a single tenant.
+     *
+     * @return array{pending: int, processing: int, failed: int, successThisMonth: int}
+     */
+    public function summaryForTenant(int $tenantId): array
+    {
+        $counts = $this->model->query()
+            ->where('tenant_id', $tenantId)
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->map(fn ($v) => (int) $v);
+
+        $successThisMonth = $this->model->query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', ReportStatus::Success)
+            ->whereMonth('completed_at', now()->month)
+            ->whereYear('completed_at', now()->year)
+            ->count();
+
+        return [
+            'pending' => $counts->get(ReportStatus::Pending->value, 0),
+            'processing' => $counts->get(ReportStatus::Processing->value, 0),
+            'failed' => $counts->get(ReportStatus::Failed->value, 0),
+            'successThisMonth' => $successThisMonth,
+        ];
+    }
+
+    /**
+     * @return Collection<int, ReportRepositoryData>
+     */
+    public function recentForTenant(int $tenantId, int $limit = 5): Collection
+    {
+        return $this->model->query()
+            ->with('user:id,name,email')
+            ->where('tenant_id', $tenantId)
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->map(fn (Report $report) => ReportRepositoryData::from($report));
+    }
+
     public function resetForRetry(string $id): ReportRepositoryData
     {
         $report = $this->model->findOrFail($id);

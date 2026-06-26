@@ -95,6 +95,75 @@ class TenantManagementServiceTest extends TestCase
         $this->assertDatabaseHas('tenants', ['slug' => 'service-corp']);
     }
 
+    public function test_create_assigns_admin_users_to_new_tenant(): void
+    {
+        $app = App::factory()->create();
+        $adminUser = User::factory()->create();
+
+        DB::table('user_apps')->insert([
+            'user_id' => $adminUser->id,
+            'app_id' => $app->id,
+            'role' => 'admin',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $data = new CreateTenantData(
+            name: 'Admin Assign Corp',
+            slug: 'admin-assign-corp',
+            dbHost: '127.0.0.1',
+            dbPort: 5432,
+            dbName: 'tenant_admin_assign',
+            dbUsername: 'user',
+            dbPassword: 'pass',
+            readReplicaHost: null,
+            readReplicaPort: null,
+            readReplicaUsername: null,
+            readReplicaPassword: null,
+        );
+
+        $result = $this->service->create($data);
+
+        $this->assertDatabaseHas('user_app_tenants', [
+            'user_id' => $adminUser->id,
+            'app_id' => $app->id,
+            'tenant_id' => $result->id,
+            'role' => 'admin',
+        ]);
+    }
+
+    public function test_create_uses_default_connection_when_db_host_is_empty(): void
+    {
+        Artisan::shouldReceive('call')
+            ->once()
+            ->with('tenant:migrate', \Mockery::any());
+
+        $data = new CreateTenantData(
+            name: 'Shared Corp',
+            slug: 'shared-corp',
+            dbHost: null,
+            dbPort: null,
+            dbName: null,
+            dbUsername: null,
+            dbPassword: null,
+            readReplicaHost: null,
+            readReplicaPort: null,
+            readReplicaUsername: null,
+            readReplicaPassword: null,
+        );
+
+        $result = $this->service->create($data);
+
+        $defaultHost = config('database.connections.tenant.host');
+        $this->assertNotNull($result->dbHost);
+        $this->assertEquals($defaultHost, $result->dbHost);
+        $this->assertDatabaseHas('tenants', [
+            'slug' => 'shared-corp',
+            'db_host' => $defaultHost,
+            'db_name' => 'tenant_shared_corp',
+        ]);
+    }
+
     public function test_update_modifies_tenant_fields(): void
     {
         $tenant = Tenant::factory()->create(['name' => 'Old Name']);

@@ -2,6 +2,32 @@
 
 ---
 
+## [2.20.0] — 2026-06-26
+
+### Added
+
+- **Tenant creation improvements** — three enhancements to the "Add Tenant" flow that make provisioning faster and more reliable:
+
+  **Nullable database credentials**
+  - `db_host`, `db_name`, `db_username`, and `db_password` on the `tenants` table are now nullable; previously they were `NOT NULL`, causing a `SQLSTATE[23502]` error when submitting the Add Tenant form with the Database Connection section left blank
+  - Migration: `2026_06_25_231939_make_tenant_db_fields_nullable`
+
+  **Default connection fallback**
+  - When the Database Connection fields are left empty, `TenantManagementService::create()` fills them from the `tenant` database connection config (`DB_TENANT_HOST`, `DB_TENANT_PORT`, `DB_TENANT_USERNAME`, `DB_TENANT_PASSWORD`, falling back to the main `DB_*` env vars)
+  - `db_name` is auto-generated from the tenant slug — e.g. slug `acme-corp` → database `tenant_acme_corp` — so the migration command creates an isolated database rather than connecting to the central database
+  - Logic lives in a private `applyDefaultConnection(CreateTenantData): CreateTenantData` helper on `TenantManagementService`
+
+  **Auto-assign admin users**
+  - After a new tenant is created, `TenantRepository::assignAdminUsersToTenant(int $tenantId)` automatically inserts a `user_app_tenants` row for every user who holds `role = admin` on any app
+  - `is_default` is set to `true` only when the admin has no other tenant assignments on that app yet
+  - Existing assignments are skipped (idempotent); the call happens before `tenant:migrate` runs
+
+  **Tests** (2 new `TenantManagementServiceTest` cases)
+  - `test_create_uses_default_connection_when_db_host_is_empty` — asserts `db_host` and `db_name` are populated from config when left blank
+  - `test_create_assigns_admin_users_to_new_tenant` — asserts a `user_app_tenants` row is created for the admin user after tenant creation
+
+---
+
 ## [2.19.0] — 2026-06-26
 
 ### Added

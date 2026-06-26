@@ -96,7 +96,11 @@ class TenantManagementService
      */
     public function create(CreateTenantData $data): TenantData
     {
+        $data = $this->applyDefaultConnection($data);
+
         $tenant = $this->tenantRepository->create($data);
+
+        $this->tenantRepository->assignAdminUsersToTenant($tenant->id);
 
         Artisan::call('tenant:migrate', [
             '--tenant' => $tenant->slug,
@@ -208,6 +212,29 @@ class TenantManagementService
             pendingReports: 0,
             failedReports: 0,
             healthStatus: 'healthy',
+        );
+    }
+
+    private function applyDefaultConnection(CreateTenantData $data): CreateTenantData
+    {
+        if ($data->dbHost !== null) {
+            return $data;
+        }
+
+        $default = config('database.connections.tenant');
+
+        return new CreateTenantData(
+            name: $data->name,
+            slug: $data->slug,
+            dbHost: $default['host'] ?? null,
+            dbPort: isset($default['port']) ? (int) $default['port'] : $data->dbPort,
+            dbName: $data->dbName ?? 'tenant_'.str_replace('-', '_', $data->slug),
+            dbUsername: $data->dbUsername ?? ($default['username'] ?: null),
+            dbPassword: $data->dbPassword ?? ($default['password'] ?: null),
+            readReplicaHost: $data->readReplicaHost,
+            readReplicaPort: $data->readReplicaPort,
+            readReplicaUsername: $data->readReplicaUsername,
+            readReplicaPassword: $data->readReplicaPassword,
         );
     }
 

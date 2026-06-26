@@ -20,6 +20,9 @@
         <testsuite name="Profile">
             <directory>app/Profile/Tests</directory>
         </testsuite>
+        <testsuite name="Documents">
+            <directory>app/Documents/Tests</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

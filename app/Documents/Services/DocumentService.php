@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Documents\Services;
+
+use App\Admin\Services\TenantSettingsService;
+use App\Data\Repositories\Central\DocumentRepositoryData;
+use App\Documents\Data\DocumentData;
+use App\Repositories\Central\DocumentRepository;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class DocumentService
+{
+    public function __construct(
+        protected DocumentRepository $documentRepository,
+        protected TenantSettingsService $tenantSettingsService,
+    ) {}
+
+    /**
+     * @return LengthAwarePaginator<DocumentData>
+     */
+    public function paginate(int $perPage = 20): LengthAwarePaginator
+    {
+        return $this->documentRepository->paginate($perPage)
+            ->through(fn (DocumentRepositoryData $d) => $this->toData($d));
+    }
+
+    /**
+     * @return Collection<int, DocumentData>
+     */
+    public function list(): Collection
+    {
+        return $this->documentRepository->list()->map(fn (DocumentRepositoryData $d) => $this->toData($d));
+    }
+
+    public function find(int $id): DocumentData
+    {
+        return $this->toData($this->documentRepository->find($id));
+    }
+
+    public function getFilePath(int $id): string
+    {
+        return $this->documentRepository->find($id)->filePath;
+    }
+
+    public function store(
+        string $title,
+        ?string $description,
+        UploadedFile $file,
+        int $userId,
+        string $userName,
+        string $tenantSlug,
+        int $tenantId,
+    ): DocumentData {
+        $disk = $this->tenantSettingsService->resolveDisk($tenantId);
+        $path = $disk->putFileAs("documents/{$tenantSlug}", $file, $file->hashName());
+
+        $dto = $this->documentRepository->create([
+            'title' => $title,
+            'description' => $description,
+            'file_path' => $path,
+            'file_name' => $file->getClientOriginalName(),
+            'file_size' => $file->getSize(),
+            'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
+            'uploaded_by_user_id' => $userId,
+            'uploaded_by_name' => $userName,
+        ]);
+
+        return $this->toData($dto);
+    }
+
+    public function delete(int $id, int $tenantId): void
+    {
+        $dto = $this->documentRepository->find($id);
+        $disk = $this->tenantSettingsService->resolveDisk($tenantId);
+        $disk->delete($dto->filePath);
+        $this->documentRepository->delete($id);
+    }
+
+    /**
+     * Return a download response for the given document.
+     *
+     * For cloud disks (S3/R2) this redirects to a short-lived signed URL so the
+     * file transfer happens directly between the client and the storage backend.
+     * For local disks it streams the file through the app.
+     */
+    public function downloadResponse(int $id, int $tenantId): RedirectResponse|StreamedResponse
+    {
+        $dto = $this->documentRepository->find($id);
+        $disk = $this->tenantSettingsService->resolveDisk($tenantId);
+
+        try {
+            $url = $disk->temporaryUrl($dto->filePath, now()->addMinutes(5));
+
+            return redirect($url);
+        } catch (\RuntimeException) {
+            return $disk->download($dto->filePath, $dto->fileName);
+        }
+    }
+
+    private function toData(DocumentRepositoryData $d): DocumentData
+    {
+        return new DocumentData(
+            id: $d->id,
+            title: $d->title,
+            description: $d->description,
+            fileName: $d->fileName,
+            fileSize: $d->fileSize,
+            mimeType: $d->mimeType,
+            uploadedByName: $d->uploadedByName,
+            createdAt: $d->createdAt,
+        );
+    }
+}

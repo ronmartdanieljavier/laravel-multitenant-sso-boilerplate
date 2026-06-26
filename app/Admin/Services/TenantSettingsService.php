@@ -5,6 +5,7 @@ namespace App\Admin\Services;
 use App\Admin\Data\TenantSettingsData;
 use App\Models\Central\SystemSetting;
 use App\Repositories\Central\TenantSettingRepository;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -198,5 +199,50 @@ class TenantSettingsService
             'bucket' => $t('s3_bucket') ?? SystemSetting::get('s3_bucket'),
             'url' => $t('s3_url') ?? SystemSetting::get('s3_url'),
         ];
+    }
+
+    /**
+     * Resolve and return the effective storage disk for a tenant.
+     *
+     * Falls back to the system default when the tenant has no storage settings.
+     * The returned disk is ephemeral — built from live settings at call time.
+     */
+    public function resolveDisk(int $tenantId): Filesystem
+    {
+        $tenant = $this->repository->allForTenant($tenantId);
+        $t = fn (string $key): ?string => $tenant[$key] ?? null;
+
+        $driver = $t('storage_driver') ?? SystemSetting::get('storage_driver', 'local');
+
+        $config = match ($driver) {
+            's3' => [
+                'driver' => 's3',
+                'key' => $t('s3_key') ?? SystemSetting::get('s3_key'),
+                'secret' => $t('s3_secret') ?? SystemSetting::get('s3_secret'),
+                'region' => $t('s3_region') ?? SystemSetting::get('s3_region', 'us-east-1'),
+                'bucket' => $t('s3_bucket') ?? SystemSetting::get('s3_bucket'),
+                'url' => $t('s3_url') ?? SystemSetting::get('s3_url'),
+                'visibility' => 'private',
+            ],
+            'r2' => [
+                'driver' => 's3',
+                'key' => $t('r2_access_key') ?? SystemSetting::get('r2_access_key'),
+                'secret' => $t('r2_secret') ?? SystemSetting::get('r2_secret'),
+                'region' => 'auto',
+                'bucket' => $t('r2_bucket') ?? SystemSetting::get('r2_bucket'),
+                'url' => $t('r2_url') ?? SystemSetting::get('r2_url'),
+                'endpoint' => 'https://'.($t('r2_account_id') ?? SystemSetting::get('r2_account_id')).'.r2.cloudflarestorage.com',
+                'use_path_style_endpoint' => true,
+                'visibility' => 'private',
+            ],
+            default => [
+                'driver' => 'local',
+                'root' => storage_path('app/public'),
+                'url' => config('app.url').'/storage',
+                'visibility' => 'public',
+            ],
+        };
+
+        return Storage::build($config);
     }
 }

@@ -15,7 +15,7 @@ test.describe('Tenant portal', () => {
         await expect(page.getByText('Active Reports')).toBeVisible();
         await expect(page.getByText('Failed Reports')).toBeVisible();
         await expect(page.getByText('Open Errors')).toBeVisible();
-        await expect(page.getByText('Documents')).toBeVisible();
+        await expect(page.locator('#stat-documents')).toBeVisible();
     });
 
     test('shows quick action links', async ({ page }) => {
@@ -25,8 +25,8 @@ test.describe('Tenant portal', () => {
     });
 
     test('shows recent activity sections', async ({ page }) => {
-        await expect(page.getByText('Recent Reports')).toBeVisible();
-        await expect(page.getByText('Recent Errors')).toBeVisible();
-        await expect(page.getByText('Recent Documents')).toBeVisible();
+        await expect(page.locator('#tour-recent-reports')).toBeVisible();
+        await expect(page.locator('#tour-recent-errors')).toBeVisible();
+        await expect(page.locator('#tour-recent-documents')).toBeVisible();
     });
 });

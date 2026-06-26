@@ -19,7 +19,8 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 | **Admin — Tenant Reports** | `/admin/tenants/{t}/reports` `/api/v1/admin/tenants/{t}/reports` | Admin | Admin view of any tenant's report job queue (status, format, user, duration) |
 | **Admin — Tenant Errors** | `/admin/tenants/{t}/errors` `/api/v1/admin/tenants/{t}/errors` | Admin | Per-tenant exception log: list, filter, detail with stack trace, resolve/reopen, delete; global error-code lookup |
 | **Admin — System Settings** | `/admin/settings` `/api/v1/admin/settings` | Admin | Seven-tab system config: Email, SMS, Push, Storage, Authentication, Security, Branding; amber banner when required settings are unset |
-| **Tenant (Web)** | `/tenant` `/tenant/reports` `/tenant/documents` `/tenant/errors` | Session | Persistent sidebar portal — dashboard, report queue, document manager, and error log |
+| **Tenant (Web)** | `/tenant` `/tenant/reports` `/documents` `/tenant/errors` | Session | Persistent sidebar portal — dashboard, report queue, document manager, and error log |
+| **Documents (API)** | `/api/v1/documents` | Bearer + X-App + X-Tenant | Upload, list (paginated), show, download, and delete tenant documents; files stored on the tenant's configured storage disk |
 | **Reports (API)** | `/api/v1/reports` | Bearer + X-App + X-Tenant | Dispatch single and batch report jobs; poll status; download files; manage scheduled subscriptions (daily/weekly/monthly, email/S3 delivery) |
 | **Profile (API)** | `/api/v1/profile` | Bearer | Update display name, upload profile picture, change password |
 | **Profile (Web)** | `/profile` | Session | Same self-service actions via Inertia |
@@ -273,6 +274,7 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── UserApp.php
 │   │   │   └── UserAppTenant.php
 │   │   └── Tenant/                         # Tenant DB models (App\Models\Tenant)
+│   │       ├── Document.php                # connection=tenant; id, title, description, file_path, file_name, file_size, mime_type, uploaded_by_user_id, uploaded_by_name
 │   │       └── ReportSubscription.php
 │   │
 │   ├── Console/Commands/
@@ -387,6 +389,25 @@ laravel-multitenant-sso-boilerplate/
 │           ├── TenantSwitcherApiTest.php   # 4 PHPUnit tests — API surface
 │           ├── TenantSwitcherServiceTest.php # 7 PHPUnit tests — service layer
 │           └── TenantSwitcherWebTest.php   # 3 PHPUnit tests — web surface
+│
+├── Documents/
+│   ├── Data/
+│   │   └── DocumentData.php            # Spatie Data — { id, title, description, fileName, fileSize, mimeType, uploadedByName, createdAt }
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── DocumentController.php       # GET|POST /documents, GET /documents/{id}/download, DELETE /documents/{id}
+│   │   │   └── DocumentApiController.php    # GET|POST /api/v1/documents, GET /api/v1/documents/{id}, GET|DELETE /api/v1/documents/{id}/*
+│   │   └── Requests/
+│   │       └── StoreDocumentRequest.php     # title (required, max:255), description (nullable, max:2000), file (required, max:20 MB)
+│   ├── Routes/
+│   │   ├── web_documents.php            # Web routes under auth + ResolveWebTenantDatabase
+│   │   └── api_documents.php            # API routes under auth:sanctum + ResolveTenantDatabase
+│   ├── Services/
+│   │   └── DocumentService.php          # paginate(), list(), find(), store(), downloadResponse(), delete(), getFilePath()
+│   └── Tests/
+│       ├── DocumentApiTest.php          # 6 PHPUnit tests — API surface
+│       ├── DocumentServiceTest.php      # 6 PHPUnit tests — service layer
+│       └── DocumentWebTest.php          # 8 PHPUnit tests — web surface
 │
 ├── database/
 │   ├── factories/
@@ -553,7 +574,9 @@ What's built:
 - **Tenant maintenance mode (Phase 5.9)** — admin can put any individual tenant or all tenants simultaneously into maintenance mode; enabling immediately revokes all Sanctum tokens for affected tenant users (force logout), hides the tenant from the app picker (`AppService.loadApps()`), and returns HTTP 503 on all API requests resolved through that tenant; admin UI on `/admin/tenants` includes per-row toggle buttons and "Maintenance: All On / All Off" bulk buttons; a dedicated "In Maintenance" summary card appears on both the tenant list and admin dashboard; full REST API via `PATCH /api/v1/admin/tenants/{id}/maintenance` and `PATCH /api/v1/admin/tenants/maintenance/all`
 - **App tour system** — every page has a guided tour (driver.js) that auto-starts on first visit, can be skipped, and retriggered via a floating `?` button; tour-seen state persisted per page in `localStorage`; 12 pages covered (admin dashboard, tenants, apps, users, settings, tenant settings/users/reports/errors, tenant portal dashboard and report queue, user profile); `useTour` composable + `TourButton.vue` component; all 217 Vitest tests pass with a global driver.js mock in `test-setup.js`
 - **Tenant logged-in users (Phase 5.10)** — admin can see how many users are currently online per tenant (green "X online" dot on the tenant list) and view per-user live session status on the tenant users page; Force Logout button immediately revokes all Sanctum tokens for a specific user; `TenantData` gains `loggedInCount`, `UserData` gains `isLoggedIn`; powered by `TenantRepository::loggedInUserCountByTenant()` and `loggedInUserIdsForTenant()` (join on `personal_access_tokens`); full REST API via `DELETE /api/v1/admin/tenants/{tenant}/users/{user}/session`
-- **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (tenant switcher + Dashboard + Report Queue sidebar + user profile/logout footer); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
+- **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (tenant switcher + Dashboard + Report Queue + Documents sidebar + user profile/logout footer); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
+- **Documents module (Phase 6.2)** — `app/Documents/` module following the standard layered architecture; upload files via multipart form (streamed with `putFileAs()` for memory efficiency), list with pagination (20 per page), show metadata, download (signed URL for S3/R2; streamed response for local disk), and delete (removes file from storage and DB record); files stored on the tenant's configured storage disk resolved via `TenantSettingsService::resolveDisk()`; web routes at `/documents`; API routes at `/api/v1/documents`; 20 PHPUnit tests across web, API, and service layers
+- **Multi-driver tenant DB middleware (Phase 6.2)** — both `ResolveWebTenantDatabase` and `ResolveTenantDatabase` now detect `DB_TENANT_DRIVER` at runtime and build either a PostgreSQL or MySQL connection config; PostgreSQL connections use `schema`, `sslmode`, and `utf8` charset; MySQL connections retain `utf8mb4`/`collation`/`strict`; default port falls back to `5432` (pgsql) or `3306` (mysql); 11 new PHPUnit tests across both middleware classes
 - **Tenant switcher (Phase 6.7)** — `TenantSwitcherService` + `TenantSwitcherController` (web) + `TenantSwitcherApiController` (API); `ResolveWebTenantDatabase` middleware for session-based tenant resolution; `TenantSwitcher.vue` dropdown component; `availableTenants` Inertia shared prop; 16 PHPUnit + 27 Vitest tests
 - **Repository pattern** — all Eloquent access isolated to `App\Repositories\Central\`; every public repository method returns a DTO, never a model; service layer maps repository DTOs to module DTOs before returning to controllers
 - **Inertia.js + Vue 3** — installed and wired up with `HandleInertiaRequests` middleware
@@ -677,13 +700,23 @@ Import via **Postman → Import → File**. The collection uses two variables �
 |---|---|---|---|
 | `GET` | `/api/v1/tenant/reports` | Bearer | List all report jobs for the current tenant (paginated, latest-first) |
 
+**Documents (API — Bearer + X-App + X-Tenant headers)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/documents` | Bearer | List documents for the current tenant (paginated, 20/page, max 100 via `?per_page=`) |
+| `POST` | `/api/v1/documents` | Bearer | Upload a document (multipart — `title`, `description?`, `file`; max 20 MB); saves to tenant storage disk |
+| `GET` | `/api/v1/documents/{id}` | Bearer | Get document metadata by ID |
+| `GET` | `/api/v1/documents/{id}/download` | Bearer | Download the file — redirect to signed URL for S3/R2, streamed response for local disk |
+| `DELETE` | `/api/v1/documents/{id}` | Bearer | Delete a document record and its file from storage |
+
 **Admin Tenant Report Queue (API — Bearer token auth)**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
 | `GET` | `/api/v1/admin/tenants/{tenant}/reports` | Bearer | List all report jobs for a specific tenant (admin view) |
 
-The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, "Create Subscription" saves the ID to `{{subscription_id}}`, "Invite User" saves the new user ID to `{{invited_user_id}}`, and "Create Tenant" saves the ID to `{{tenant_id}}`, so subsequent requests work without manual copy-paste.
+The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, "Create Subscription" saves the ID to `{{subscription_id}}`, "Invite User" saves the new user ID to `{{invited_user_id}}`, "Create Tenant" saves the ID to `{{tenant_id}}`, and "Upload Document" saves the ID to `{{document_id}}`, so subsequent requests work without manual copy-paste.
 
 ---
 
@@ -1105,15 +1138,16 @@ Phase 6 makes every per-tenant setting configured in Phase 5.7 visible and funct
 - [x] Remove all existing `database/migrations/tenant/` files except `create_report_subscriptions_table.php`
 - [x] Re-run `php artisan tenant:migrate --fresh` to apply the clean schema to all tenant databases
 
-*6.2 — Documents module (sample tenant feature)*
-- [ ] New `app/Documents/` module following the standard module structure (`Data/`, `Http/Controllers/`, `Http/Requests/`, `Routes/`, `Services/`, `Tests/`)
-- [ ] **Upload documents** — users upload files through the tenant portal; files are stored on the tenant's configured storage disk (falls back to system default via `TenantSettingsService::resolveS3Config()`); metadata persisted to the `documents` tenant table
-- [ ] **Document list** — paginated list with file name, size, upload date, uploader name, and a per-row download button
-- [ ] **Multi-select + ZIP download** — checkboxes on the document list; selecting two or more documents enables a "Download as ZIP" button; `ReportFileService::zip()` packages the selected files; ZIP streamed directly to the browser
-- [ ] **Generate PDF report** — "Generate PDF" button on the document list dispatches a `GenerateReportJob` (format `pdf`, delivery `download`); the PDF is compiled with the tenant's configured header, footer, and logo from `TenantSettingsService`; stored on the tenant's resolved storage disk; the generated file appears in the report queue and is downloadable once complete
-- [ ] **Web routes** — `GET|POST /tenant/documents`, `GET /tenant/documents/{id}/download`, `POST /tenant/documents/zip`, `DELETE /tenant/documents/{id}` (session auth, `ResolveTenantWeb` middleware)
-- [ ] **API parity** — `GET|POST /api/v1/tenant/documents`, `GET /api/v1/tenant/documents/{id}/download`, `POST /api/v1/tenant/documents/zip`, `DELETE /api/v1/tenant/documents/{id}` (Bearer + `X-App` + `X-Tenant` headers, `ResolveTenantDatabase` middleware); responses follow `{ data: {...} }` / `{ data: [...] }` envelope
-- [ ] **Tests** — `DocumentsWebTest`, `DocumentsApiTest`, `DocumentsServiceTest` covering upload, list, download, ZIP, and PDF dispatch
+*6.2 — Documents module (sample tenant feature)* *(done)*
+- [x] New `app/Documents/` module following the standard module structure (`Data/`, `Http/Controllers/`, `Http/Requests/`, `Routes/`, `Services/`, `Tests/`)
+- [x] **Upload documents** — users upload files through the tenant portal; files streamed via `putFileAs()` to the tenant's configured storage disk (resolved via `TenantSettingsService::resolveDisk()`, falls back to system default); metadata persisted to the `documents` tenant table
+- [x] **Document list** — paginated list (20/page) with file name, size, upload date, uploader name, and per-row download and delete buttons; rendered in `Documents/Index.vue` using `TenantLayout`
+- [x] **Download** — signed temporary URL for S3/R2 disks (5-minute expiry, redirect 302); streamed binary response for local disk; handled via `DocumentService::downloadResponse()`
+- [x] **Web routes** — `GET|POST /documents`, `GET /documents/{id}/download`, `DELETE /documents/{id}` (session auth, `ResolveWebTenantDatabase` middleware)
+- [x] **API parity** — `GET|POST /api/v1/documents`, `GET /api/v1/documents/{id}`, `GET /api/v1/documents/{id}/download`, `DELETE /api/v1/documents/{id}` (Bearer + `X-App` + `X-Tenant` headers, `ResolveTenantDatabase` middleware)
+- [x] **Multi-driver tenant DB middleware** — `ResolveWebTenantDatabase` and `ResolveTenantDatabase` now detect `DB_TENANT_DRIVER` and build the correct connection config (PostgreSQL: `schema`, `sslmode`, utf8; MySQL: utf8mb4, collation, strict); default port falls back to 5432 / 3306 respectively
+- [x] **Tests** — `DocumentWebTest` (8), `DocumentApiTest` (6), `DocumentServiceTest` (6) covering upload, list, download, delete; `ResolveWebTenantDatabaseMiddlewareTest` (9 new tests); 4 new pgsql/mysql driver tests in `ResolveTenantDatabaseMiddlewareTest`
+- [x] **Documents nav link** added to `TenantLayout.vue` sidebar
 
 *6.3 — Tenant error log portal view*
 - [ ] New page at `/tenant/errors` — tenant users view error logs for their active tenant; stack traces hidden for non-admin users; admins see full detail

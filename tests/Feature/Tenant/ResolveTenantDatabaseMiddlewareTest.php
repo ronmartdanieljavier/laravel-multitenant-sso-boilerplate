@@ -360,6 +360,84 @@ class ResolveTenantDatabaseMiddlewareTest extends TestCase
         $this->assertEquals('read_pass', Config::get('database.connections.tenant.read.password'));
     }
 
+    public function test_configures_pgsql_connection_when_tenant_driver_is_pgsql(): void
+    {
+        Config::set('database.connections.tenant.driver', 'pgsql');
+
+        $user = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create([
+            'db_host' => '10.0.0.5',
+            'db_port' => 5432,
+            'db_name' => 'tenant_pg',
+            'db_username' => 'pg_user',
+            'db_password' => 'pg_secret',
+            'read_replica_host' => null,
+        ]);
+
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::Admin]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $tenant->id,
+            'role' => Role::Admin,
+            'is_default' => true,
+        ]);
+
+        $request = $this->makeRequest($user, $app->slug, $tenant->slug, ["app:{$app->slug}"]);
+
+        DB::shouldReceive('purge')->once()->with('tenant');
+
+        $middleware = new ResolveTenantDatabase;
+        $response = $middleware->handle($request, fn () => new Response('ok'));
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('pgsql', Config::get('database.connections.tenant.driver'));
+        $this->assertEquals('10.0.0.5', Config::get('database.connections.tenant.host'));
+        $this->assertEquals(5432, Config::get('database.connections.tenant.port'));
+        $this->assertEquals('tenant_pg', Config::get('database.connections.tenant.database'));
+        $this->assertEquals('public', Config::get('database.connections.tenant.schema'));
+        $this->assertNull(Config::get('database.connections.tenant.collation'));
+    }
+
+    public function test_pgsql_configures_read_write_split(): void
+    {
+        Config::set('database.connections.tenant.driver', 'pgsql');
+
+        $user = User::factory()->create();
+        $app = App::factory()->create();
+        $tenant = Tenant::factory()->create([
+            'db_host' => '10.0.0.1',
+            'db_port' => 5432,
+            'db_name' => 'tenant_pg',
+            'db_username' => 'pg_user',
+            'db_password' => 'pg_secret',
+            'read_replica_host' => '10.0.0.2',
+            'read_replica_port' => 5433,
+        ]);
+
+        $user->userApps()->create(['app_id' => $app->id, 'role' => Role::Admin]);
+        $user->userAppTenants()->create([
+            'app_id' => $app->id,
+            'tenant_id' => $tenant->id,
+            'role' => Role::Admin,
+            'is_default' => true,
+        ]);
+
+        $request = $this->makeRequest($user, $app->slug, $tenant->slug, ["app:{$app->slug}"]);
+
+        DB::shouldReceive('purge')->once()->with('tenant');
+
+        $middleware = new ResolveTenantDatabase;
+        $middleware->handle($request, fn () => new Response('ok'));
+
+        $this->assertEquals('pgsql', Config::get('database.connections.tenant.driver'));
+        $this->assertEquals('10.0.0.1', Config::get('database.connections.tenant.write.host'));
+        $this->assertEquals(5432, Config::get('database.connections.tenant.write.port'));
+        $this->assertEquals('10.0.0.2', Config::get('database.connections.tenant.read.host'));
+        $this->assertEquals(5433, Config::get('database.connections.tenant.read.port'));
+        $this->assertTrue(Config::get('database.connections.tenant.sticky'));
+    }
+
     public function test_no_read_write_split_when_no_replica(): void
     {
         $user = User::factory()->create();

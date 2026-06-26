@@ -1178,12 +1178,13 @@ Phase 6 makes every per-tenant setting configured in Phase 5.7 visible and funct
 - [x] **Tests** — `DocumentWebTest` (8), `DocumentApiTest` (6), `DocumentServiceTest` (6) covering upload, list, download, delete; `ResolveWebTenantDatabaseMiddlewareTest` (9 new tests); 4 new pgsql/mysql driver tests in `ResolveTenantDatabaseMiddlewareTest`
 - [x] **Documents nav link** added to `TenantLayout.vue` sidebar
 
-*6.3 — Tenant error log portal view*
-- [ ] New page at `/tenant/errors` — tenant users view error logs for their active tenant; stack traces hidden for non-admin users; admins see full detail
-- [ ] Error list with severity badge, error code, short message, and timestamp; click-through to a detail view at `/tenant/errors/{id}`
-- [ ] **Web routes** — `GET /tenant/errors`, `GET /tenant/errors/{id}` (session auth, `ResolveTenantWeb` middleware)
-- [ ] **API parity** — `GET /api/v1/tenant/errors`, `GET /api/v1/tenant/errors/{id}` (Bearer + `X-App` + `X-Tenant` headers); responses follow `{ data: [...] }` / `{ data: {...} }` envelope
-- [ ] **Tests** — `TenantErrorPortalWebTest`, `TenantErrorPortalApiTest` covering list, detail, auth guard, and stack-trace visibility by role
+*6.3 — Tenant error log portal view* *(done)*
+- [x] New pages at `/tenant/errors` (list) and `/tenant/errors/{id}` (detail) — read-only portal view; response DTO omits stack trace, file path, line number, and request headers; support callout on detail page prompts users to quote the error code
+- [x] Error list with stat cards, severity/unresolved filters, severity badge, error code link, short exception class, message, status badge, and timestamp
+- [x] **Web routes** — `GET /tenant/errors`, `GET /tenant/errors/{id}` (session auth, `ResolveWebTenantDatabase` middleware); named `tenant.errors`, `tenant.errors.show`
+- [x] **API parity** — `GET /api/v1/tenant/errors`, `GET /api/v1/tenant/errors/{id}` (Bearer + `X-App` + `X-Tenant` headers); responses follow `{ data: [...] }` / `{ data: {...} }` envelope; named `tenant.api.errors.*`
+- [x] **Tests** — `TenantErrorsWebTest` (7), `TenantErrorsApiTest` (7), `TenantErrorsServiceTest` (7) covering list, detail, tenant scoping, auth guard, severity/unresolved filters, cross-tenant 404, and DTO sensitivity mask; `ErrorLogs.test.js` (18 Vitest), `ErrorLog.test.js` (24 Vitest)
+- [x] **Error Logs** nav link added to `TenantLayout.vue` sidebar
 
 *6.4 — Tenant report queue enhancements*
 - [ ] Report queue page (`/tenant/reports`) gains a "Generate Report" quick-action button to dispatch a sample report job without leaving the portal

@@ -65,6 +65,27 @@ class ResolveTenantDatabase
             ->where('tenant_id', $tenant->id)
             ->firstOrFail();
 
+        $driver = config('database.connections.tenant.driver', 'mysql');
+        $defaultPort = $driver === 'pgsql' ? 5432 : 3306;
+
+        $connection = $driver === 'pgsql'
+            ? $this->pgsqlConnection($tenant, $defaultPort)
+            : $this->mysqlConnection($tenant, $defaultPort);
+
+        Config::set('database.connections.tenant', $connection);
+
+        DB::purge('tenant');
+
+        $request->attributes->set('current_app', $app);
+        $request->attributes->set('current_tenant', $tenant);
+        $request->attributes->set('current_role', $userAppTenant->role);
+
+        return $next($request);
+    }
+
+    /** @return array<string, mixed> */
+    private function mysqlConnection(Tenant $tenant, int $defaultPort): array
+    {
         $connection = [
             'driver' => 'mysql',
             'database' => $tenant->db_name,
@@ -79,14 +100,8 @@ class ResolveTenantDatabase
         ];
 
         if ($tenant->hasReadReplica()) {
-            $connection['write'] = [
-                'host' => $tenant->db_host,
-                'port' => $tenant->db_port ?? 3306,
-            ];
-            $connection['read'] = [
-                'host' => $tenant->read_replica_host,
-                'port' => $tenant->read_replica_port ?? $tenant->db_port ?? 3306,
-            ];
+            $connection['write'] = ['host' => $tenant->db_host, 'port' => $tenant->db_port ?? $defaultPort];
+            $connection['read'] = ['host' => $tenant->read_replica_host, 'port' => $tenant->read_replica_port ?? $tenant->db_port ?? $defaultPort];
             if ($tenant->read_replica_username !== null) {
                 $connection['read']['username'] = $tenant->read_replica_username;
                 $connection['read']['password'] = $tenant->read_replica_password ?? '';
@@ -94,17 +109,39 @@ class ResolveTenantDatabase
             $connection['sticky'] = true;
         } else {
             $connection['host'] = $tenant->db_host;
-            $connection['port'] = $tenant->db_port ?? 3306;
+            $connection['port'] = $tenant->db_port ?? $defaultPort;
         }
 
-        Config::set('database.connections.tenant', $connection);
+        return $connection;
+    }
 
-        DB::purge('tenant');
+    /** @return array<string, mixed> */
+    private function pgsqlConnection(Tenant $tenant, int $defaultPort): array
+    {
+        $connection = [
+            'driver' => 'pgsql',
+            'database' => $tenant->db_name,
+            'username' => $tenant->db_username,
+            'password' => $tenant->db_password,
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ];
 
-        $request->attributes->set('current_app', $app);
-        $request->attributes->set('current_tenant', $tenant);
-        $request->attributes->set('current_role', $userAppTenant->role);
+        if ($tenant->hasReadReplica()) {
+            $connection['write'] = ['host' => $tenant->db_host, 'port' => $tenant->db_port ?? $defaultPort];
+            $connection['read'] = ['host' => $tenant->read_replica_host, 'port' => $tenant->read_replica_port ?? $tenant->db_port ?? $defaultPort];
+            if ($tenant->read_replica_username !== null) {
+                $connection['read']['username'] = $tenant->read_replica_username;
+                $connection['read']['password'] = $tenant->read_replica_password ?? '';
+            }
+            $connection['sticky'] = true;
+        } else {
+            $connection['host'] = $tenant->db_host;
+            $connection['port'] = $tenant->db_port ?? $defaultPort;
+        }
 
-        return $next($request);
+        return $connection;
     }
 }

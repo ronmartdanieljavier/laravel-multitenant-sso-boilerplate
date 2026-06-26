@@ -47,6 +47,11 @@
       "key": "subscription_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -4888,6 +4893,327 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "body": "{\n  \"data\": [\n    {\n      \"id\": \"018f1a2b-3c4d-7e5f-6a7b-8c9d0e1f2a3b\",\n      \"type\": \"user_activity\",\n      \"format\": \"screen\",\n      \"delivery\": \"none\",\n      \"status\": \"success\",\n      \"user\": {\n        \"id\": 1,\n        \"name\": \"Alice\"\n      },\n      \"created_at\": \"2026-06-25T10:00:00.000000Z\",\n      \"started_at\": \"2026-06-25T10:00:01.000000Z\",\n      \"completed_at\": \"2026-06-25T10:00:03.000000Z\",\n      \"file_path\": \"reports/018f1a2b.json\",\n      \"error_message\": null\n    },\n    {\n      \"id\": \"028f1a2b-3c4d-7e5f-6a7b-8c9d0e1f2a3b\",\n      \"type\": \"user_activity\",\n      \"format\": \"pdf\",\n      \"delivery\": \"none\",\n      \"status\": \"pending\",\n      \"user\": {\n        \"id\": 2,\n        \"name\": \"Bob\"\n      },\n      \"created_at\": \"2026-06-25T10:01:00.000000Z\",\n      \"started_at\": null,\n      \"completed_at\": null,\n      \"file_path\": null,\n      \"error_message\": null\n    }\n  ],\n  \"total\": 2,\n  \"current_page\": 1,\n  \"last_page\": 1,\n  \"per_page\": 25,\n  \"prev_page_url\": null,\n  \"next_page_url\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Documents (API)",
+      "description": "Document management endpoints for tenant users. Files are stored on the tenant\u2019s configured storage disk (S3, R2, or local \u2014 resolved via TenantSettingsService::resolveDisk()). Requires both X-App: tenant and X-Tenant: {slug} headers alongside a Bearer token.",
+      "item": [
+        {
+          "name": "List Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20",
+                  "description": "Items per page (max 100, default 20)"
+                }
+              ]
+            },
+            "description": "Returns a paginated list of documents for the authenticated tenant, ordered latest-first. Includes file name, size, MIME type, uploader name, and upload date. Requires X-App: tenant and X-Tenant: {slug} headers.\n\nOptional query param: ?per_page=20 (max 100)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"title\": \"Q1 Financial Report\",\n      \"description\": \"Quarterly financials for review\",\n      \"file_name\": \"q1-financials.pdf\",\n      \"file_size\": 204800,\n      \"mime_type\": \"application/pdf\",\n      \"uploaded_by_name\": \"Alice\",\n      \"created_at\": \"2026-06-26T10:00:00.000000Z\"\n    }\n  ],\n  \"current_page\": 1,\n  \"last_page\": 1,\n  \"per_page\": 20,\n  \"total\": 1,\n  \"prev_page_url\": null,\n  \"next_page_url\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('document_id', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Q1 Financial Report",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Quarterly financials for review",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/file.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents"
+              ]
+            },
+            "description": "Upload a document to the tenant\u2019s configured storage disk. Files are streamed using putFileAs() for memory efficiency. Metadata (title, file name, size, MIME type, uploader) is persisted to the tenant\u2019s documents table.\n\nThe test script saves the returned document ID to {{document_id}} for use in subsequent requests.\n\nValidation: title required (max 255), description optional (max 2000), file required (max 20 MB)."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {}
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"title\": \"Q1 Financial Report\",\n    \"description\": \"Quarterly financials for review\",\n    \"file_name\": \"q1-financials.pdf\",\n    \"file_size\": 204800,\n    \"mime_type\": \"application/pdf\",\n    \"uploaded_by_name\": \"Alice\",\n    \"created_at\": \"2026-06-26T10:00:00.000000Z\"\n  }\n}"
+            },
+            {
+              "name": "422 Unprocessable \u2014 Validation Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {}
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"The title field is required.\",\n  \"errors\": {\n    \"title\": [\"The title field is required.\"],\n    \"file\": [\"The file field is required.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Document",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/{{document_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "{{document_id}}"
+              ]
+            },
+            "description": "Retrieve metadata for a single document by ID. Returns the same shape as a single item in the list response."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": 1,\n  \"title\": \"Q1 Financial Report\",\n  \"description\": \"Quarterly financials for review\",\n  \"file_name\": \"q1-financials.pdf\",\n  \"file_size\": 204800,\n  \"mime_type\": \"application/pdf\",\n  \"uploaded_by_name\": \"Alice\",\n  \"created_at\": \"2026-06-26T10:00:00.000000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download Document",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/{{document_id}}/download",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "{{document_id}}",
+                "download"
+              ]
+            },
+            "description": "Download a document file. For S3/R2 disks, returns a redirect (302) to a signed temporary URL valid for 5 minutes. For local disk, streams the file directly as a binary response.\n\nDo not set Accept: application/json on this request \u2014 the response is a file stream or redirect, not JSON."
+          },
+          "response": [
+            {
+              "name": "302 Redirect (S3 / R2 signed URL)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "Found",
+              "code": 302,
+              "_postman_previewlanguage": "text",
+              "body": ""
+            },
+            {
+              "name": "200 OK (local disk \u2014 binary stream)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "body": "(binary file content)"
+            }
+          ]
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/{{document_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "{{document_id}}"
+              ]
+            },
+            "description": "Delete a document and its associated file from the tenant\u2019s storage disk. Both the database record and the file are removed."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\"message\": \"Document deleted.\"}"
             }
           ]
         }

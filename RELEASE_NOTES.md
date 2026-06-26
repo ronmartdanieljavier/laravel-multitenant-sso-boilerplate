@@ -2,6 +2,56 @@
 
 ---
 
+## [2.23.0] — 2026-06-26
+
+### Added
+
+- **Documents module — Phase 6.2** — new `app/Documents/` module following the standard layered architecture (`Controller → Service → Repository → Model`).
+
+  **Backend**
+
+  - `Document` model (`App\Models\Tenant\Document`) — tenant DB connection; columns: `id`, `title`, `description` (nullable), `file_path`, `file_name`, `file_size`, `mime_type`, `uploaded_by_user_id`, `uploaded_by_name`, timestamps
+  - `DocumentRepository` — `paginate()` returns a `LengthAwarePaginator<DocumentRepositoryData>` via lazy `->through()`; `list()`, `find()`, `create()`, `delete()`
+  - `DocumentService` — `paginate()`, `list()`, `find()`, `store()` (streams file via `putFileAs()`), `downloadResponse()` (signed URL redirect for S3/R2; streamed response for local disk), `delete()` (removes file then DB record), `getFilePath()`
+  - `StoreDocumentRequest` — `title` (required, max:255), `description` (nullable, max:2000), `file` (required, max:20 MB)
+  - `DocumentController` — web surface: `GET|POST /documents`, `GET /documents/{id}/download`, `DELETE /documents/{id}` (session auth, `ResolveWebTenantDatabase` middleware)
+  - `DocumentApiController` — API surface: `GET|POST /api/v1/documents`, `GET /api/v1/documents/{id}`, `GET /api/v1/documents/{id}/download`, `DELETE /api/v1/documents/{id}` (Bearer + `X-App` + `X-Tenant` headers)
+  - `DocumentRepositoryData` DTO (`app/Data/Repositories/Central/`) — maps all DB columns with `#[MapInputName]` for camelCase properties
+  - `DocumentData` DTO (`app/Documents/Data/`) — strips internal `filePath` from API/controller responses
+  - Tenant migration `2026_06_26_032822_create_documents_table.php` — driver-agnostic schema (works with both MySQL and PostgreSQL)
+  - `TenantSettingsService::resolveDisk(int $tenantId): Filesystem` — new method that builds an ephemeral `Filesystem` from live tenant settings (`storage_driver` → S3, R2, or local); used by `DocumentService` and falls back to system defaults
+  - `DocumentFactory` — `Database\Factories\Documents\DocumentFactory`
+
+  **Frontend**
+
+  - `resources/js/Pages/Documents/Index.vue` — upload form (title, description, file picker), paginated document table (file name with doc icon, title, size, uploaded by, upload date, Download + Delete actions), pagination controls; uses `TenantLayout` via `defineOptions({ layout: TenantLayout })`
+  - `TenantLayout.vue` — Documents nav link added to the sidebar (between Report Queue and any future items)
+
+  **Tests**
+
+  - `DocumentWebTest` — 8 tests: guest redirect, page renders, prop shape, pagination (25 docs → 20/page), upload, title validation, file validation, delete
+  - `DocumentApiTest` — 6 tests: unauthenticated 401, index JSON structure with pagination keys, store 201, store validation 422, show 200, destroy 200
+  - `DocumentServiceTest` — 6 tests: paginate returns correct page/total, list, find, store (file on disk), downloadResponse (stream or redirect), delete (record + file removed)
+  - `WithFakeTenantContext` trait (`tests/Concerns/`) — hot-swaps both `ResolveWebTenantDatabase` and `ResolveTenantDatabase` middleware bindings in tests to set `current_tenant` without reconfiguring the DB connection
+
+  **Postman**
+
+  - New **Documents (API)** folder with 5 requests: List Documents, Upload Document (saves `{{document_id}}`), Get Document, Download Document, Delete Document
+
+- **Multi-driver tenant DB middleware** — both `ResolveWebTenantDatabase` and `ResolveTenantDatabase` now detect `DB_TENANT_DRIVER` (via `config('database.connections.tenant.driver')`) and build the correct connection config at runtime.
+
+  - **PostgreSQL** (`pgsql`): sets `schema: 'public'`, `sslmode: 'prefer'`, `charset: 'utf8'`; no `collation`/`strict`/`engine` keys; default port falls back to `5432`
+  - **MySQL** (`mysql`): retains existing `charset: 'utf8mb4'`, `collation: 'utf8mb4_unicode_ci'`, `strict: true`, `engine: null`; default port falls back to `3306`
+  - Read replica (`write`/`read` split) and separate replica credentials work for both drivers
+  - Fixes an `Internal Server Error` where environments using PostgreSQL for tenant databases received a driver mismatch because the middleware previously hardcoded `driver: 'mysql'`
+
+  **Tests**
+
+  - `ResolveWebTenantDatabaseMiddlewareTest` — new file with 9 tests: 503 when app not configured, 403 when no session tenant, 403 when user lacks access, 503 for maintenance, MySQL connection config, PostgreSQL connection config, PostgreSQL read/write split, MySQL read/write split, request attributes set correctly
+  - `ResolveTenantDatabaseMiddlewareTest` — 4 new tests: PostgreSQL connection config, PostgreSQL read/write split, MySQL default port 3306, existing connection test updated to explicitly set `mysql` driver
+
+---
+
 ## [2.22.0] — 2026-06-26
 
 ### Added

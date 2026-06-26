@@ -5862,6 +5862,144 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Tenant Error Logs \u2014 Portal (API)",
+      "item": [
+        {
+          "name": "List Error Logs (Portal)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tenant/errors?severity=error&unresolved=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "errors"
+              ],
+              "query": [
+                {
+                  "key": "severity",
+                  "value": "error"
+                },
+                {
+                  "key": "unresolved",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Returns error logs recorded for the current tenant (resolved by X-App + X-Tenant headers). Read-only portal view \u2014 does not expose stack trace, file path, line number, or request headers. Optional query params:\n- `severity` \u2014 filter by `error`, `warning`, or `critical`\n- `unresolved=1` \u2014 only show errors without a `resolved_at` timestamp"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 42,\n      \"error_code\": \"E-ACME-A3F9B12C\",\n      \"exception_class\": \"Illuminate\\\\Database\\\\QueryException\",\n      \"message\": \"SQLSTATE[23000]: Integrity constraint violation\",\n      \"severity\": \"error\",\n      \"resolved\": false,\n      \"resolved_at\": null,\n      \"created_at\": \"2026-06-25T09:14:22.000000Z\",\n      \"request_url\": \"http://localhost/api/v1/tenant/orders\",\n      \"request_method\": \"POST\",\n      \"request_params\": {\n        \"product_id\": 5,\n        \"qty\": 2,\n        \"password\": \"[REDACTED]\"\n      },\n      \"context\": {\n        \"app_slug\": \"myapp\",\n        \"tenant_slug\": \"acme\",\n        \"ip\": \"127.0.0.1\",\n        \"user_agent\": \"PostmanRuntime/7.x\"\n      }\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Error Detail (Portal)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var body = pm.response.json();",
+                  "    if (body.data && body.data.id) {",
+                  "        pm.collectionVariables.set('error_id', body.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tenant/errors/{{error_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "errors",
+                "{{error_id}}"
+              ]
+            },
+            "description": "Returns the full portal-visible error log entry for the current tenant. Omits stack trace, request headers, file path, and line number \u2014 shows only the error code, exception type, message, severity, status, request URL/method, sanitized request params, and context fields (IP, user agent). Returns 404 if the error ID does not belong to the current tenant."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"id\": 42,\n    \"error_code\": \"E-ACME-A3F9B12C\",\n    \"exception_class\": \"Illuminate\\\\Database\\\\QueryException\",\n    \"message\": \"SQLSTATE[23000]: Integrity constraint violation\",\n    \"severity\": \"error\",\n    \"resolved\": false,\n    \"resolved_at\": null,\n    \"created_at\": \"2026-06-25T09:14:22.000000Z\",\n    \"request_url\": \"http://localhost/api/v1/tenant/orders\",\n    \"request_method\": \"POST\",\n    \"request_params\": {\n      \"product_id\": 5,\n      \"qty\": 2,\n      \"password\": \"[REDACTED]\"\n    },\n    \"context\": {\n      \"app_slug\": \"myapp\",\n      \"tenant_slug\": \"acme\",\n      \"ip\": \"127.0.0.1\",\n      \"user_agent\": \"PostmanRuntime/7.x\"\n    }\n  }\n}"
+            },
+            {
+              "name": "404 \u2014 Wrong Tenant or Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Not Found\"\n}"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

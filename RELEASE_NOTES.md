@@ -2,6 +2,43 @@
 
 ---
 
+## [2.26.0] — 2026-06-26
+
+### Added
+
+- **Tenant error log portal view — Phase 6.3** — tenant users can now view and inspect their own error logs from within the tenant portal, without needing admin access. The view is read-only and intentionally limits what is exposed: the response DTO omits stack traces, raw file paths, line numbers, and request headers. What tenants see is the error code, exception type, message, severity, open/resolved status, request URL and method, sanitized request parameters, and context fields (IP, user agent). A support callout on the detail page prompts users to quote the error code when contacting support.
+
+  **Backend (`app/TenantErrors/`)**
+
+  - `TenantErrors/Data/TenantErrorData.php` — service-layer DTO scoped to what is safe to expose in the portal: `id`, `errorCode`, `exceptionClass`, `message`, `severity`, `resolved`, `resolvedAt`, `createdAt`, `requestUrl`, `requestMethod`, `requestParams`, `context`; intentionally excludes `trace`, `file`, `line`, and `requestHeaders`
+  - `TenantErrors/Services/TenantErrorsPortalService.php` — `listForTenant(int $tenantId, ?string $severity, bool $unresolvedOnly)` and `getForTenant(int $tenantId, int $id)` (aborts 404 if the ID belongs to a different tenant); maps `TenantErrorLogRepositoryData` → `TenantErrorData`
+  - `TenantErrors/Http/Controllers/TenantErrorsController.php` — `GET /tenant/errors` (index) and `GET /tenant/errors/{errorId}` (show); reads `current_tenant` from request attributes set by `ResolveWebTenantDatabase`
+  - `TenantErrors/Http/Controllers/TenantErrorsApiController.php` — `GET /api/v1/tenant/errors` and `GET /api/v1/tenant/errors/{errorId}`; reads `current_tenant` from request attributes set by `ResolveTenantDatabase`; returns `{ data: [...] }` / `{ data: {...} }` envelope
+  - `TenantErrors/Routes/web_tenant_errors.php` — routes named `tenant.errors` and `tenant.errors.show`
+  - `TenantErrors/Routes/api_tenant_errors.php` — routes named `tenant.api.errors.index` and `tenant.api.errors.show`
+
+  **Frontend**
+
+  - `resources/js/Pages/Tenant/ErrorLogs.vue` — error log list page using `TenantLayout`; stat cards (total / unresolved / critical / errors); severity select filter and unresolved-only checkbox; table rows link to detail; resolved rows dimmed at `opacity-60`; empty state when no logs; guided tour (`useTour`)
+  - `resources/js/Pages/Tenant/ErrorLog.vue` — error detail page using `TenantLayout`; shows error code with Copy button, severity and status badges, occurred timestamp, exception type (short name only), message, request URL and method, sanitized request params (JSON), context fields; support callout with the error code prominently displayed; breadcrumb back to the list; no resolve/reopen/delete actions
+  - `resources/js/Layouts/TenantLayout.vue` — added **Error Logs** nav link (warning triangle icon, href `/tenant/errors`) between Documents and App Selection
+
+  **Tests**
+
+  - `TenantErrors/Tests/TenantErrorsServiceTest.php` — 7 PHPUnit tests: returns `TenantErrorData` collection, tenant scoping, severity filter, unresolved filter, single-record fetch, cross-tenant 404, DTO does not expose trace or request headers
+  - `TenantErrors/Tests/TenantErrorsWebTest.php` — 7 PHPUnit tests: auth redirect, list page renders correct Inertia component, tenant scoping, detail page, cross-tenant 404, severity filter, unresolved filter; uses `WithFakeTenantContext` trait
+  - `TenantErrors/Tests/TenantErrorsApiTest.php` — 7 PHPUnit tests: auth guard, list scoped to tenant, tenant scoping, detail by ID, cross-tenant 404, severity filter, response does not expose trace or request headers; uses `WithFakeTenantContext` trait
+  - `resources/js/Pages/Tenant/ErrorLogs.test.js` — 18 Vitest tests: heading, stat card counts, row count, error code links, exception class, message, severity badges, status badges, empty state, table visibility, severity filter router call, unresolved filter router call, clear-severity omits param, no resolve/reopen/delete buttons, pre-selected filter state, opacity class on resolved rows
+  - `resources/js/Pages/Tenant/ErrorLog.test.js` — 24 Vitest tests: error code, short class name, no full namespace, message, request URL, request method badge, request params JSON, context fields, severity and status badges, breadcrumb link, support note with error code, copy button, no action buttons (read-only), params section hidden when empty, context section hidden when empty or null, clipboard `writeText` called on copy, null request_params safe
+
+  **Postman**
+
+  - New folder **Tenant Error Logs — Portal (API)** added after "Tenant Error Logs (API)"; contains two requests:
+    - `GET /api/v1/tenant/errors` (List Error Logs — Portal) — Bearer + `X-App: tenant` + `X-Tenant: {{tenant_slug}}`; optional `?severity=` and `?unresolved=1` query params
+    - `GET /api/v1/tenant/errors/{{error_id}}` (Get Error Detail — Portal) — includes a test script that saves the returned ID to `{{error_id}}`; documents the 404-on-wrong-tenant behaviour
+
+---
+
 ## [2.25.0] — 2026-06-26
 
 ### Added

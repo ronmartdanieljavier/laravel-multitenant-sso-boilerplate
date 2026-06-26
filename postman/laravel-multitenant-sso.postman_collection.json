@@ -5500,6 +5500,212 @@
           ]
         },
         {
+          "name": "Download Selected Documents (ZIP)",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant",
+                "type": "text"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [{{document_id}}, 2, 3]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/download-zip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "download-zip"
+              ]
+            },
+            "description": "Download multiple documents as a single ZIP archive. Pass an array of document IDs in `ids`. Returns `documents.zip` streamed as `application/zip`. Each document is resolved from its correct storage disk \u2014 report-origin documents use `Storage::disk('reports')`, user-uploaded documents use the tenant's configured disk (S3, R2, or local). Missing files are skipped silently.\n\nRequires `X-App: tenant` and `X-Tenant: {slug}` headers alongside a Bearer token."
+          },
+          "response": [
+            {
+              "name": "200 OK \u2014 ZIP streamed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-App",
+                    "value": "tenant",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Tenant",
+                    "value": "{{tenant_slug}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [1, 2]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/documents/download-zip",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "documents",
+                    "download-zip"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/zip"
+                },
+                {
+                  "key": "Content-Disposition",
+                  "value": "attachment; filename=documents.zip"
+                }
+              ],
+              "cookie": [],
+              "body": "(binary ZIP data)"
+            },
+            {
+              "name": "422 Unprocessable \u2014 ids required",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-App",
+                    "value": "tenant",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Tenant",
+                    "value": "{{tenant_slug}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/documents/download-zip",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "documents",
+                    "download-zip"
+                  ]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"The ids field is required.\",\n  \"errors\": {\n    \"ids\": [\"The ids field is required.\"]\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [1]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/documents/download-zip",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "documents",
+                    "download-zip"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+            }
+          ]
+        },
+        {
           "name": "Delete Document",
           "request": {
             "method": "DELETE",

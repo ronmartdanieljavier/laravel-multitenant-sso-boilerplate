@@ -297,6 +297,79 @@ describe('Documents/Index', () => {
         });
     });
 
+    describe('Checkbox selection', () => {
+        it('renders a checkbox for each document row', () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc, reportDoc]));
+            const checkboxes = wrapper.findAll('tbody input[type="checkbox"]');
+            expect(checkboxes).toHaveLength(2);
+        });
+
+        it('renders a select-all checkbox in the table header', () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc]));
+            const headerCheckbox = wrapper.find('thead input[type="checkbox"]');
+            expect(headerCheckbox.exists()).toBe(true);
+        });
+
+        it('does not show "Download Selected" button when nothing is selected', () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc]));
+            expect(wrapper.text()).not.toContain('Download Selected');
+        });
+
+        it('shows "Download Selected (1)" after checking one document', async () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc]));
+            await wrapper.find('tbody input[type="checkbox"]').setValue(true);
+            expect(wrapper.text()).toContain('Download Selected (1)');
+        });
+
+        it('shows correct count when multiple documents are selected', async () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc, reportDoc]));
+            const checkboxes = wrapper.findAll('tbody input[type="checkbox"]');
+            await checkboxes[0].setValue(true);
+            await checkboxes[1].setValue(true);
+            expect(wrapper.text()).toContain('Download Selected (2)');
+        });
+
+        it('selects all rows when select-all checkbox is clicked', async () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc, reportDoc]));
+            await wrapper.find('thead input[type="checkbox"]').setValue(true);
+            expect(wrapper.text()).toContain('Download Selected (2)');
+        });
+
+        it('deselects all rows when select-all is unchecked', async () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc, reportDoc]));
+            await wrapper.find('thead input[type="checkbox"]').setValue(true);
+            expect(wrapper.text()).toContain('Download Selected (2)');
+            await wrapper.find('thead input[type="checkbox"]').setValue(false);
+            expect(wrapper.text()).not.toContain('Download Selected');
+        });
+
+        it('hides "Download Selected" button after deselecting', async () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc]));
+            const checkbox = wrapper.find('tbody input[type="checkbox"]');
+            await checkbox.setValue(true);
+            expect(wrapper.text()).toContain('Download Selected (1)');
+            await checkbox.setValue(false);
+            expect(wrapper.text()).not.toContain('Download Selected');
+        });
+
+        it('submits a form POST to /documents/download-zip when Download Selected is clicked', async () => {
+            const submitSpy = vi.fn();
+            const originalCreateElement = document.createElement.bind(document);
+            const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+                const el = originalCreateElement(tag);
+                if (tag === 'form') { el.submit = submitSpy; }
+                return el;
+            });
+
+            const wrapper = mountPage(buildDocuments([uploadDoc]));
+            await wrapper.find('tbody input[type="checkbox"]').setValue(true);
+            await wrapper.find('button.bg-slate-700').trigger('click');
+
+            expect(submitSpy).toHaveBeenCalled();
+            createElementSpy.mockRestore();
+        });
+    });
+
     describe('File type icons', () => {
         it('applies red icon color for PDF files', () => {
             const wrapper = mountPage(buildDocuments([uploadDoc]));

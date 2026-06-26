@@ -2,8 +2,11 @@
 
 namespace App\Reports\Jobs;
 
+use App\Documents\Services\DocumentService;
 use App\Models\Central\Report;
+use App\Models\Central\Tenant;
 use App\Reports\Enums\ReportDelivery;
+use App\Reports\Enums\ReportFormat;
 use App\Reports\Enums\ReportStatus;
 use App\Reports\Generators\ReportGeneratorFactory;
 use App\Reports\Mail\ReportReadyMail;
@@ -13,6 +16,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -71,6 +76,7 @@ class GenerateReportJob implements ShouldQueue
             'completed_at' => now(),
         ]);
 
+        $this->registerDocument($report);
         $this->deliver($report, app(ReportDeliveryService::class));
     }
 
@@ -102,6 +108,66 @@ class GenerateReportJob implements ShouldQueue
     {
         $deliveryService->sendToRecipients($report, $parameters['recipients'] ?? []);
         $deliveryService->uploadToS3($report, $parameters['s3_path'] ?? null);
+    }
+
+    private function registerDocument(Report $report): void
+    {
+        if (! in_array($report->format, [ReportFormat::Pdf, ReportFormat::Excel], strict: true)) {
+            return;
+        }
+
+        if ($report->tenant_id === null) {
+            return;
+        }
+
+        $report->loadMissing('tenant');
+
+        if (! $report->tenant instanceof Tenant) {
+            return;
+        }
+
+        $this->configureTenantConnection($report->tenant);
+
+        app(DocumentService::class)->createFromReport($report);
+    }
+
+    private function configureTenantConnection(Tenant $tenant): void
+    {
+        $driver = config('database.connections.tenant.driver', 'mysql');
+        $defaultPort = $driver === 'pgsql' ? 5432 : 3306;
+
+        if ($driver === 'pgsql') {
+            $connection = [
+                'driver' => 'pgsql',
+                'host' => $tenant->db_host,
+                'port' => $tenant->db_port ?? $defaultPort,
+                'database' => $tenant->db_name,
+                'username' => $tenant->db_username,
+                'password' => $tenant->db_password,
+                'charset' => 'utf8',
+                'prefix' => '',
+                'schema' => 'public',
+                'sslmode' => 'prefer',
+            ];
+        } else {
+            $connection = [
+                'driver' => 'mysql',
+                'host' => $tenant->db_host,
+                'port' => $tenant->db_port ?? $defaultPort,
+                'database' => $tenant->db_name,
+                'username' => $tenant->db_username,
+                'password' => $tenant->db_password,
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'prefix_indexes' => true,
+                'strict' => true,
+                'engine' => null,
+            ];
+        }
+
+        Config::set('database.connections.tenant', $connection);
+        DB::purge('tenant');
     }
 
     public function failed(Throwable $e): void

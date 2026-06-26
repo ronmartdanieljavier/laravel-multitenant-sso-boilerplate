@@ -122,7 +122,7 @@ class ReportController extends Controller
             'Report is not ready for download.'
         );
 
-        $storage = Storage::disk();
+        $storage = Storage::disk('reports');
 
         abort_unless($storage->exists($report->file_path), Response::HTTP_NOT_FOUND, 'Report file not found.');
 
@@ -134,7 +134,7 @@ class ReportController extends Controller
         Gate::authorize('delete', $report);
 
         if ($report->file_path !== null) {
-            Storage::delete($report->file_path);
+            Storage::disk('reports')->delete($report->file_path);
         }
 
         $report->delete();

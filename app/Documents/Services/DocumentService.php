@@ -5,11 +5,14 @@ namespace App\Documents\Services;
 use App\Admin\Services\TenantSettingsService;
 use App\Data\Repositories\Central\DocumentRepositoryData;
 use App\Documents\Data\DocumentData;
+use App\Documents\Enums\DocumentSource;
+use App\Models\Central\Report;
 use App\Repositories\Central\DocumentRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentService
@@ -56,7 +59,7 @@ class DocumentService
         int $tenantId,
     ): DocumentData {
         $disk = $this->tenantSettingsService->resolveDisk($tenantId);
-        $path = $disk->putFileAs("documents/{$tenantSlug}", $file, $file->hashName());
+        $path = $disk->putFileAs("{$tenantSlug}/documents", $file, $file->hashName());
 
         $dto = $this->documentRepository->create([
             'title' => $title,
@@ -67,6 +70,32 @@ class DocumentService
             'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
             'uploaded_by_user_id' => $userId,
             'uploaded_by_name' => $userName,
+            'source' => DocumentSource::Upload->value,
+        ]);
+
+        return $this->toData($dto);
+    }
+
+    public function createFromReport(Report $report): DocumentData
+    {
+        $report->loadMissing('user');
+
+        $extension = pathinfo((string) $report->file_path, PATHINFO_EXTENSION);
+        $mime = $extension === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        $fileName = basename((string) $report->file_path);
+        $fileSize = Storage::disk('reports')->size((string) $report->file_path);
+        $title = ucwords(str_replace('_', ' ', $report->type)).' Report';
+
+        $dto = $this->documentRepository->create([
+            'title' => $title,
+            'description' => null,
+            'file_path' => $report->file_path,
+            'file_name' => $fileName,
+            'file_size' => $fileSize,
+            'mime_type' => $mime,
+            'uploaded_by_user_id' => $report->user_id,
+            'uploaded_by_name' => $report->user->name ?? 'System',
+            'source' => DocumentSource::Report->value,
         ]);
 
         return $this->toData($dto);
@@ -90,6 +119,11 @@ class DocumentService
     public function downloadResponse(int $id, int $tenantId): RedirectResponse|StreamedResponse
     {
         $dto = $this->documentRepository->find($id);
+
+        if ($dto->source === DocumentSource::Report) {
+            return Storage::disk('reports')->download($dto->filePath, $dto->fileName);
+        }
+
         $disk = $this->tenantSettingsService->resolveDisk($tenantId);
 
         try {
@@ -111,6 +145,7 @@ class DocumentService
             fileSize: $d->fileSize,
             mimeType: $d->mimeType,
             uploadedByName: $d->uploadedByName,
+            source: $d->source,
             createdAt: $d->createdAt,
         );
     }

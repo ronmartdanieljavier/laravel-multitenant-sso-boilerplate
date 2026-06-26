@@ -102,6 +102,26 @@ function onFileSelected(event) {
     uploadForm.file = file;
     selectedFileName.value = file.name;
 }
+
+const SOURCE_LABELS = {
+    upload: 'User Upload',
+    report: 'Report',
+    subscription: 'Subscription',
+};
+
+const SOURCE_CLASSES = {
+    upload: 'bg-slate-700 text-slate-300',
+    report: 'bg-blue-500/15 text-blue-300',
+    subscription: 'bg-purple-500/15 text-purple-300',
+};
+
+function sourceLabel(source) {
+    return SOURCE_LABELS[source] ?? source;
+}
+
+function sourceClass(source) {
+    return SOURCE_CLASSES[source] ?? 'bg-slate-700 text-slate-300';
+}
 </script>
 
 <template>
@@ -188,6 +208,7 @@ function onFileSelected(event) {
                         <tr class="border-b border-white/5">
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">File name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Source</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Size</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Uploaded by</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Upload date</th>
@@ -207,6 +228,11 @@ function onFileSelected(event) {
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-slate-300 truncate max-w-[180px]">{{ doc.title }}</td>
+                            <td class="px-6 py-4">
+                                <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium', sourceClass(doc.source)]">
+                                    {{ sourceLabel(doc.source) }}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 text-right text-slate-400 tabular-nums whitespace-nowrap">{{ formatBytes(doc.file_size) }}</td>
                             <td class="px-6 py-4 text-slate-400 whitespace-nowrap">{{ doc.uploaded_by_name }}</td>
                             <td class="px-6 py-4 text-slate-400 whitespace-nowrap">{{ formatDate(doc.created_at) }}</td>

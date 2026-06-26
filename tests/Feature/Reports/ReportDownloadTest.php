@@ -14,10 +14,10 @@ class ReportDownloadTest extends TestCase
 
     public function test_user_can_download_a_successful_report(): void
     {
-        Storage::fake();
+        Storage::fake('reports');
 
         $user = User::factory()->create();
-        Storage::put("reports/{$user->id}/report.pdf", 'fake-pdf-content');
+        Storage::disk('reports')->put("reports/{$user->id}/report.pdf", 'fake-pdf-content');
 
         $report = Report::factory()->success()->create([
             'user_id' => $user->id,
@@ -51,11 +51,11 @@ class ReportDownloadTest extends TestCase
 
     public function test_user_cannot_download_another_users_report(): void
     {
-        Storage::fake();
+        Storage::fake('reports');
 
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
-        Storage::put("reports/{$otherUser->id}/report.pdf", 'fake-pdf-content');
+        Storage::disk('reports')->put("reports/{$otherUser->id}/report.pdf", 'fake-pdf-content');
 
         $report = Report::factory()->success()->create([
             'user_id' => $otherUser->id,

@@ -1210,14 +1210,14 @@ Phase 6 makes every per-tenant setting configured in Phase 5.7 visible and funct
 - [x] **Tests** — `TenantReportQueueWebTest` (expanded), `TenantReportQueueApiTest` (expanded), `ReportDownloadTest` (updated), `DocumentServiceTest` (5 new), `DocumentWebTest` (2 new), `DocumentApiTest` (2 new), `Documents/Index.test.js` (20 Vitest, new file)
 
 *6.5 — Tenant portal navigation update*
-- [ ] `TenantLayout.vue` sidebar updated — adds **Documents** and **Errors** nav items alongside Dashboard and Report Queue
-- [ ] Guided page tours added for Documents and Errors pages (driver.js, `useTour` composable)
+- [x] `TenantLayout.vue` sidebar updated — adds **Documents** and **Errors** nav items alongside Dashboard and Report Queue
+- [x] Guided page tours added for Documents and Errors pages (driver.js, `useTour` composable)
 
 *6.6 — Sample report seed migration*
-- [ ] New central migration `seed_sample_reports` inserts sample `Report` records tied to the default admin user and the Demo Tenant so the queue is pre-populated on a fresh install
-- [ ] Two individual reports (one `screen`, one `pdf` format, delivery `download`) are inserted as `pending` and dispatched to Horizon immediately — demonstrating single-job queue flow and PDF regeneration once the PDF package is installed
-- [ ] Two additional reports sharing the same `batch_id` are inserted and dispatched together — demonstrating batch dispatch, parallel processing, and ZIP download on completion
-- [ ] All four reports use `delivery: download` so they appear on the tenant report queue page and can be re-dispatched from the UI
+- [x] New central migration `seed_sample_reports` inserts sample `Report` records tied to the default admin user and the Demo Tenant so the queue is pre-populated on a fresh install
+- [x] Two individual reports (one `screen`, one `pdf` format, delivery `download`) are inserted as `pending` and dispatched to Horizon immediately — demonstrating single-job queue flow and PDF regeneration once the PDF package is installed
+- [x] Two additional reports sharing the same `batch_id` are inserted and dispatched together — demonstrating batch dispatch, parallel processing, and ZIP download on completion
+- [x] All four reports use `delivery: download` so they appear on the tenant report queue page and can be re-dispatched from the UI
 
 *6.7 — Tenant switcher (multi-tenant access)* *(done)*
 - [x] Users assigned to more than one tenant under the **Tenant** app see a switcher dropdown in the `TenantLayout.vue` sidebar header directly below the tenant name

@@ -162,4 +162,34 @@ describe('TenantLayout', () => {
         const appLink = wrapper.findAll('a').find(a => a.attributes('href') === '/apps');
         expect(appLink?.text()).toMatch(/app selection/i);
     });
+
+    it('renders the Documents nav link', async () => {
+        const wrapper = await mountLayout();
+        const links = wrapper.findAll('a').map(a => a.attributes('href'));
+        expect(links).toContain('/documents');
+    });
+
+    it('renders the Error Logs nav link', async () => {
+        const wrapper = await mountLayout();
+        const links = wrapper.findAll('a').map(a => a.attributes('href'));
+        expect(links).toContain('/tenant/errors');
+    });
+
+    it('highlights the Documents link when on the documents page', async () => {
+        const wrapper = await mountLayout({ url: '/documents' });
+        const docLink = wrapper.findAll('a').find(a => a.attributes('href') === '/documents');
+        expect(docLink?.classes().join(' ')).toContain('emerald');
+    });
+
+    it('highlights the Error Logs link when on the errors page', async () => {
+        const wrapper = await mountLayout({ url: '/tenant/errors' });
+        const errLink = wrapper.findAll('a').find(a => a.attributes('href') === '/tenant/errors');
+        expect(errLink?.classes().join(' ')).toContain('emerald');
+    });
+
+    it('does not highlight Dashboard when on the documents page', async () => {
+        const wrapper = await mountLayout({ url: '/documents' });
+        const dashLink = wrapper.findAll('a').find(a => a.attributes('href') === '/tenant');
+        expect(dashLink?.classes().join(' ')).not.toContain('emerald');
+    });
 });

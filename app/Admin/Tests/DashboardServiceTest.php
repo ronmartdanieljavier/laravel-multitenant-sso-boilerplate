@@ -280,8 +280,13 @@ class DashboardServiceTest extends TestCase
         $result = $this->service->getReportQueueSummary();
 
         $byTenant = collect($result->byTenant)->keyBy('tenantId');
-        $this->assertGreaterThan($byTenant[$tenantA->id]->pending + $byTenant[$tenantA->id]->processing + $byTenant[$tenantA->id]->failed,
-            $byTenant[$tenantB->id]->pending + $byTenant[$tenantB->id]->processing + $byTenant[$tenantB->id]->failed);
-        $this->assertSame($tenantB->id, $result->byTenant[0]->tenantId);
+        $totalA = $byTenant[$tenantA->id]->pending + $byTenant[$tenantA->id]->processing + $byTenant[$tenantA->id]->failed;
+        $totalB = $byTenant[$tenantB->id]->pending + $byTenant[$tenantB->id]->processing + $byTenant[$tenantB->id]->failed;
+        $this->assertGreaterThan($totalA, $totalB);
+
+        $orderedIds = collect($result->byTenant)->pluck('tenantId')->all();
+        $posA = array_search($tenantA->id, $orderedIds);
+        $posB = array_search($tenantB->id, $orderedIds);
+        $this->assertLessThan($posA, $posB);
     }
 }

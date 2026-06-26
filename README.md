@@ -19,7 +19,8 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 | **Admin — Tenant Reports** | `/admin/tenants/{t}/reports` `/api/v1/admin/tenants/{t}/reports` | Admin | Admin view of any tenant's report job queue (status, format, user, duration) |
 | **Admin — Tenant Errors** | `/admin/tenants/{t}/errors` `/api/v1/admin/tenants/{t}/errors` | Admin | Per-tenant exception log: list, filter, detail with stack trace, resolve/reopen, delete; global error-code lookup |
 | **Admin — System Settings** | `/admin/settings` `/api/v1/admin/settings` | Admin | Seven-tab system config: Email, SMS, Push, Storage, Authentication, Security, Branding; amber banner when required settings are unset |
-| **Tenant (Web)** | `/tenant` `/tenant/reports` `/documents` `/tenant/errors` | Session | Persistent sidebar portal — dashboard, report queue, document manager, and error log |
+| **Tenant (Web)** | `/tenant` `/tenant/reports` `/documents` `/tenant/errors` | Session | Persistent sidebar portal — dashboard, report queue, document manager, and error log (read-only) |
+| **Tenant Error Logs (Portal API)** | `/api/v1/tenant/errors` | Bearer + X-App + X-Tenant | Read-only portal API for tenant users to view their own error log entries; omits stack trace and request headers |
 | **Documents (API)** | `/api/v1/documents` | Bearer + X-App + X-Tenant | Upload, list (paginated), show, download, and delete tenant documents; files stored on the tenant's configured storage disk |
 | **Reports (API)** | `/api/v1/reports` | Bearer + X-App + X-Tenant | Dispatch single and batch report jobs; poll status; download files; manage scheduled subscriptions (daily/weekly/monthly, email/S3 delivery) |
 | **Profile (API)** | `/api/v1/profile` | Bearer | Update display name, upload profile picture, change password |
@@ -371,24 +372,40 @@ laravel-multitenant-sso-boilerplate/
 │   │       ├── UserAppRepository.php       # syncPermissions(), getTenantsForUserAndApp(), getDefaultTenantSlugForUserAndApp()
 │   │       └── UserRepository.php          # find(), listWithPermissions(), findWithPermissions(), createInvited(), updateProfile(), activateInvitation(), … — all return DTOs
 │   │
-│   └── Tenant/
+│   ├── Tenant/
+│   │   ├── Data/
+│   │   │   └── TenantData.php              # Spatie Data — { id, name, slug, isCurrent }
+│   │   ├── Http/
+│   │   │   ├── Controllers/
+│   │   │   │   ├── TenantSwitcherController.php     # POST /tenant/switch (web)
+│   │   │   │   └── TenantSwitcherApiController.php  # GET /api/v1/tenant/tenants, POST /api/v1/tenant/switch
+│   │   │   └── Requests/
+│   │   │       └── SwitchTenantRequest.php          # tenant_slug (required, string)
+│   │   ├── Routes/
+│   │   │   ├── web_tenant.php              # Tenant web routes (all via ResolveWebTenantDatabase)
+│   │   │   └── api_tenant.php              # Tenant API routes
+│   │   ├── Services/
+│   │   │   └── TenantSwitcherService.php   # getTenantsForUser(), initializeForUser(), switchTenant()
+│   │   └── Tests/
+│   │       ├── TenantSwitcherApiTest.php   # 4 PHPUnit tests — API surface
+│   │       ├── TenantSwitcherServiceTest.php # 7 PHPUnit tests — service layer
+│   │       └── TenantSwitcherWebTest.php   # 3 PHPUnit tests — web surface
+│   │
+│   └── TenantErrors/
 │       ├── Data/
-│       │   └── TenantData.php              # Spatie Data — { id, name, slug, isCurrent }
-│       ├── Http/
-│       │   ├── Controllers/
-│       │   │   ├── TenantSwitcherController.php     # POST /tenant/switch (web)
-│       │   │   └── TenantSwitcherApiController.php  # GET /api/v1/tenant/tenants, POST /api/v1/tenant/switch
-│       │   └── Requests/
-│       │       └── SwitchTenantRequest.php          # tenant_slug (required, string)
+│       │   └── TenantErrorData.php         # Spatie Data — portal-safe error DTO (no trace, file, line, or request headers)
+│       ├── Http/Controllers/
+│       │   ├── TenantErrorsController.php      # GET /tenant/errors, GET /tenant/errors/{id} — Inertia web surface
+│       │   └── TenantErrorsApiController.php   # GET /api/v1/tenant/errors, GET /api/v1/tenant/errors/{id} — REST API surface
 │       ├── Routes/
-│       │   ├── web_tenant.php              # Tenant web routes (all via ResolveWebTenantDatabase)
-│       │   └── api_tenant.php              # Tenant API routes
+│       │   ├── web_tenant_errors.php       # Web routes — auth + ResolveWebTenantDatabase
+│       │   └── api_tenant_errors.php       # API routes — auth:sanctum + ResolveTenantDatabase; named tenant.api.errors.*
 │       ├── Services/
-│       │   └── TenantSwitcherService.php   # getTenantsForUser(), initializeForUser(), switchTenant()
+│       │   └── TenantErrorsPortalService.php   # listForTenant(), getForTenant() — enforces tenant scoping; returns TenantErrorData
 │       └── Tests/
-│           ├── TenantSwitcherApiTest.php   # 4 PHPUnit tests — API surface
-│           ├── TenantSwitcherServiceTest.php # 7 PHPUnit tests — service layer
-│           └── TenantSwitcherWebTest.php   # 3 PHPUnit tests — web surface
+│           ├── TenantErrorsApiTest.php     # 7 PHPUnit tests — API surface, scoping, 404, sensitivity mask
+│           ├── TenantErrorsServiceTest.php # 7 PHPUnit tests — service layer, scoping, DTO type, sensitivity mask
+│           └── TenantErrorsWebTest.php     # 7 PHPUnit tests — web surface, scoping, filter, 404
 │
 ├── Documents/
 │   ├── Data/
@@ -470,6 +487,10 @@ laravel-multitenant-sso-boilerplate/
 │   │   │   ├── Tenant/Index.test.js
 │   │   │   ├── Tenant/ReportQueue.vue      # Tenant report job queue (live polling, download links); uses TenantLayout
 │   │   │   ├── Tenant/ReportQueue.test.js
+│   │   │   ├── Tenant/ErrorLogs.vue        # Portal error log list — severity/unresolved filters, stat cards, read-only table; uses TenantLayout
+│   │   │   ├── Tenant/ErrorLogs.test.js    # 18 Vitest tests
+│   │   │   ├── Tenant/ErrorLog.vue         # Portal error detail — error code, exception summary, request info, context, support note; uses TenantLayout
+│   │   │   ├── Tenant/ErrorLog.test.js     # 24 Vitest tests
 │   │   │   ├── Profile/Index.vue           # User profile page (name, picture, password)
 │   │   │   └── Profile/Index.test.js
 │   │   ├── Pages/Partials/
@@ -574,7 +595,8 @@ What's built:
 - **Tenant maintenance mode (Phase 5.9)** — admin can put any individual tenant or all tenants simultaneously into maintenance mode; enabling immediately revokes all Sanctum tokens for affected tenant users (force logout), hides the tenant from the app picker (`AppService.loadApps()`), and returns HTTP 503 on all API requests resolved through that tenant; admin UI on `/admin/tenants` includes per-row toggle buttons and "Maintenance: All On / All Off" bulk buttons; a dedicated "In Maintenance" summary card appears on both the tenant list and admin dashboard; full REST API via `PATCH /api/v1/admin/tenants/{id}/maintenance` and `PATCH /api/v1/admin/tenants/maintenance/all`
 - **App tour system** — every page has a guided tour (driver.js) that auto-starts on first visit, can be skipped, and retriggered via a floating `?` button; tour-seen state persisted per page in `localStorage`; 12 pages covered (admin dashboard, tenants, apps, users, settings, tenant settings/users/reports/errors, tenant portal dashboard and report queue, user profile); `useTour` composable + `TourButton.vue` component; all 217 Vitest tests pass with a global driver.js mock in `test-setup.js`
 - **Tenant logged-in users (Phase 5.10)** — admin can see how many users are currently online per tenant (green "X online" dot on the tenant list) and view per-user live session status on the tenant users page; Force Logout button immediately revokes all Sanctum tokens for a specific user; `TenantData` gains `loggedInCount`, `UserData` gains `isLoggedIn`; powered by `TenantRepository::loggedInUserCountByTenant()` and `loggedInUserIdsForTenant()` (join on `personal_access_tokens`); full REST API via `DELETE /api/v1/admin/tenants/{tenant}/users/{user}/session`
-- **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (tenant switcher + Dashboard + Report Queue + Documents sidebar + App Selection link + user profile/logout footer); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav + App Selection link); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
+- **Tenant error log portal view (Phase 6.3)** — tenant users can view their own error log at `/tenant/errors` and inspect individual entries at `/tenant/errors/{id}`; read-only (no resolve/delete); response DTO omits stack trace, file path, line number, and request headers — showing only the error code, exception type, message, severity, status, request URL/method, sanitized params, and context (IP, user agent); a support callout on the detail page prompts users to quote the error code when contacting support; REST API at `/api/v1/tenant/errors` (named `tenant.api.errors.*`); `Error Logs` nav link added to `TenantLayout.vue`; 42 Vitest component tests + 21 PHPUnit tests across web, API, and service layers
+- **Persistent navigation layouts** — `TenantLayout.vue` for the tenant portal (tenant switcher + Dashboard + Report Queue + Documents + Error Logs sidebar + App Selection link + user profile/logout footer); `AdminTenantLayout.vue` for admin tenant pages (Settings / Users / Reports / Errors sub-nav + App Selection link); both implemented as Inertia persistent layouts via `defineOptions({ layout })`
 - **Documents module (Phase 6.2 / 6.3)** — `app/Documents/` module following the standard layered architecture; upload files via multipart form (streamed with `putFileAs()` for memory efficiency), list with pagination (20 per page), show metadata, download (signed URL for S3/R2; streamed response for local disk), and delete (removes file from storage and DB record); files stored on the tenant's configured storage disk resolved via `TenantSettingsService::resolveDisk()`; web routes at `/documents`; API routes at `/api/v1/documents`; **Phase 6.3** enforces upload constraints (allowed MIME groups and per-type size caps) resolved from system settings and tenant overrides via `StoreDocumentRequest` + `TenantSettingsService::resolveUploadConstraints()`; 27 PHPUnit tests across web, API, and service layers
 - **Multi-driver tenant DB middleware (Phase 6.2)** — both `ResolveWebTenantDatabase` and `ResolveTenantDatabase` now detect `DB_TENANT_DRIVER` at runtime and build either a PostgreSQL or MySQL connection config; PostgreSQL connections use `schema`, `sslmode`, and `utf8` charset; MySQL connections retain `utf8mb4`/`collation`/`strict`; default port falls back to `5432` (pgsql) or `3306` (mysql); 11 new PHPUnit tests across both middleware classes
 - **Tenant switcher (Phase 6.7)** — `TenantSwitcherService` + `TenantSwitcherController` (web) + `TenantSwitcherApiController` (API); `ResolveWebTenantDatabase` middleware for session-based tenant resolution; `TenantSwitcher.vue` dropdown component; `availableTenants` Inertia shared prop; 16 PHPUnit + 27 Vitest tests
@@ -700,6 +722,13 @@ Import via **Postman → Import → File**. The collection uses two variables �
 |---|---|---|---|
 | `GET` | `/api/v1/tenant/reports` | Bearer | List all report jobs for the current tenant (paginated, latest-first) |
 
+**Tenant Error Logs — Portal (API — Bearer + X-App + X-Tenant headers)**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/tenant/errors` | Bearer | List error logs for the current tenant — read-only; omits trace and request headers. Optional: `?severity=error\|warning\|critical`, `?unresolved=1` |
+| `GET` | `/api/v1/tenant/errors/{id}` | Bearer | Get a single error log entry for the current tenant; returns 404 if the ID belongs to a different tenant |
+
 **Documents (API — Bearer + X-App + X-Tenant headers)**
 
 | Method | Endpoint | Auth | Description |
@@ -716,7 +745,7 @@ Import via **Postman → Import → File**. The collection uses two variables �
 |---|---|---|---|
 | `GET` | `/api/v1/admin/tenants/{tenant}/reports` | Bearer | List all report jobs for a specific tenant (admin view) |
 
-The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, "Create Subscription" saves the ID to `{{subscription_id}}`, "Invite User" saves the new user ID to `{{invited_user_id}}`, "Create Tenant" saves the ID to `{{tenant_id}}`, and "Upload Document" saves the ID to `{{document_id}}`, so subsequent requests work without manual copy-paste.
+The Login request includes a test script that automatically saves the returned token to `{{token}}`. The "Dispatch Single Report" request saves the returned UUID to `{{report_id}}`, "Create Subscription" saves the ID to `{{subscription_id}}`, "Invite User" saves the new user ID to `{{invited_user_id}}`, "Create Tenant" saves the ID to `{{tenant_id}}`, "Upload Document" saves the ID to `{{document_id}}`, and "Get Error Detail (Portal)" saves the ID to `{{error_id}}`, so subsequent requests work without manual copy-paste.
 
 ---
 

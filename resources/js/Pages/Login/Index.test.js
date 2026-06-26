@@ -32,7 +32,7 @@ describe('Login/Index', () => {
     it('renders the brand heading', () => {
         const wrapper = mount(LoginPage);
 
-        expect(wrapper.text()).toContain('Welcome back');
+        expect(wrapper.text()).toContain('Sign in');
     });
 
     it('submits to the web login route', async () => {

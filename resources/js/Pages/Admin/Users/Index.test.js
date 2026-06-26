@@ -124,8 +124,8 @@ describe('Admin/Users/Index', () => {
 
     it('renders the Users nav item as active', () => {
         const wrapper = mountPage();
-        const activeLink = wrapper.find('.bg-violet-600\\/20');
-        expect(activeLink.text()).toContain('Users');
+        const activeLink = wrapper.findAll('a').find(a => a.classes().includes('border-blue-500'));
+        expect(activeLink?.text()).toContain('Users');
     });
 
     it('does not show missing settings banner when settings are complete', () => {

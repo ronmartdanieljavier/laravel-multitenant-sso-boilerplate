@@ -19,8 +19,9 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 | **Admin — Tenant Reports** | `/admin/tenants/{t}/reports` `/api/v1/admin/tenants/{t}/reports` | Admin | Admin view of any tenant's report job queue (status, format, user, duration) |
 | **Admin — Tenant Errors** | `/admin/tenants/{t}/errors` `/api/v1/admin/tenants/{t}/errors` | Admin | Per-tenant exception log: list, filter, detail with stack trace, resolve/reopen, delete; global error-code lookup |
 | **Admin — System Settings** | `/admin/settings` `/api/v1/admin/settings` | Admin | Seven-tab system config: Email, SMS, Push, Storage, Authentication, Security, Branding; amber banner when required settings are unset |
-| **Tenant (Web)** | `/tenant` `/tenant/reports` `/documents` `/tenant/errors` | Session | Persistent sidebar portal — dashboard (live stats + recent activity), report queue, document manager, and error log (read-only) |
+| **Tenant (Web)** | `/tenant` `/tenant/reports` `/tenant/jobs` `/documents` `/tenant/errors` | Session | Persistent sidebar portal — dashboard (live stats + recent activity), report queue, job queue, document manager, and error log (read-only) |
 | **Tenant Dashboard (API)** | `/api/v1/tenant/dashboard` | Bearer + X-App + X-Tenant | Live dashboard snapshot: pending/failed report counts, error counts, document totals, and up to 5 recent records per category |
+| **Tenant Job Queue (Portal API)** | `/api/v1/tenant/jobs` | Bearer + X-App + X-Tenant | Paginated list of all background jobs dispatched for the current tenant; filterable by status (pending/running/completed/failed); includes display name, job class, timestamps, duration, and error message |
 | **Tenant Error Logs (Portal API)** | `/api/v1/tenant/errors` | Bearer + X-App + X-Tenant | Read-only portal API for tenant users to view their own error log entries; omits stack trace and request headers |
 | **Documents (API)** | `/api/v1/documents` | Bearer + X-App + X-Tenant | Upload, list (paginated), show, download, bulk ZIP download, and delete tenant documents; files stored on the tenant's configured storage disk |
 | **Reports (API)** | `/api/v1/reports` | Bearer + X-App + X-Tenant | Dispatch single and batch report jobs; poll status; download files; manage scheduled subscriptions (daily/weekly/monthly, email/S3 delivery) |
@@ -61,6 +62,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
         │  users  apps         │  │  sessions   │  │  GenerateReportJob    │
         │  tenants  settings   │  │  queues     │  │  GenerateReportBatch  │
         │  reports  error_logs │  └─────────────┘  │  ScheduledReports     │
+        │  tenant_job_records  │                   │  TenantJobTrackable   │
         └──────────┬───────────┘                   └───────────────────────┘
                    │
                    │  ResolveTenantDatabase (API) — X-Tenant header
@@ -128,8 +130,9 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 - **Persistent tenant sub-navigation** — admin users navigating between tenant-specific pages (Settings, Users, Reports, Errors) stay in context via a sticky sub-nav bar; no need to return to the tenants list to switch pages
 
 **Tenant portal**
-- Persistent sidebar layout (`TenantLayout.vue`) so users navigate between Dashboard, Report Queue, Documents, and Error Logs without page flicker; all portal pages use full-width layout matching the admin panel
+- Persistent sidebar layout (`TenantLayout.vue`) so users navigate between Dashboard, Report Queue, Job Queue, Documents, and Error Logs without page flicker; all portal pages use full-width layout matching the admin panel
 - Report queue page at `/tenant/reports` — live status polling every 4 s, stat cards, format/status badges, download links
+- **Job queue page at `/tenant/jobs`** — general-purpose background job tracker; any job using `TenantJobTrackable` is automatically recorded; live polling every 4 s; filterable by status; shows job name, class, timestamps, duration, and expandable error detail for failed jobs
 - **Tenant switcher** — users assigned to more than one tenant see a dropdown in the sidebar below the tenant name; selecting a tenant posts to `POST /tenant/switch`, updates `session('tenant_app_current_tenant')`, and reloads the page with the new tenant's DB connection wired in
 
 **Inertia.js + Vue 3 frontend**

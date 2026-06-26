@@ -1,9 +1,6 @@
 <?php
 
-use App\Reports\Jobs\GenerateReportJob;
-use Illuminate\Bus\Batch;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -64,9 +61,6 @@ return new class extends Migration
             ],
         ]);
 
-        GenerateReportJob::dispatch($screenReportId);
-        GenerateReportJob::dispatch($pdfReportId);
-
         // Two batch reports dispatched together
         $batchGroupId = (string) Str::uuid();
         $batchReport1Id = (string) Str::uuid();
@@ -109,10 +103,7 @@ return new class extends Migration
             ],
         ]);
 
-        Bus::batch([
-            new GenerateReportJob($batchReport1Id),
-            new GenerateReportJob($batchReport2Id),
-        ])->dispatch();
+        // Reports are seeded as 'pending' — workers will pick them up when the queue is running.
     }
 
     public function down(): void

@@ -6265,6 +6265,70 @@
       ]
     },
     {
+      "name": "Tenant Job Queue (Portal API)",
+      "item": [
+        {
+          "name": "List Jobs (Portal)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tenant/jobs?status=failed&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "failed",
+                  "description": "Filter by status: pending, running, completed, failed. Omit for all."
+                },
+                {
+                  "key": "per_page",
+                  "value": "20",
+                  "description": "Number of results per page (default 20)."
+                }
+              ]
+            },
+            "description": "Returns a paginated list of background jobs dispatched for the current tenant (resolved by X-App + X-Tenant headers). Includes all jobs that use the TenantJobTrackable trait \u2014 report generation, email delivery, and any future heavy-computation jobs.\n\nOptional query params:\n- `status` \u2014 filter by `pending`, `running`, `completed`, or `failed`\n- `per_page` \u2014 page size (default 20)"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n      \"job_class\": \"App\\\\Reports\\\\Jobs\\\\GenerateReportJob\",\n      \"display_name\": \"Report: audit_log\",\n      \"status\": \"completed\",\n      \"error_message\": null,\n      \"started_at\": \"2026-06-27T08:00:05.000000Z\",\n      \"finished_at\": \"2026-06-27T08:00:12.000000Z\",\n      \"created_at\": \"2026-06-27T08:00:00.000000Z\",\n      \"duration_seconds\": 7\n    },\n    {\n      \"id\": \"b2c3d4e5-f6a7-8901-bcde-f12345678901\",\n      \"job_class\": \"App\\\\Reports\\\\Jobs\\\\GenerateReportJob\",\n      \"display_name\": \"Report: sales_summary\",\n      \"status\": \"failed\",\n      \"error_message\": \"Disk full \\u2014 unable to write report file.\",\n      \"started_at\": \"2026-06-27T07:55:00.000000Z\",\n      \"finished_at\": \"2026-06-27T07:55:03.000000Z\",\n      \"created_at\": \"2026-06-27T07:54:58.000000Z\",\n      \"duration_seconds\": 3\n    }\n  ],\n  \"first_page_url\": \"{{base_url}}/api/v1/tenant/jobs?page=1\",\n  \"last_page\": 1,\n  \"per_page\": 20,\n  \"total\": 2\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Tenant Error Logs \u2014 Portal (API)",
       "item": [
         {

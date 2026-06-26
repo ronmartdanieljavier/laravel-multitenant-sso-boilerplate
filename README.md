@@ -205,7 +205,7 @@ laravel-multitenant-sso-boilerplate/
 │   │       ├── TenantHealthServiceTest.php     # 14 service-layer unit tests
 │   │       ├── TenantHealthWebTest.php         # 7 HTTP tests for GET /admin/tenants
 │   │       ├── TenantManagementApiTest.php     # 9 PHPUnit tests — API surface (list, create, update, toggle, migrate, delete)
-│   │       ├── TenantManagementServiceTest.php # 8 PHPUnit tests — DTO return contracts, token revocation
+│   │       ├── TenantManagementServiceTest.php # 13 PHPUnit tests — DTO return contracts, token revocation, default connection, admin auto-assign
 │   │       ├── TenantManagementWebTest.php     # 11 PHPUnit tests — web surface (list, CRUD, toggle, delete)
 │   │       ├── TenantReportQueueApiTest.php    # 4 PHPUnit tests — admin API report queue
 │   │       ├── TenantReportQueueWebTest.php    # 6 PHPUnit tests — admin web report queue
@@ -527,6 +527,7 @@ What's built:
 - **App management (Phase 5.4)** — admin can view and edit app information (name, description) at `/admin/apps` and via `GET|PUT /api/v1/admin/apps`; Inertia inline-edit rows; `AppRepositoryData` DTO returned by the repository
 - **User management (Phase 5.5)** — admin can invite users by email with per-app and per-tenant permissions via `POST /api/v1/admin/users/invite`; admin can update user profile and permissions via `PUT /api/v1/admin/users/{user}`; invited users accept via `/invitation/{token}`; account stays inactive until accepted; `UserData` and `UserWithPermissionsRepositoryData` DTOs carry the full permission graph
 - **Tenant management (Phase 5.6)** — admin can create, edit, and delete tenants from `/admin/tenants`; creating a tenant automatically runs its DB migrations; admin can run migrations per-tenant or across all tenants; toggling `is_active` to false immediately revokes all Sanctum tokens for users on that tenant; deleting a tenant drops its database (best-effort), revokes user tokens, and cascades central record removal; full REST API under `/api/v1/admin/tenants`; `TenantData` DTO combines management fields (DB credentials, `isPasswordSet`) with health metrics for the combined management+health page
+- **Tenant provisioning enhancements** — when adding a new tenant with the Database Connection fields left blank, the system automatically fills `db_host`, `db_port`, `db_username`, and `db_password` from the `tenant` connection config (`DB_TENANT_*` env vars), and generates `db_name` as `tenant_{slug}` so each tenant gets an isolated database rather than sharing the central one; `db_host`, `db_name`, `db_username`, and `db_password` are now nullable in the DB (migration `2026_06_25_231939_make_tenant_db_fields_nullable`); after creation, every user with `role = admin` on any app is automatically assigned to the new tenant in `user_app_tenants`
 - **Per-tenant settings (Phase 5.7)** — admin configures per-tenant overrides across five tabs (Email, Storage, Report PDF, Report Server, Branding); unset keys fall back to system settings at runtime via `TenantSettingsService::resolveMailConfig()` / `resolveS3Config()`; report jobs routed to tenant-specific queue, timeout, and Redis connection via `ReportController::resolveReportConfig()`; `report_connection` dropdown populated from `config/queue.php` redis entries; full REST API under `/api/v1/admin/tenants/{tenant}/settings`
 - **Tenant report queue (Phase 5.7)** — tenant users view their queued report jobs at `/tenant/reports` with live 4 s polling via `usePoll`; admin views any tenant's jobs at `/admin/tenants/{tenant}/reports`; both surfaces share `ReportRepository::listForTenant()`
 - **Live admin dashboard (Phase 5.8)** — single-page snapshot of the entire platform: user/app/tenant/SSO-session stat cards, tenant health bar (healthy/warning/critical) with click-to-filter, pending invitation list with one-click resend, recent users table with edit modal shortcut, cross-tenant unresolved error log summary by severity, report queue health (pending/processing/failed per tenant), and tenant migration compliance (behind tenants listed with one-click Run migrations); also exposed as `GET /api/v1/admin/dashboard` for mobile and external consumers
@@ -1017,6 +1018,8 @@ git commit -m "chore(docker): add redis healthcheck to compose file"
 - [x] Admin can trigger migrations on a selected tenant or across all tenants from the UI
 - [x] Admin can toggle a tenant's `is_active` flag — when deactivated, all users with a tenant role on that tenant are force-logged out (tokens revoked)
 - [x] Admin can delete a tenant — the tenant's database is dropped and all related central records are removed
+- [x] Leaving the Database Connection fields blank auto-fills credentials from `DB_TENANT_*` env vars and generates `db_name` as `tenant_{slug}` for an isolated tenant database
+- [x] Creating a new tenant automatically assigns all admin-role users to it in `user_app_tenants`
 
 *5.7 — Tenant settings (admin)* *(done)*
 - [x] Admin can add, update, and delete per-tenant settings:

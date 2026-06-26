@@ -62,7 +62,12 @@ class GenerateReportBatchJob
 
                 if ($delivery === ReportDelivery::Download && $group->count() > 1) {
                     $paths = $group->pluck('file_path')->filter()->all();
-                    $zipPath = $this->fileService->zipFiles($paths, "batch_{$batchId}.zip");
+                    $firstReport = $group->first();
+                    $firstReport->loadMissing('tenant');
+                    $prefix = $firstReport->tenant
+                        ? "{$firstReport->tenant->slug}/reports"
+                        : "reports/{$firstReport->user_id}";
+                    $zipPath = $this->fileService->zipFiles($paths, "batch_{$batchId}.zip", $prefix);
 
                     // Store the ZIP path on the first report so the batch download is retrievable via the API.
                     $group->first()->update(['file_path' => $zipPath]);

@@ -2,17 +2,31 @@
 
 namespace App\Reports\Services;
 
+use App\Models\Central\Report;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use ZipArchive;
 
 class ReportFileService
 {
-    public function storeFile(string $content, string $filename, int $userId): string
+    /**
+     * Compute the storage directory for a report's generated file.
+     * Tenant reports live under {slug}/reports; user-only reports fall back to reports/{userId}.
+     */
+    public static function prefix(Report $report): string
     {
-        $path = "reports/{$userId}/{$filename}";
+        $report->loadMissing('tenant');
 
-        if (Storage::put($path, $content) === false) {
+        return $report->tenant
+            ? "{$report->tenant->slug}/reports"
+            : "reports/{$report->user_id}";
+    }
+
+    public function storeFile(string $content, string $filename, Report $report): string
+    {
+        $path = self::prefix($report).'/'.$filename;
+
+        if (Storage::disk('reports')->put($path, $content) === false) {
             throw new RuntimeException("Failed to write report file at {$path}.");
         }
 
@@ -31,32 +45,32 @@ class ReportFileService
     /**
      * @param  string[]  $storagePaths  Storage-relative paths to include in the ZIP
      */
-    public function zipFiles(array $storagePaths, string $zipName): string
+    public function zipFiles(array $storagePaths, string $zipName, string $prefix = 'reports'): string
     {
         $zip = new ZipArchive;
-        $zipPath = storage_path("app/reports/{$zipName}");
+        $zipPath = Storage::disk('reports')->path("{$prefix}/{$zipName}");
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             throw new RuntimeException("Cannot create ZIP archive at {$zipPath}");
         }
 
         foreach ($storagePaths as $storagePath) {
-            $absolutePath = Storage::path($storagePath);
+            $absolutePath = Storage::disk('reports')->path($storagePath);
             $zip->addFile($absolutePath, basename($storagePath));
         }
 
         $zip->close();
 
-        return "reports/{$zipName}";
+        return "{$prefix}/{$zipName}";
     }
 
     public function absolutePath(string $storagePath): string
     {
-        return Storage::path($storagePath);
+        return Storage::disk('reports')->path($storagePath);
     }
 
     public function exists(string $storagePath): bool
     {
-        return Storage::exists($storagePath);
+        return Storage::disk('reports')->exists($storagePath);
     }
 }

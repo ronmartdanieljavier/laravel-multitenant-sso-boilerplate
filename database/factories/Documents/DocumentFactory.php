@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Documents;
 
+use App\Documents\Enums\DocumentSource;
 use App\Models\Tenant\Document;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,6 +24,7 @@ class DocumentFactory extends Factory
             'mime_type' => 'application/pdf',
             'uploaded_by_user_id' => fake()->numberBetween(1, 100),
             'uploaded_by_name' => fake()->name(),
+            'source' => DocumentSource::Upload->value,
         ];
     }
 }

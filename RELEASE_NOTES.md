@@ -2,6 +2,31 @@
 
 ---
 
+## [2.31.0] — 2026-06-26
+
+### Added
+
+- **Bulk ZIP download for tenant documents — Phase 6.6** — tenant users can select any combination of documents and download them as a single `documents.zip` archive directly from the Documents page.
+
+  **Backend**
+
+  - `DocumentRepository::findMany(array $ids): Collection<DocumentRepositoryData>` — new method that fetches multiple documents by ID using `whereIn` on the tenant connection
+  - `DocumentService::downloadZipResponse(array $ids, int $tenantId): StreamedResponse` — builds a ZIP archive in a system temp file using PHP's `ZipArchive`; resolves the correct disk per document (`Storage::disk('reports')` for report-source, tenant storage disk for uploads); skips missing files silently; streams the temp file as `documents.zip` (`Content-Type: application/zip`); temp file deleted after streaming
+  - `DocumentController::downloadZip(Request $request)` — validates `ids` (required, non-empty array of integers), delegates to service; web route: `POST /documents/download-zip` (`documents.download-zip`)
+  - `DocumentApiController::downloadZip(Request $request)` — same validation for API consumers; API route: `POST /api/v1/documents/download-zip` (`documents.download-zip`)
+
+  **Frontend**
+
+  - `resources/js/Pages/Documents/Index.vue` — checkbox column added as the first column; select-all checkbox in the table header; `selectedIds` reactive `Set` tracks checked IDs; "Download Selected (N)" button appears in the page header only when ≥ 1 document is selected; clicking submits a native hidden `<form>` POST with each selected ID as `ids[]`, triggering a browser file download without disrupting the Inertia SPA session
+
+  **Tests**
+
+  - `DocumentWebTest` — 3 new PHPUnit tests: zip download returns 200 + `Content-Disposition: attachment; filename=documents.zip`, validation rejects empty ids, guest redirected to login
+  - `DocumentApiTest` — 2 new PHPUnit tests: API zip download 200 + header, 422 when ids missing
+  - `resources/js/Pages/Documents/Index.test.js` — 9 new Vitest tests covering: checkbox per row, select-all in header, no button without selection, count display for single and multiple selections, select-all / deselect-all toggle, button disappears after deselect, form POST submitted on click
+
+---
+
 ## [2.30.0] — 2026-06-26
 
 ### Added

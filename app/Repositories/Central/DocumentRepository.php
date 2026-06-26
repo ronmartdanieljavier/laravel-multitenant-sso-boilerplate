@@ -73,4 +73,16 @@ class DocumentRepository
     {
         $this->model->on('tenant')->findOrFail($id)->delete();
     }
+
+    /**
+     * @param  array<int>  $ids
+     * @return Collection<int, DocumentRepositoryData>
+     */
+    public function findMany(array $ids): Collection
+    {
+        return $this->model->on('tenant')
+            ->whereIn('id', $ids)
+            ->get()
+            ->map(fn (Document $doc) => DocumentRepositoryData::from($doc));
+    }
 }

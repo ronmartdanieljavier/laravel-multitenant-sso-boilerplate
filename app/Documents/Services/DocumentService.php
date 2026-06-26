@@ -14,6 +14,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use ZipArchive;
 
 class DocumentService
 {
@@ -133,6 +134,42 @@ class DocumentService
         } catch (\RuntimeException) {
             return $disk->download($dto->filePath, $dto->fileName);
         }
+    }
+
+    /**
+     * Build a ZIP archive from the given document IDs and stream it to the client.
+     *
+     * @param  array<int>  $ids
+     */
+    public function downloadZipResponse(array $ids, int $tenantId): StreamedResponse
+    {
+        $documents = $this->documentRepository->findMany($ids);
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'docs_zip_');
+
+        $zip = new ZipArchive;
+        $zip->open($tmpPath, ZipArchive::OVERWRITE);
+
+        foreach ($documents as $doc) {
+            $disk = $doc->source === DocumentSource::Report
+                ? Storage::disk('reports')
+                : $this->tenantSettingsService->resolveDisk($tenantId);
+
+            if (! $disk->exists($doc->filePath)) {
+                continue;
+            }
+
+            $zip->addFromString($doc->fileName, $disk->get($doc->filePath));
+        }
+
+        $zip->close();
+
+        return response()->streamDownload(function () use ($tmpPath): void {
+            $stream = fopen($tmpPath, 'rb');
+            fpassthru($stream);
+            fclose($stream);
+            @unlink($tmpPath);
+        }, 'documents.zip', ['Content-Type' => 'application/zip']);
     }
 
     private function toData(DocumentRepositoryData $d): DocumentData

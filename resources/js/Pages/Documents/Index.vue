@@ -32,6 +32,58 @@ const showUploadModal = ref(false);
 const fileInput = ref(null);
 const selectedFileName = ref(null);
 
+const selectedIds = ref(new Set());
+
+const allSelected = computed(() => {
+    return props.documents.data.length > 0 &&
+        props.documents.data.every(doc => selectedIds.value.has(doc.id));
+});
+
+function toggleSelectAll() {
+    if (allSelected.value) {
+        props.documents.data.forEach(doc => selectedIds.value.delete(doc.id));
+    } else {
+        props.documents.data.forEach(doc => selectedIds.value.add(doc.id));
+    }
+    selectedIds.value = new Set(selectedIds.value);
+}
+
+function toggleSelect(id) {
+    if (selectedIds.value.has(id)) {
+        selectedIds.value.delete(id);
+    } else {
+        selectedIds.value.add(id);
+    }
+    selectedIds.value = new Set(selectedIds.value);
+}
+
+function downloadSelected() {
+    const ids = Array.from(selectedIds.value);
+    if (ids.length === 0) { return; }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/documents/download-zip';
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+    form.appendChild(csrfInput);
+
+    ids.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids[]';
+        input.value = id;
+        form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
+
 function closeUploadModal() {
     showUploadModal.value = false;
     uploadForm.reset();
@@ -212,13 +264,25 @@ function fileIconConfig(mimeType) {
 
     <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
         <h2 class="text-lg font-semibold">Documents</h2>
-        <button
-            id="tour-el-upload-btn"
-            @click="showUploadModal = true"
-            class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
-        >
-            Upload Document
-        </button>
+        <div class="flex items-center gap-3">
+            <button
+                v-if="selectedIds.size > 0"
+                @click="downloadSelected"
+                class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download Selected ({{ selectedIds.size }})
+            </button>
+            <button
+                id="tour-el-upload-btn"
+                @click="showUploadModal = true"
+                class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+            >
+                Upload Document
+            </button>
+        </div>
     </header>
 
     <!-- Upload Modal -->
@@ -315,6 +379,14 @@ function fileIconConfig(mimeType) {
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-white/5">
+                            <th class="pl-6 pr-3 py-3 w-10">
+                                <input
+                                    type="checkbox"
+                                    :checked="allSelected"
+                                    @change="toggleSelectAll"
+                                    class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                                />
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">File name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Title</th>
                             <th id="tour-el-source-col" class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Source</th>
@@ -326,6 +398,14 @@ function fileIconConfig(mimeType) {
                     </thead>
                     <tbody class="divide-y divide-white/5">
                         <tr v-for="doc in documents.data" :key="doc.id" class="hover:bg-white/[0.02] transition">
+                            <td class="pl-6 pr-3 py-4">
+                                <input
+                                    type="checkbox"
+                                    :checked="selectedIds.has(doc.id)"
+                                    @change="toggleSelect(doc.id)"
+                                    class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                                />
+                            </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div :class="['w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center shrink-0', fileIconConfig(doc.mime_type).bg]">

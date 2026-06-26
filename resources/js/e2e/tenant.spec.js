@@ -11,14 +11,22 @@ test.describe('Tenant portal', () => {
         await expect(page.getByText(/good (morning|afternoon|evening)/i)).toBeVisible();
     });
 
-    test('shows app cards', async ({ page }) => {
-        await expect(page.getByText('Admin Portal')).toBeVisible();
-        await expect(page.getByText('Reports Suite')).toBeVisible();
-        await expect(page.getByText('Tenant Hub')).toBeVisible();
-        await expect(page.getByText('Billing')).toBeVisible();
+    test('shows stats cards', async ({ page }) => {
+        await expect(page.getByText('Active Reports')).toBeVisible();
+        await expect(page.getByText('Failed Reports')).toBeVisible();
+        await expect(page.getByText('Open Errors')).toBeVisible();
+        await expect(page.getByText('Documents')).toBeVisible();
     });
 
-    test('shows recent activity section', async ({ page }) => {
-        await expect(page.getByText('Recent Activity')).toBeVisible();
+    test('shows quick action links', async ({ page }) => {
+        await expect(page.getByRole('link', { name: /queue report/i })).toBeVisible();
+        await expect(page.getByRole('link', { name: /browse documents/i })).toBeVisible();
+        await expect(page.getByRole('link', { name: /review errors/i })).toBeVisible();
+    });
+
+    test('shows recent activity sections', async ({ page }) => {
+        await expect(page.getByText('Recent Reports')).toBeVisible();
+        await expect(page.getByText('Recent Errors')).toBeVisible();
+        await expect(page.getByText('Recent Documents')).toBeVisible();
     });
 });

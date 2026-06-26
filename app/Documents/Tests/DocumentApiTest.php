@@ -272,4 +272,49 @@ class DocumentApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.0.source', 'report');
     }
+
+    public function test_api_user_can_download_selected_documents_as_zip(): void
+    {
+        $this->fakeDisk->put('slug/documents/a.pdf', 'content-a');
+        $this->fakeDisk->put('slug/documents/b.pdf', 'content-b');
+
+        $docA = Document::on('tenant')->create([
+            'title' => 'Doc A',
+            'description' => null,
+            'file_path' => 'slug/documents/a.pdf',
+            'file_name' => 'a.pdf',
+            'file_size' => 9,
+            'mime_type' => 'application/pdf',
+            'uploaded_by_user_id' => $this->user->id,
+            'uploaded_by_name' => $this->user->name,
+            'source' => DocumentSource::Upload->value,
+        ]);
+
+        $docB = Document::on('tenant')->create([
+            'title' => 'Doc B',
+            'description' => null,
+            'file_path' => 'slug/documents/b.pdf',
+            'file_name' => 'b.pdf',
+            'file_size' => 9,
+            'mime_type' => 'application/pdf',
+            'uploaded_by_user_id' => $this->user->id,
+            'uploaded_by_name' => $this->user->name,
+            'source' => DocumentSource::Upload->value,
+        ]);
+
+        $this->withToken($this->token())
+            ->withHeaders($this->apiHeaders())
+            ->post('/api/v1/documents/download-zip', ['ids' => [$docA->id, $docB->id]])
+            ->assertOk()
+            ->assertHeader('Content-Disposition', 'attachment; filename=documents.zip');
+    }
+
+    public function test_api_download_zip_requires_ids(): void
+    {
+        $this->withToken($this->token())
+            ->withHeaders($this->apiHeaders())
+            ->postJson('/api/v1/documents/download-zip', [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('ids');
+    }
 }

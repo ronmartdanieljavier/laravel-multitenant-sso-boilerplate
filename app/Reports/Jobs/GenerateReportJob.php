@@ -11,6 +11,8 @@ use App\Reports\Enums\ReportStatus;
 use App\Reports\Generators\ReportGeneratorFactory;
 use App\Reports\Mail\ReportReadyMail;
 use App\Reports\Services\ReportDeliveryService;
+use App\Repositories\Central\TenantJobRecordRepository;
+use App\TenantJobs\Concerns\TenantJobTrackable;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,7 +25,7 @@ use Throwable;
 
 class GenerateReportJob implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, TenantJobTrackable;
 
     public int $tries = 3;
 
@@ -46,6 +48,11 @@ class GenerateReportJob implements ShouldQueue
         if ($connection !== null) {
             $this->onConnection($connection);
         }
+    }
+
+    public function middleware(): array
+    {
+        return $this->trackingMiddleware();
     }
 
     public function handle(ReportGeneratorFactory $factory): void
@@ -177,5 +184,9 @@ class GenerateReportJob implements ShouldQueue
             'error_message' => $e->getMessage(),
             'completed_at' => now(),
         ]);
+
+        if ($this->tenantJobTrackingId !== '') {
+            app(TenantJobRecordRepository::class)->markFailed($this->tenantJobTrackingId, $e->getMessage());
+        }
     }
 }

@@ -11,14 +11,22 @@ test.describe('Tenant portal', () => {
         await expect(page.getByText(/good (morning|afternoon|evening)/i)).toBeVisible();
     });
 
-    test('shows app cards', async ({ page }) => {
-        await expect(page.getByText('Admin Portal')).toBeVisible();
-        await expect(page.getByText('Reports Suite')).toBeVisible();
-        await expect(page.getByText('Tenant Hub')).toBeVisible();
-        await expect(page.getByText('Billing')).toBeVisible();
+    test('shows stats cards', async ({ page }) => {
+        await expect(page.locator('#stat-reports-active')).toBeVisible();
+        await expect(page.locator('#stat-reports-failed')).toBeVisible();
+        await expect(page.locator('#stat-errors')).toBeVisible();
+        await expect(page.locator('#stat-documents')).toBeVisible();
     });
 
-    test('shows recent activity section', async ({ page }) => {
-        await expect(page.getByText('Recent Activity')).toBeVisible();
+    test('shows quick action links', async ({ page }) => {
+        await expect(page.getByRole('link', { name: /queue report/i })).toBeVisible();
+        await expect(page.getByRole('link', { name: /browse documents/i })).toBeVisible();
+        await expect(page.getByRole('link', { name: /review errors/i })).toBeVisible();
+    });
+
+    test('shows recent activity sections', async ({ page }) => {
+        await expect(page.locator('#tour-recent-reports')).toBeVisible();
+        await expect(page.locator('#tour-recent-errors')).toBeVisible();
+        await expect(page.locator('#tour-recent-documents')).toBeVisible();
     });
 });

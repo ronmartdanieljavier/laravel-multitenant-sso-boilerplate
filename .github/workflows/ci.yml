@@ -64,6 +64,22 @@ jobs:
     name: Frontend E2E Tests
     runs-on: ubuntu-latest
     needs: [frontend]
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: laravel
+          POSTGRES_USER: laravel
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -96,9 +112,17 @@ jobs:
       - name: Start Laravel server
         run: |
           cp .env.example .env
+          # Switch to PostgreSQL so the tenant DB is reachable (SQLite has no host/port)
+          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=pgsql/' .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_DATABASE=laravel" >> .env
+          echo "DB_USERNAME=laravel" >> .env
+          echo "DB_PASSWORD=secret" >> .env
           php artisan key:generate
           php artisan migrate --force
           php artisan db:seed --force
+          php artisan tenant:migrate --force
           php artisan serve --port=8000 &
           timeout 30 bash -c 'until curl -sf http://localhost:8000/up; do sleep 1; done'
 

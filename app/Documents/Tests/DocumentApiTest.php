@@ -40,9 +40,7 @@ class DocumentApiTest extends TestCase
         Storage::fake('local');
         $this->fakeDisk = Storage::disk('local');
 
-        $settingsService = \Mockery::mock(TenantSettingsService::class);
-        $settingsService->allows('resolveDisk')->andReturn($this->fakeDisk);
-        $this->app->instance(TenantSettingsService::class, $settingsService);
+        $this->mockSettingsService();
 
         $this->tenantApp = App::where('slug', 'tenant')->first() ?? App::factory()->create(['slug' => 'tenant', 'is_active' => true]);
         $this->tenant = Tenant::factory()->create(['is_active' => true, 'is_maintenance' => false]);
@@ -57,6 +55,23 @@ class DocumentApiTest extends TestCase
         ]);
 
         $this->setFakeTenant($this->tenant);
+    }
+
+    /**
+     * @param  string[]  $allowedTypes
+     * @param  array<string, int>  $maxSizes
+     */
+    private function mockSettingsService(
+        array $allowedTypes = ['pdf', 'doc', 'text', 'excel', 'image', 'csv'],
+        array $maxSizes = ['pdf' => 5, 'doc' => 5, 'text' => 5, 'excel' => 5, 'image' => 5, 'csv' => 5],
+    ): void {
+        $settingsService = \Mockery::mock(TenantSettingsService::class);
+        $settingsService->allows('resolveDisk')->andReturn($this->fakeDisk);
+        $settingsService->allows('resolveUploadConstraints')->andReturn([
+            'allowedTypes' => $allowedTypes,
+            'maxSizes' => $maxSizes,
+        ]);
+        $this->app->instance(TenantSettingsService::class, $settingsService);
     }
 
     private function apiHeaders(): array
@@ -124,6 +139,58 @@ class DocumentApiTest extends TestCase
             ->postJson('/api/v1/documents', [])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['title', 'file']);
+    }
+
+    public function test_store_rejects_disallowed_mime_type(): void
+    {
+        $this->mockSettingsService(
+            allowedTypes: ['pdf'],
+            maxSizes: ['pdf' => 5],
+        );
+
+        $this->withToken($this->token())
+            ->withHeaders($this->apiHeaders())
+            ->post('/api/v1/documents', [
+                'title' => 'Wrong Type',
+                'file' => UploadedFile::fake()->create('data.csv', 50, 'text/csv'),
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file');
+    }
+
+    public function test_store_rejects_file_exceeding_per_type_max_size(): void
+    {
+        $this->mockSettingsService(
+            allowedTypes: ['pdf'],
+            maxSizes: ['pdf' => 1],
+        );
+
+        // 1.5 MB — over the 1 MB limit
+        $this->withToken($this->token())
+            ->withHeaders($this->apiHeaders())
+            ->post('/api/v1/documents', [
+                'title' => 'Huge PDF',
+                'file' => UploadedFile::fake()->create('huge.pdf', 1536, 'application/pdf'),
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file');
+    }
+
+    public function test_store_accepts_allowed_file_type_within_size_limit(): void
+    {
+        $this->mockSettingsService(
+            allowedTypes: ['image'],
+            maxSizes: ['image' => 5],
+        );
+
+        $this->withToken($this->token())
+            ->withHeaders($this->apiHeaders())
+            ->post('/api/v1/documents', [
+                'title' => 'Screenshot',
+                'file' => UploadedFile::fake()->create('screen.png', 512, 'image/png'),
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.title', 'Screenshot');
     }
 
     public function test_show_returns_document(): void

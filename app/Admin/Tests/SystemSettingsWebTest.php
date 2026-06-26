@@ -592,4 +592,59 @@ class SystemSettingsWebTest extends TestCase
             ])
             ->assertSessionHasErrors('email_footer_unsubscribe_url');
     }
+
+    public function test_upload_settings_appear_in_settings_payload(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('admin.settings'))
+            ->assertInertia(fn ($page) => $page
+                ->has('settings', fn ($s) => $s
+                    ->has('upload_allowed_types')
+                    ->has('upload_max_size_pdf')
+                    ->has('upload_max_size_doc')
+                    ->has('upload_max_size_text')
+                    ->has('upload_max_size_excel')
+                    ->has('upload_max_size_image')
+                    ->has('upload_max_size_csv')
+                    ->etc()
+                )
+            );
+    }
+
+    public function test_authenticated_user_can_save_upload_settings(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->put(route('admin.settings.update'), [
+                'upload_allowed_types' => 'pdf,image',
+                'upload_max_size_pdf' => 10,
+                'upload_max_size_image' => 3,
+            ])
+            ->assertRedirect(route('admin.settings'));
+
+        $this->assertSame('pdf,image', SystemSetting::get('upload_allowed_types'));
+        $this->assertSame('10', SystemSetting::get('upload_max_size_pdf'));
+        $this->assertSame('3', SystemSetting::get('upload_max_size_image'));
+    }
+
+    public function test_update_rejects_upload_max_size_above_100(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->put(route('admin.settings.update'), ['upload_max_size_pdf' => 101])
+            ->assertSessionHasErrors('upload_max_size_pdf');
+    }
+
+    public function test_update_rejects_upload_max_size_below_1(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->put(route('admin.settings.update'), ['upload_max_size_doc' => 0])
+            ->assertSessionHasErrors('upload_max_size_doc');
+    }
 }

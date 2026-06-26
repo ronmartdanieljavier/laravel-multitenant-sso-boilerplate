@@ -2,6 +2,43 @@
 
 ---
 
+## [2.28.0] — 2026-06-26
+
+### Changed
+
+- **App Selection link on all remaining admin sidebar pages** — the "App Selection" link (grid icon, href `/apps`) was already present on the Admin Dashboard and in `AdminTenantLayout.vue`. It is now also added to the sidebar footer of `Admin/Users/Index.vue`, `Admin/Apps/Index.vue`, `Admin/Settings/Index.vue`, and `Admin/Tenants/Index.vue` so the link is consistent across every admin page.
+
+- **Tenant portal pages — full-width layout** — removed the `max-w-*` constraint from the `<main>` element of all tenant portal pages so content fills the available viewport width, matching the admin panel layout:
+  - `Tenant/Index.vue` — `max-w-5xl` removed
+  - `Tenant/ReportQueue.vue` — `max-w-5xl` removed
+  - `Tenant/ErrorLogs.vue` — `max-w-5xl` removed
+  - `Tenant/ErrorLog.vue` — `max-w-4xl` removed
+  - `Documents/Index.vue` — `max-w-6xl` removed
+
+- **Document upload moved to modal** — the inline "Upload Document" card previously rendered on the Documents page is replaced by a modal triggered by an "Upload Document" button in the page header. The modal (`<Teleport to="body">`) contains the same title / description / file picker form. Clicking the backdrop, the × icon, or Cancel closes the modal and resets the form. A successful upload also closes and resets automatically.
+
+- **File-type-aware icons in the document table** — the generic slate document icon is replaced with a colour-coded icon per MIME type:
+
+  | Type | Icon colour | Background |
+  |---|---|---|
+  | PDF (`application/pdf`) | Red | `bg-red-500/10` |
+  | Word (`.doc`/`.docx`) | Blue | `bg-blue-500/10` |
+  | Excel / spreadsheet | Emerald | `bg-emerald-500/10` |
+  | CSV (`text/csv`) | Amber | `bg-amber-500/10` |
+  | Image (`image/*`) | Purple | `bg-purple-500/10` |
+  | Plain text (`text/*`) | Slate light | `bg-slate-700/50` |
+  | Unknown | Slate | `bg-slate-800` |
+
+  `fileIconConfig(mimeType)` returns `{ color, bg, path }` for binding via `:class` and `:d`. CSV is checked before the general `text/` branch to prevent `text/csv` from falling through to the text icon.
+
+### Tests
+
+- `resources/js/Pages/Documents/Index.test.js` — 13 new Vitest tests:
+  - **Upload modal** — modal hidden by default; opens on button click; closes on Cancel; closes after successful upload
+  - **File type icons** — correct `svg` colour class for PDF, Word, Excel, CSV, image, and text files; correct background class for PDF and image; mixed-type table renders all four icon colours simultaneously
+
+---
+
 ## [2.27.0] — 2026-06-26
 
 ### Added

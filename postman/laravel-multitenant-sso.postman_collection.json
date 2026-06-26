@@ -4217,6 +4217,49 @@
               "body": "{\n  \"message\": \"The selected email driver is invalid.\",\n  \"errors\": {\n    \"email_driver\": [\"The selected email driver is invalid.\"]\n  }\n}"
             }
           ]
+        },
+        {
+          "name": "Update Document Upload Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"upload_allowed_types\": \"pdf,doc,image,csv\",\n  \"upload_max_size_pdf\": 10,\n  \"upload_max_size_doc\": 5,\n  \"upload_max_size_text\": 5,\n  \"upload_max_size_excel\": 5,\n  \"upload_max_size_image\": 8,\n  \"upload_max_size_csv\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "settings"
+              ]
+            },
+            "description": "Set the allowed document upload file type groups and per-type maximum file size (MB, 1\u2013100). `upload_allowed_types` is a comma-separated list of groups: `pdf`, `doc`, `text`, `excel`, `image`, `csv`. Each `upload_max_size_*` value controls the ceiling for that group. Omit a field to leave it unchanged. These values are the system-wide defaults \u2014 tenants can override them via the Tenant Settings endpoint."
+          },
+          "response": []
         }
       ]
     },
@@ -4650,6 +4693,51 @@
           ]
         },
         {
+          "name": "Update Document Upload Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"upload_allowed_types\": \"pdf,image\",\n  \"upload_max_size_pdf\": 15,\n  \"upload_max_size_image\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "tenants",
+                "{{tenant_id}}",
+                "settings"
+              ]
+            },
+            "description": "Override the allowed document upload file type groups and per-type maximum file sizes for this tenant. `upload_allowed_types` is a comma-separated list of groups: `pdf`, `doc`, `text`, `excel`, `image`, `csv`. Each `upload_max_size_*` value is in MB (1\u2013100). Set any field to `null` or omit it to revert to the system-wide default. Resolved at runtime by `TenantSettingsService::resolveUploadConstraints()` \u2014 tenant override wins over system setting."
+          },
+          "response": []
+        },
+        {
           "name": "Clear a Setting (revert to system default)",
           "request": {
             "method": "PUT",
@@ -5052,6 +5140,120 @@
               "code": 422,
               "_postman_previewlanguage": "json",
               "body": "{\n  \"message\": \"The title field is required.\",\n  \"errors\": {\n    \"title\": [\"The title field is required.\"],\n    \"file\": [\"The file field is required.\"]\n  }\n}"
+            },
+            {
+              "name": "422 \u2014 Disallowed File Type",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "X-App",
+                    "value": "{{app_slug}}"
+                  },
+                  {
+                    "key": "X-Tenant",
+                    "value": "{{tenant_slug}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "title",
+                      "value": "Bad Upload",
+                      "type": "text"
+                    },
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "disallowed.exe",
+                      "description": "A file type not in upload_allowed_types"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/documents",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "documents"
+                  ]
+                }
+              },
+              "status": "Unprocessable Content",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The file field is invalid.\",\n  \"errors\": {\n    \"file\": [\n      \"The file must be a file of type: application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "422 \u2014 File Exceeds Per-Type Size Limit",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "X-App",
+                    "value": "{{app_slug}}"
+                  },
+                  {
+                    "key": "X-Tenant",
+                    "value": "{{tenant_slug}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "title",
+                      "value": "Oversized PDF",
+                      "type": "text"
+                    },
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "large.pdf",
+                      "description": "PDF larger than upload_max_size_pdf"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/documents",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "documents"
+                  ]
+                }
+              },
+              "status": "Unprocessable Content",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The file field is invalid.\",\n  \"errors\": {\n    \"file\": [\n      \"The pdf file must not be larger than 5 MB.\"\n    ]\n  }\n}"
             }
           ]
         },

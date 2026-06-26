@@ -2,6 +2,7 @@
 
 namespace App\Documents\Http\Controllers;
 
+use App\Admin\Services\TenantSettingsService;
 use App\Documents\Http\Requests\StoreDocumentRequest;
 use App\Documents\Services\DocumentService;
 use App\Http\Controllers\Controller;
@@ -16,7 +17,8 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 class DocumentController extends Controller
 {
     public function __construct(
-        protected DocumentService $documentService
+        protected DocumentService $documentService,
+        protected TenantSettingsService $tenantSettingsService,
     ) {}
 
     public function index(Request $request): Response
@@ -24,9 +26,12 @@ class DocumentController extends Controller
         /** @var Tenant $tenant */
         $tenant = $request->attributes->get('current_tenant');
 
+        $uploadConstraints = $this->tenantSettingsService->resolveUploadConstraints($tenant->id);
+
         return Inertia::render('Documents/Index', [
             'documents' => $this->documentService->paginate(),
             'tenant' => ['id' => $tenant->id, 'name' => $tenant->name, 'slug' => $tenant->slug],
+            'uploadConstraints' => $uploadConstraints,
         ]);
     }
 

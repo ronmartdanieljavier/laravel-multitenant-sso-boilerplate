@@ -53,8 +53,23 @@ class TenantSettingsData extends Data
         public ?string $appName,
         public ?string $supportEmail,
         public ?string $supportUrl,
+        // Upload overrides
+        public ?string $uploadAllowedTypes,
+        public ?string $uploadMaxSizePdf,
+        public ?string $uploadMaxSizeDoc,
+        public ?string $uploadMaxSizeText,
+        public ?string $uploadMaxSizeExcel,
+        public ?string $uploadMaxSizeImage,
+        public ?string $uploadMaxSizeCsv,
         // Effective values (tenant override ?? system default)
         public ?string $effectiveEmailDriver,
         public ?string $effectiveStorageDriver,
+        public ?string $effectiveUploadAllowedTypes,
+        public ?string $effectiveUploadMaxSizePdf,
+        public ?string $effectiveUploadMaxSizeDoc,
+        public ?string $effectiveUploadMaxSizeText,
+        public ?string $effectiveUploadMaxSizeExcel,
+        public ?string $effectiveUploadMaxSizeImage,
+        public ?string $effectiveUploadMaxSizeCsv,
     ) {}
 }

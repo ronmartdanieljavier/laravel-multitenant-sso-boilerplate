@@ -6,6 +6,7 @@ use App\Auth\Http\Requests\SelectAppRequest;
 use App\Auth\Services\AppService;
 use App\Http\Controllers\Controller;
 use App\Models\Central\User;
+use App\Tenant\Services\TenantSwitcherService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -15,6 +16,7 @@ class WebAppPickerController extends Controller
 {
     public function __construct(
         private readonly AppService $appService,
+        private readonly TenantSwitcherService $tenantSwitcherService,
     ) {}
 
     /**
@@ -58,6 +60,10 @@ class WebAppPickerController extends Controller
 
         if (! $hasAccess) {
             return back()->withErrors(['slug' => 'You do not have access to this app.']);
+        }
+
+        if ($slug === 'tenant') {
+            $this->tenantSwitcherService->initializeForUser($user->id, 'tenant');
         }
 
         return match ($slug) {

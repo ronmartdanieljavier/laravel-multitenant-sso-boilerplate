@@ -8,6 +8,8 @@ use App\Data\Repositories\Central\TenantMigrationVersionRepositoryData;
 use App\Data\Repositories\Central\TenantRepositoryData;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMigrationVersion;
+use App\Models\Central\UserApp;
+use App\Models\Central\UserAppTenant;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Config;
@@ -199,6 +201,34 @@ class TenantRepository
     public function getAllIds(): BaseCollection
     {
         return $this->model->pluck('id');
+    }
+
+    public function assignAdminUsersToTenant(int $tenantId): void
+    {
+        $adminUserApps = UserApp::where('role', 'admin')->get();
+
+        foreach ($adminUserApps as $userApp) {
+            $alreadyAssigned = UserAppTenant::where('user_id', $userApp->user_id)
+                ->where('app_id', $userApp->app_id)
+                ->where('tenant_id', $tenantId)
+                ->exists();
+
+            if ($alreadyAssigned) {
+                continue;
+            }
+
+            $isDefault = ! UserAppTenant::where('user_id', $userApp->user_id)
+                ->where('app_id', $userApp->app_id)
+                ->exists();
+
+            UserAppTenant::create([
+                'user_id' => $userApp->user_id,
+                'app_id' => $userApp->app_id,
+                'tenant_id' => $tenantId,
+                'role' => $userApp->role,
+                'is_default' => $isDefault,
+            ]);
+        }
     }
 
     public function delete(int $id): void

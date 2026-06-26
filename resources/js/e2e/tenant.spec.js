@@ -12,9 +12,9 @@ test.describe('Tenant portal', () => {
     });
 
     test('shows stats cards', async ({ page }) => {
-        await expect(page.getByText('Active Reports')).toBeVisible();
-        await expect(page.getByText('Failed Reports')).toBeVisible();
-        await expect(page.getByText('Open Errors')).toBeVisible();
+        await expect(page.locator('#stat-reports-active')).toBeVisible();
+        await expect(page.locator('#stat-reports-failed')).toBeVisible();
+        await expect(page.locator('#stat-errors')).toBeVisible();
         await expect(page.locator('#stat-documents')).toBeVisible();
     });
 

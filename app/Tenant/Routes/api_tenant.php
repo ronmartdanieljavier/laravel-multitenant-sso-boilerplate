@@ -14,5 +14,7 @@ Route::middleware('auth:sanctum')
 
         Route::middleware(ResolveTenantDatabase::class)->group(function (): void {
             Route::get('/reports', [TenantReportQueueApiController::class, 'index'])->name('reports.index');
+            Route::post('/reports/quick', [TenantReportQueueApiController::class, 'quickDispatch'])->name('reports.quick');
+            Route::post('/reports/{reportId}/retry', [TenantReportQueueApiController::class, 'retry'])->name('reports.retry');
         });
     });

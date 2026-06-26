@@ -109,4 +109,18 @@ class ReportRepository
     {
         return ReportRepositoryData::from($this->model->create($data));
     }
+
+    public function resetForRetry(string $id): ReportRepositoryData
+    {
+        $report = $this->model->findOrFail($id);
+
+        $report->update([
+            'status' => ReportStatus::Pending,
+            'error_message' => null,
+            'started_at' => null,
+            'completed_at' => null,
+        ]);
+
+        return ReportRepositoryData::from($report->fresh());
+    }
 }

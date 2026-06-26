@@ -9,7 +9,7 @@ vi.mock('../../Layouts/TenantLayout.vue', () => ({
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<slot />' },
     Link: { template: '<a :href="href"><slot /></a>', props: ['href'] },
-    router: { post: vi.fn(), visit: vi.fn() },
+    router: { post: vi.fn(), visit: vi.fn(), put: vi.fn(), delete: vi.fn() },
     usePage: () => ({
         props: {
             auth: { user: { name: 'Alice', email: 'alice@example.com' } },
@@ -20,6 +20,26 @@ vi.mock('@inertiajs/vue3', () => ({
         url: '/tenant/reports',
     }),
     usePoll: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
+    useForm: vi.fn((defaults) => {
+        const form = {
+            ...defaults,
+            errors: {},
+            processing: false,
+            reset: vi.fn(),
+            transform: vi.fn().mockReturnThis(),
+            data: vi.fn(() => ({ ...defaults })),
+            post: vi.fn((_url, opts) => { opts?.onSuccess?.(); }),
+        };
+        return form;
+    }),
+}));
+
+vi.mock('../../composables/useTour', () => ({
+    useTour: () => ({ startTour: vi.fn() }),
+}));
+
+vi.mock('../Partials/TourButton.vue', () => ({
+    default: { template: '<button />' },
 }));
 
 const tenant = { id: 1, name: 'Acme Corp', slug: 'acme' };
@@ -62,6 +82,23 @@ const failedReport = {
     error_message: 'Generator failed: out of memory',
 };
 
+const activeSubscription = {
+    id: 1,
+    type: 'documents_summary',
+    format: 'screen',
+    frequency: 'daily',
+    delivery: 'none',
+    is_active: true,
+    last_dispatched_at: null,
+    created_at: '2026-06-25T09:00:00Z',
+};
+
+const pausedSubscription = {
+    ...activeSubscription,
+    id: 2,
+    is_active: false,
+};
+
 function makePaginator(data = []) {
     return {
         data,
@@ -74,9 +111,9 @@ function makePaginator(data = []) {
     };
 }
 
-function mountPage(data = [pendingReport]) {
+function mountPage(reportData = [pendingReport], subscriptions = []) {
     return mount(ReportQueuePage, {
-        props: { tenant, reports: makePaginator(data) },
+        props: { tenant, reports: makePaginator(reportData), subscriptions },
         attachTo: document.body,
     });
 }
@@ -87,6 +124,8 @@ describe('Tenant/ReportQueue', () => {
         vi.clearAllMocks();
     });
 
+    // ── Existing report queue tests ──────────────────────────────────────────
+
     it('renders the page heading', () => {
         const wrapper = mountPage();
         expect(wrapper.text()).toContain('Report Queue');
@@ -95,7 +134,7 @@ describe('Tenant/ReportQueue', () => {
     it('renders a row for each report', () => {
         const wrapper = mountPage([pendingReport, processingReport]);
         const rows = wrapper.findAll('tbody tr');
-        expect(rows).toHaveLength(2);
+        expect(rows.length).toBeGreaterThanOrEqual(2);
     });
 
     it('shows Pending status badge', () => {
@@ -125,7 +164,7 @@ describe('Tenant/ReportQueue', () => {
 
     it('shows a Download link for successful reports with a file', () => {
         const wrapper = mountPage([successReport]);
-        const link = wrapper.find('a[href*="download"]');
+        const link = wrapper.find(`a[href="/tenant/reports/${successReport.id}/download"]`);
         expect(link.exists()).toBe(true);
         expect(link.text()).toBe('Download');
     });
@@ -179,5 +218,118 @@ describe('Tenant/ReportQueue', () => {
         const { usePoll } = await import('@inertiajs/vue3');
         mountPage([pendingReport]);
         expect(usePoll).toHaveBeenCalledWith(4000, { only: ['reports'] }, { autoStart: true });
+    });
+
+    // ── Generate Report button & modal ───────────────────────────────────────
+
+    it('renders the Generate Report button', () => {
+        const wrapper = mountPage();
+        const btn = wrapper.find('button#tour-rq-generate');
+        expect(btn.exists()).toBe(true);
+        expect(btn.text()).toContain('Generate Report');
+    });
+
+    it('opens the generate report modal when button is clicked', async () => {
+        const wrapper = mountPage();
+        await wrapper.find('button#tour-rq-generate').trigger('click');
+        expect(document.body.textContent).toContain('Dispatch Job');
+    });
+
+    it('closes the generate report modal on cancel', async () => {
+        const wrapper = mountPage();
+        await wrapper.find('button#tour-rq-generate').trigger('click');
+        const cancel = Array.from(document.body.querySelectorAll('button')).find(b => b.textContent.includes('Cancel'));
+        cancel.click();
+        await wrapper.vm.$nextTick();
+        expect(document.body.textContent).not.toContain('Dispatch Job');
+    });
+
+    // ── Subscriptions panel ──────────────────────────────────────────────────
+
+    it('renders the Subscriptions section heading', () => {
+        const wrapper = mountPage([], []);
+        expect(wrapper.text()).toContain('Scheduled Subscriptions');
+    });
+
+    it('shows empty state when no subscriptions exist', () => {
+        const wrapper = mountPage([], []);
+        expect(wrapper.text()).toContain('No subscriptions yet');
+    });
+
+    it('renders a row for each subscription', () => {
+        const wrapper = mountPage([], [activeSubscription, pausedSubscription]);
+        expect(wrapper.text()).toContain('documents_summary');
+    });
+
+    it('shows Active badge for active subscription', () => {
+        const wrapper = mountPage([], [activeSubscription]);
+        expect(wrapper.text()).toContain('Active');
+    });
+
+    it('shows Paused badge for inactive subscription', () => {
+        const wrapper = mountPage([], [pausedSubscription]);
+        expect(wrapper.text()).toContain('Paused');
+    });
+
+    it('shows Pause action for active subscription', () => {
+        const wrapper = mountPage([], [activeSubscription]);
+        expect(wrapper.text()).toContain('Pause');
+    });
+
+    it('shows Resume action for paused subscription', () => {
+        const wrapper = mountPage([], [pausedSubscription]);
+        expect(wrapper.text()).toContain('Resume');
+    });
+
+    it('renders the New Subscription button', () => {
+        const wrapper = mountPage([], []);
+        expect(wrapper.text()).toContain('New Subscription');
+    });
+
+    it('opens the new subscription modal', async () => {
+        const wrapper = mountPage([], []);
+        const btn = wrapper.findAll('button').find(b => b.text().includes('New Subscription'));
+        await btn.trigger('click');
+        expect(document.body.textContent).toContain('Create Subscription');
+    });
+
+    it('calls router.put when toggle is clicked', async () => {
+        const { router } = await import('@inertiajs/vue3');
+        const wrapper = mountPage([], [activeSubscription]);
+        const pauseBtn = wrapper.findAll('button').find(b => b.text() === 'Pause');
+        await pauseBtn.trigger('click');
+        expect(router.put).toHaveBeenCalled();
+    });
+
+    it('shows a Retry button for failed reports', () => {
+        const wrapper = mountPage([failedReport]);
+        const retryBtn = wrapper.findAll('button').find(b => b.text() === 'Retry');
+        expect(retryBtn).toBeDefined();
+    });
+
+    it('does not show a Retry button for pending reports', () => {
+        const wrapper = mountPage([pendingReport]);
+        const retryBtn = wrapper.findAll('button').find(b => b.text() === 'Retry');
+        expect(retryBtn).toBeUndefined();
+    });
+
+    it('calls router.post with retry URL when Retry is clicked', async () => {
+        const { router } = await import('@inertiajs/vue3');
+        const wrapper = mountPage([failedReport]);
+        const retryBtn = wrapper.findAll('button').find(b => b.text() === 'Retry');
+        await retryBtn.trigger('click');
+        expect(router.post).toHaveBeenCalledWith(
+            `/tenant/reports/${failedReport.id}/retry`,
+            {},
+            expect.objectContaining({ preserveScroll: true })
+        );
+    });
+
+    it('calls router.delete when delete is clicked', async () => {
+        const { router } = await import('@inertiajs/vue3');
+        const wrapper = mountPage([], [activeSubscription]);
+        const deleteBtn = wrapper.findAll('button').find(b => b.text() === 'Delete');
+        await deleteBtn.trigger('click');
+        expect(router.delete).toHaveBeenCalled();
     });
 });

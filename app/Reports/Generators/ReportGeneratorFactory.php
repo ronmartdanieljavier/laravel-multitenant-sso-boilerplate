@@ -10,10 +10,12 @@ class ReportGeneratorFactory
 {
     public function make(Report $report): ReportGenerator
     {
-        return match ($report->format) {
-            ReportFormat::Screen => new ScreenReportGenerator($report),
-            ReportFormat::Pdf => new PdfReportGenerator($report),
-            ReportFormat::Excel => new ExcelReportGenerator($report),
+        $class = match ($report->format) {
+            ReportFormat::Screen => ScreenReportGenerator::class,
+            ReportFormat::Pdf => PdfReportGenerator::class,
+            ReportFormat::Excel => ExcelReportGenerator::class,
         };
+
+        return app()->make($class, ['report' => $report]);
     }
 }

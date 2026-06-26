@@ -2,6 +2,7 @@
 
 namespace App\Data\Repositories\Central;
 
+use App\Documents\Enums\DocumentSource;
 use Illuminate\Support\Carbon;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Data;
@@ -20,6 +21,7 @@ class DocumentRepositoryData extends Data
         public int $uploadedByUserId,
         #[MapInputName('uploaded_by_name')]
         public string $uploadedByName,
+        public DocumentSource $source,
         public Carbon $createdAt,
         public Carbon $updatedAt,
     ) {}

@@ -67,6 +67,50 @@ const subscriptionDoc = {
     created_at: '2026-06-15T08:00:00Z',
 };
 
+const wordDoc = {
+    id: 4,
+    title: 'Meeting Notes',
+    file_name: 'notes.docx',
+    file_size: 30720,
+    mime_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    uploaded_by_name: 'Alice',
+    source: 'upload',
+    created_at: '2026-06-20T09:00:00Z',
+};
+
+const csvDoc = {
+    id: 5,
+    title: 'Export',
+    file_name: 'export.csv',
+    file_size: 8192,
+    mime_type: 'text/csv',
+    uploaded_by_name: 'Alice',
+    source: 'upload',
+    created_at: '2026-06-20T10:00:00Z',
+};
+
+const imageDoc = {
+    id: 6,
+    title: 'Logo',
+    file_name: 'logo.png',
+    file_size: 15360,
+    mime_type: 'image/png',
+    uploaded_by_name: 'Alice',
+    source: 'upload',
+    created_at: '2026-06-20T11:00:00Z',
+};
+
+const textDoc = {
+    id: 7,
+    title: 'Readme',
+    file_name: 'readme.txt',
+    file_size: 1024,
+    mime_type: 'text/plain',
+    uploaded_by_name: 'Alice',
+    source: 'upload',
+    created_at: '2026-06-20T12:00:00Z',
+};
+
 function buildDocuments(data = [], total = null) {
     return {
         data,
@@ -221,5 +265,93 @@ describe('Documents/Index', () => {
         expect(wrapper.text()).toContain('User Upload');
         expect(wrapper.text()).toContain('Report');
         expect(wrapper.text()).toContain('Subscription');
+    });
+
+    describe('Upload modal', () => {
+        it('does not show the modal by default', () => {
+            const wrapper = mountPage();
+            expect(wrapper.find('form').exists()).toBe(false);
+        });
+
+        it('opens the modal when Upload Document button is clicked', async () => {
+            const wrapper = mountPage();
+            await wrapper.find('button.bg-emerald-600').trigger('click');
+            expect(wrapper.find('form').exists()).toBe(true);
+        });
+
+        it('closes the modal when Cancel is clicked', async () => {
+            const wrapper = mountPage();
+            await wrapper.find('button.bg-emerald-600').trigger('click');
+            expect(wrapper.find('form').exists()).toBe(true);
+            const cancelBtn = wrapper.findAll('button').find(b => b.text() === 'Cancel');
+            await cancelBtn.trigger('click');
+            expect(wrapper.find('form').exists()).toBe(false);
+        });
+
+        it('closes the modal after successful upload', async () => {
+            const wrapper = mountPage();
+            await wrapper.find('button.bg-emerald-600').trigger('click');
+            expect(wrapper.find('form').exists()).toBe(true);
+            await wrapper.find('form').trigger('submit');
+            expect(wrapper.find('form').exists()).toBe(false);
+        });
+    });
+
+    describe('File type icons', () => {
+        it('applies red icon color for PDF files', () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc]));
+            const icon = wrapper.find('svg.text-red-400');
+            expect(icon.exists()).toBe(true);
+        });
+
+        it('applies blue icon color for Word documents', () => {
+            const wrapper = mountPage(buildDocuments([wordDoc]));
+            const icon = wrapper.find('svg.text-blue-400');
+            expect(icon.exists()).toBe(true);
+        });
+
+        it('applies emerald icon color for Excel spreadsheets', () => {
+            const wrapper = mountPage(buildDocuments([subscriptionDoc]));
+            const icon = wrapper.find('svg.text-emerald-400');
+            expect(icon.exists()).toBe(true);
+        });
+
+        it('applies amber icon color for CSV files', () => {
+            const wrapper = mountPage(buildDocuments([csvDoc]));
+            const icon = wrapper.find('svg.text-amber-400');
+            expect(icon.exists()).toBe(true);
+        });
+
+        it('applies purple icon color for image files', () => {
+            const wrapper = mountPage(buildDocuments([imageDoc]));
+            const icon = wrapper.find('svg.text-purple-400');
+            expect(icon.exists()).toBe(true);
+        });
+
+        it('applies light slate icon color for text files', () => {
+            const wrapper = mountPage(buildDocuments([textDoc]));
+            const icon = wrapper.find('svg.text-slate-300');
+            expect(icon.exists()).toBe(true);
+        });
+
+        it('applies correct background for PDF icon', () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc]));
+            const bg = wrapper.find('div.bg-red-500\\/10');
+            expect(bg.exists()).toBe(true);
+        });
+
+        it('applies correct background for image icon', () => {
+            const wrapper = mountPage(buildDocuments([imageDoc]));
+            const bg = wrapper.find('div.bg-purple-500\\/10');
+            expect(bg.exists()).toBe(true);
+        });
+
+        it('shows distinct icons for multiple file types in the same table', () => {
+            const wrapper = mountPage(buildDocuments([uploadDoc, wordDoc, imageDoc, csvDoc]));
+            expect(wrapper.find('svg.text-red-400').exists()).toBe(true);
+            expect(wrapper.find('svg.text-blue-400').exists()).toBe(true);
+            expect(wrapper.find('svg.text-purple-400').exists()).toBe(true);
+            expect(wrapper.find('svg.text-amber-400').exists()).toBe(true);
+        });
     });
 });

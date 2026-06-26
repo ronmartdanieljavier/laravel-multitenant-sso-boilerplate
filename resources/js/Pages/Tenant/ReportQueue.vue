@@ -189,7 +189,7 @@ const { startTour } = useTour('tenant-report-queue', [
 <template>
     <Head title="Report Queue" />
 
-    <main class="flex-1 px-8 py-10 max-w-5xl">
+    <main class="flex-1 px-8 py-10">
 
         <!-- Header -->
         <div id="tour-rq-header" class="flex items-center justify-between mb-6">

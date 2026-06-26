@@ -2,6 +2,47 @@
 
 ---
 
+## [2.32.0] — 2026-06-27
+
+### Added
+
+- **General-purpose tenant job queue tracker** — tenant users can now see all background jobs dispatched in their context from a dedicated "Job Queue" page at `/tenant/jobs`. The page live-polls every 4 s and shows job name, status, queued/started timestamps, duration, and an expandable error detail for failed jobs. Filterable by status (All / Pending / Running / Done / Failed).
+
+  **Tracking mechanism**
+
+  - `TenantJobTrackable` trait (`app/TenantJobs/Concerns/`) — add to any `ShouldQueue` job to opt into tracking. Provides four public properties serialized into the job payload (`tenantJobTrackingId`, `tenantId`, `userId`, `jobDisplayName`). Static `initTracking($job, $tenantId, $userId, $displayName)` must be called before dispatch to create the initial `pending` record.
+  - `TrackTenantJob` job middleware (`app/TenantJobs/Middleware/`) — wraps `handle()` to flip the record to `running` on start and `completed` on success; re-throws on failure so the job's `failed()` hook can write the terminal `failed` state after all retries are exhausted.
+  - `tenant_job_records` central DB table — `id` (UUID PK), `tracking_id` (UUID, travels in job payload), `tenant_id`, `user_id`, `job_class`, `display_name`, `status` (enum), `error_message`, `started_at`, `finished_at`, timestamps.
+
+  **Backend (module: `app/TenantJobs/`)**
+
+  - `TenantJobStatus` enum — `Pending | Running | Completed | Failed`
+  - `TenantJobRecord` model (`app/Models/Central/`) with `HasUuids` and enum cast
+  - `TenantJobRecordRepositoryData` DTO (`app/Data/Repositories/Central/`) — repository output shape
+  - `TenantJobRecordRepository` — `create()`, `markRunning()`, `markCompleted()`, `markFailed()`, `listForTenant()` (paginated, optional status filter)
+  - `TenantJobData` service DTO — adds computed `durationSeconds` field
+  - `TenantJobsPortalService` — `listForTenant(int $tenantId, ?string $status, int $perPage)`
+  - `TenantJobsController` — `GET /tenant/jobs` → `Inertia::render('Tenant/Jobs')`, middleware: `auth + ResolveWebTenantDatabase`
+  - `TenantJobsApiController` — `GET /api/v1/tenant/jobs` → JSON, middleware: `auth:sanctum + ResolveTenantDatabase`
+
+  **Frontend**
+
+  - `resources/js/Pages/Tenant/Jobs.vue` — status filter tab bar, paginated table (Job Name, Status badge, Queued, Started, Duration), `usePoll(4000, { only: ['jobs'] })` for live updates, expandable `<details>` error block for failed rows
+  - `TenantLayout.vue` — "Job Queue" nav entry added between Report Queue and Error Logs
+
+  **Updated: `GenerateReportJob`**
+
+  - Now uses `TenantJobTrackable` trait — all dispatched report jobs are automatically tracked in the job queue
+  - `TenantReportQueueController` and `TenantReportQueueApiController` updated at both dispatch sites (`quickDispatch`, `retry`) to call `initTracking()` before dispatch
+
+  **Tests**
+
+  - `TenantJobsWebTest` — 5 tests: unauthenticated redirect, index 200 with `jobs` prop, tenant scoping, status filter, filters prop reflection
+  - `TenantJobsApiTest` — 4 tests: 401 unauthenticated, list 200, tenant scoping, status filter
+  - `TenantJobsServiceTest` — 5 tests: DTO type, tenant scoping, status filter, duration computation, null duration when pending
+
+---
+
 ## [2.31.0] — 2026-06-26
 
 ### Added

@@ -2,6 +2,28 @@
 
 ---
 
+## [2.25.0] — 2026-06-26
+
+### Added
+
+- **App Selection link in all portal sidebars** — users can now navigate back to the app picker (`/apps`) from within any portal without signing out first. The link appears in the sidebar footer of every portal area, using a consistent grid/apps icon and label.
+
+  **Pages updated**
+
+  - `AdminTenantLayout.vue` — App Selection link added above the Sign out button in the admin sidebar footer; visible on all admin tenant sub-pages (Settings, Users, Reports, Errors)
+  - `Admin/Index.vue` — App Selection link added above the user/sign-out section in the admin dashboard sidebar footer
+  - `TenantLayout.vue` — App Selection link added above the user/sign-out border section in the tenant portal sidebar
+  - `Profile/Index.vue` — App Selection link added to the sidebar footer; the Dashboard link (which was the only nav item) is removed since it no longer applies to the profile context
+
+  **Tests**
+
+  - `AdminTenantLayout.test.js` — 2 new tests: App Selection link href `/apps`, label matches `/app selection/i`
+  - `Admin/Index.test.js` — 2 new tests: App Selection link href `/apps`, label matches `/app selection/i`
+  - `TenantLayout.test.js` — 2 new tests: App Selection link href `/apps`, label matches `/app selection/i`
+  - `Profile/Index.test.js` — new test file (13 tests): My Profile heading, App Selection link, no Dashboard link, Display Name / Profile Picture / Change Password sections, user name and email in sidebar, avatar fallback, profile picture `<img>`, logout button, flash success message
+
+---
+
 ## [2.24.0] — 2026-06-26
 
 ### Added

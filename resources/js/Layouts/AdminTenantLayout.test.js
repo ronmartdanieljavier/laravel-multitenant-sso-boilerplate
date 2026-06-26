@@ -126,4 +126,16 @@ describe('AdminTenantLayout', () => {
         const settingsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/settings');
         expect(settingsLink?.classes().join(' ')).toContain('violet');
     });
+
+    it('renders the App Selection link pointing to /apps', async () => {
+        const wrapper = await mountLayout();
+        const links = wrapper.findAll('a').map(a => a.attributes('href'));
+        expect(links).toContain('/apps');
+    });
+
+    it('App Selection link displays correct label', async () => {
+        const wrapper = await mountLayout();
+        const appLink = wrapper.findAll('a').find(a => a.attributes('href') === '/apps');
+        expect(appLink?.text()).toMatch(/app selection/i);
+    });
 });

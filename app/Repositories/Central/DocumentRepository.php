@@ -52,6 +52,23 @@ class DocumentRepository
         );
     }
 
+    public function countAll(): int
+    {
+        return $this->model->on('tenant')->count();
+    }
+
+    /**
+     * @return Collection<int, DocumentRepositoryData>
+     */
+    public function recentList(int $limit = 5): Collection
+    {
+        return $this->model->on('tenant')
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->map(fn (Document $doc) => DocumentRepositoryData::from($doc));
+    }
+
     public function delete(int $id): void
     {
         $this->model->on('tenant')->findOrFail($id)->delete();

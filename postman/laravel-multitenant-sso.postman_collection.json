@@ -5995,6 +5995,70 @@
       ]
     },
     {
+      "name": "Tenant Dashboard (API)",
+      "item": [
+        {
+          "name": "Get Tenant Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-App",
+                "value": "tenant"
+              },
+              {
+                "key": "X-Tenant",
+                "value": "{{tenant_slug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tenant/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "dashboard"
+              ]
+            },
+            "description": "Returns a live dashboard snapshot for the current tenant: stats card counts (pending/processing/failed reports, success-this-month, unresolved/critical errors, total documents) plus the 5 most recent reports, errors, and documents.\n\nStats are serialised with snake_case keys (e.g. `pending_reports`, `total_documents`) due to the global Spatie SnakeCaseMapper.\n\nRequires `Authorization: Bearer <token>`, `X-App: tenant`, and `X-Tenant: <slug>` headers."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"stats\": {\n      \"pending_reports\": 3,\n      \"processing_reports\": 1,\n      \"failed_reports\": 2,\n      \"success_reports_this_month\": 14,\n      \"unresolved_errors\": 5,\n      \"critical_errors\": 1,\n      \"total_documents\": 42\n    },\n    \"recentReports\": [\n      {\n        \"id\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",\n        \"user_id\": 1,\n        \"tenant_id\": 1,\n        \"type\": \"user_activity\",\n        \"format\": \"pdf\",\n        \"delivery\": \"none\",\n        \"status\": \"pending\",\n        \"parameters\": null,\n        \"file_path\": null,\n        \"error_message\": null,\n        \"batch_id\": null,\n        \"started_at\": null,\n        \"completed_at\": null,\n        \"created_at\": \"2026-06-26T10:00:00.000000Z\"\n      }\n    ],\n    \"recentErrors\": [\n      {\n        \"id\": 10,\n        \"tenant_id\": 1,\n        \"error_code\": \"E-ACME-A3F9B12C\",\n        \"exception_class\": \"Illuminate\\\\Database\\\\QueryException\",\n        \"message\": \"SQLSTATE[23000]: Integrity constraint violation\",\n        \"severity\": \"error\",\n        \"resolved\": false,\n        \"resolved_at\": null,\n        \"created_at\": \"2026-06-26T09:00:00.000000Z\"\n      }\n    ],\n    \"recentDocuments\": [\n      {\n        \"id\": 1,\n        \"title\": \"Annual Report 2026\",\n        \"description\": null,\n        \"file_name\": \"annual_report.pdf\",\n        \"file_size\": 204800,\n        \"mime_type\": \"application/pdf\",\n        \"source\": \"upload\",\n        \"uploaded_by_name\": \"Alice\",\n        \"created_at\": \"2026-06-26T08:00:00.000000Z\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\"message\": \"Unauthenticated.\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Tenant Error Logs \u2014 Portal (API)",
       "item": [
         {

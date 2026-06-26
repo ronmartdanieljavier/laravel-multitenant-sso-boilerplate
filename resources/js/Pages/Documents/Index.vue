@@ -2,6 +2,8 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import TenantLayout from '../../Layouts/TenantLayout.vue';
+import TourButton from '../Partials/TourButton.vue';
+import { useTour } from '../../composables/useTour';
 
 defineOptions({ layout: TenantLayout });
 
@@ -127,6 +129,34 @@ function sourceClass(source) {
     return SOURCE_CLASSES[source] ?? 'bg-slate-700 text-slate-300';
 }
 
+const { startTour } = useTour('tenant-documents', [
+    {
+        element: '#tour-el-upload-btn',
+        title: 'Upload a Document',
+        description: 'Upload PDFs, Word docs, spreadsheets, images, or text files for your tenant.',
+        side: 'bottom',
+        align: 'end',
+    },
+    {
+        element: '#tour-el-doc-table',
+        title: 'Document Library',
+        description: 'All files stored for your tenant. Includes user uploads, generated reports, and subscription-delivered files.',
+        side: 'top',
+    },
+    {
+        element: '#tour-el-source-col',
+        title: 'Document Source',
+        description: 'Shows whether a file was manually uploaded, generated from a report job, or delivered via a subscription.',
+        side: 'bottom',
+    },
+    {
+        element: '#tour-el-actions-col',
+        title: 'Download & Delete',
+        description: 'Download any file directly to your device, or delete documents you no longer need.',
+        side: 'left',
+    },
+]);
+
 const FILE_ICON_CONFIG = {
     pdf: {
         color: 'text-red-400',
@@ -183,6 +213,7 @@ function fileIconConfig(mimeType) {
     <header class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
         <h2 class="text-lg font-semibold">Documents</h2>
         <button
+            id="tour-el-upload-btn"
             @click="showUploadModal = true"
             class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
         >
@@ -270,7 +301,7 @@ function fileIconConfig(mimeType) {
         </div>
 
         <!-- Document Table -->
-        <section class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+        <section id="tour-el-doc-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
             <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
                 <h3 class="font-semibold text-white">All Documents</h3>
                 <span class="text-xs text-slate-500">{{ documents.total }} {{ documents.total === 1 ? 'file' : 'files' }}</span>
@@ -286,11 +317,11 @@ function fileIconConfig(mimeType) {
                         <tr class="border-b border-white/5">
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">File name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Title</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Source</th>
+                            <th id="tour-el-source-col" class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Source</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Size</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Uploaded by</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Upload date</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
+                            <th id="tour-el-actions-col" class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
@@ -364,4 +395,6 @@ function fileIconConfig(mimeType) {
         </section>
 
     </main>
+
+    <TourButton @click="startTour" />
 </template>

@@ -4,8 +4,8 @@ namespace App\Admin\Services;
 
 use App\Admin\Data\AdminJobData;
 use App\Data\Repositories\Central\TenantJobRecordRepositoryData;
-use App\Models\Central\Tenant;
 use App\Repositories\Central\TenantJobRecordRepository;
+use App\Repositories\Central\TenantRepository;
 use App\TenantJobs\Data\TenantJobData;
 use App\TenantJobs\Enums\TenantJobStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,6 +15,7 @@ class TenantJobsAdminService
 {
     public function __construct(
         private readonly TenantJobRecordRepository $repository,
+        private readonly TenantRepository $tenantRepository,
     ) {}
 
     /**
@@ -25,8 +26,7 @@ class TenantJobsAdminService
         ?int $tenantId = null,
         ?TenantJobStatus $status = null,
     ): LengthAwarePaginator {
-        $tenantNames = Tenant::query()
-            ->pluck('name', 'id');
+        $tenantNames = $this->tenantRepository->pluckNames();
 
         return $this->repository
             ->listAll($tenantId, $status, $perPage)

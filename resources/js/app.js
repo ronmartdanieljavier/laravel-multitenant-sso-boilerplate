@@ -1,6 +1,7 @@
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { MotionPlugin } from '@vueuse/motion';
 
 createInertiaApp({
     title: (title) => `${title} - ${import.meta.env.VITE_APP_NAME ?? 'Laravel'}`,
@@ -9,6 +10,7 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         return createApp({ render: () => h(App, props) })
             .use(plugin)
+            .use(MotionPlugin)
             .mount(el);
     },
 });

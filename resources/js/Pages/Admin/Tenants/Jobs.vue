@@ -1,6 +1,6 @@
 <script setup>
 import { Head, router, usePoll } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import AdminTenantLayout from '../../../Layouts/AdminTenantLayout.vue';
 
 defineOptions({ layout: AdminTenantLayout });
@@ -26,7 +26,11 @@ const hasActiveJobs = computed(() =>
     props.jobs.data.some(j => j.status === 'pending' || j.status === 'running')
 );
 
-usePoll(4000, { only: ['jobs'] }, { autoStart: true });
+const { start: startPoll, stop: stopPoll } = usePoll(4000, { only: ['jobs'] }, { autoStart: false });
+
+watch(hasActiveJobs, (active) => {
+    if (active) { startPoll(); } else { stopPoll(); }
+}, { immediate: true });
 
 const filterTabs = [
     { label: 'All',     value: null        },

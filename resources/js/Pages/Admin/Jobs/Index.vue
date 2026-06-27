@@ -1,12 +1,6 @@
 <script setup>
-import { Head, Link, router, usePage, usePoll } from '@inertiajs/vue3';
-import { computed } from 'vue';
-
-const page = usePage();
-
-function logout() {
-    router.post('/logout');
-}
+import { Head, Link, router, usePoll } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
 
 const props = defineProps({
     jobs: Object,
@@ -29,7 +23,11 @@ const hasActiveJobs = computed(() =>
     props.jobs.data.some(j => j.status === 'pending' || j.status === 'running')
 );
 
-usePoll(4000, { only: ['jobs'] }, { autoStart: true });
+const { start: startPoll, stop: stopPoll } = usePoll(4000, { only: ['jobs'] }, { autoStart: false });
+
+watch(hasActiveJobs, (active) => {
+    if (active) { startPoll(); } else { stopPoll(); }
+}, { immediate: true });
 
 const filterTabs = [
     { label: 'All',     value: null        },
@@ -96,7 +94,7 @@ function goToPage(url) {
                     </svg>
                     App Selection
                 </Link>
-                <button @click="logout" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition">
+                <button @click="router.post('/logout')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition">
                     Sign out
                 </button>
             </div>

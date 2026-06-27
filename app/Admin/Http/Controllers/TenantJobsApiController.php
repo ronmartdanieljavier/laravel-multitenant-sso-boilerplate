@@ -19,7 +19,7 @@ class TenantJobsApiController extends Controller
     {
         $tenantId = $request->query('tenant_id') ? (int) $request->query('tenant_id') : null;
         $status = $request->query('status');
-        $perPage = (int) ($request->query('per_page', 20));
+        $perPage = min((int) ($request->query('per_page', 20)), 100);
         $statusEnum = $status ? TenantJobStatus::tryFrom($status) : null;
 
         return response()->json([
@@ -30,7 +30,7 @@ class TenantJobsApiController extends Controller
     public function indexForTenant(Request $request, Tenant $tenant): JsonResponse
     {
         $status = $request->query('status');
-        $perPage = (int) ($request->query('per_page', 20));
+        $perPage = min((int) ($request->query('per_page', 20)), 100);
         $statusEnum = $status ? TenantJobStatus::tryFrom($status) : null;
 
         return response()->json([

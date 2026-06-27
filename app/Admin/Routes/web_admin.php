@@ -5,6 +5,7 @@ use App\Admin\Http\Controllers\AppManagementController;
 use App\Admin\Http\Controllers\DashboardController;
 use App\Admin\Http\Controllers\SystemSettingsController;
 use App\Admin\Http\Controllers\TenantErrorsController;
+use App\Admin\Http\Controllers\TenantJobsController;
 use App\Admin\Http\Controllers\TenantManagementController;
 use App\Admin\Http\Controllers\TenantReportQueueController;
 use App\Admin\Http\Controllers\TenantSettingsController;
@@ -51,6 +52,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/admin/tenants/{tenant}/errors/{error}/resolve', [TenantErrorsController::class, 'resolve'])->name('admin.tenants.errors.resolve');
     Route::patch('/admin/tenants/{tenant}/errors/{error}/unresolve', [TenantErrorsController::class, 'unresolve'])->name('admin.tenants.errors.unresolve');
     Route::delete('/admin/tenants/{tenant}/errors/{error}', [TenantErrorsController::class, 'destroy'])->name('admin.tenants.errors.destroy');
+
+    Route::get('/admin/jobs', [TenantJobsController::class, 'index'])->name('admin.jobs');
+    Route::get('/admin/tenants/{tenant}/jobs', [TenantJobsController::class, 'indexForTenant'])->name('admin.tenants.jobs');
 
     Route::get('/admin/settings', [SystemSettingsController::class, 'index'])->name('admin.settings');
     Route::put('/admin/settings', [SystemSettingsController::class, 'update'])->name('admin.settings.update');

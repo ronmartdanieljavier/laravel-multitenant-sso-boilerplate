@@ -61,26 +61,26 @@ function shortClass(cls) {
 // ── Report status badge ─────────────────────────────────────────────────────
 
 const reportStatusConfig = {
-    pending:    { label: 'Pending',    cls: 'bg-amber-500/20 text-amber-300' },
-    processing: { label: 'Processing', cls: 'bg-blue-500/20 text-blue-300 animate-pulse' },
-    success:    { label: 'Done',       cls: 'bg-emerald-500/20 text-emerald-400' },
-    failed:     { label: 'Failed',     cls: 'bg-red-500/20 text-red-400' },
+    pending:    { label: 'Pending',    cls: 'bg-amber-500/10 border-amber-500/20 text-amber-300' },
+    processing: { label: 'Processing', cls: 'bg-blue-500/10 border-blue-500/20 text-blue-300 animate-pulse' },
+    success:    { label: 'Done',       cls: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' },
+    failed:     { label: 'Failed',     cls: 'bg-red-500/10 border-red-500/20 text-red-300' },
 };
 
 function reportStatusBadge(status) {
-    return reportStatusConfig[status] ?? { label: status, cls: 'bg-slate-700 text-slate-400' };
+    return reportStatusConfig[status] ?? { label: status, cls: 'bg-slate-700/50 border-white/10 text-slate-400' };
 }
 
 // ── Error severity badge ────────────────────────────────────────────────────
 
 const errorSeverityConfig = {
-    error:    { label: 'Error',    cls: 'bg-red-500/20 text-red-400' },
-    warning:  { label: 'Warning',  cls: 'bg-amber-500/20 text-amber-300' },
-    critical: { label: 'Critical', cls: 'bg-red-900/40 text-red-300 font-bold' },
+    error:    { label: 'Error',    cls: 'bg-red-500/10 border-red-500/20 text-red-300' },
+    warning:  { label: 'Warning',  cls: 'bg-amber-500/10 border-amber-500/20 text-amber-300' },
+    critical: { label: 'Critical', cls: 'bg-red-900/30 border-red-500/20 text-red-300' },
 };
 
 function errorSeverityBadge(s) {
-    return errorSeverityConfig[s] ?? { label: s, cls: 'bg-slate-700 text-slate-400' };
+    return errorSeverityConfig[s] ?? { label: s, cls: 'bg-slate-700/50 border-white/10 text-slate-400' };
 }
 
 // ── Stats cards ─────────────────────────────────────────────────────────────
@@ -94,6 +94,7 @@ const statCards = computed(() => [
         icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
         iconColor: 'text-blue-400',
         iconBg: 'bg-blue-500/10',
+        topBorder: 'border-t-blue-500/40',
         alert: false,
     },
     {
@@ -105,6 +106,7 @@ const statCards = computed(() => [
         icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
         iconColor: props.stats.failed_reports > 0 ? 'text-red-400' : 'text-slate-400',
         iconBg: props.stats.failed_reports > 0 ? 'bg-red-500/10' : 'bg-slate-700/50',
+        topBorder: props.stats.failed_reports > 0 ? 'border-t-red-500/40' : 'border-t-slate-700/40',
         alert: props.stats.failed_reports > 0,
     },
     {
@@ -118,6 +120,7 @@ const statCards = computed(() => [
         icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
         iconColor: props.stats.unresolved_errors > 0 ? 'text-amber-400' : 'text-slate-400',
         iconBg: props.stats.unresolved_errors > 0 ? 'bg-amber-500/10' : 'bg-slate-700/50',
+        topBorder: props.stats.unresolved_errors > 0 ? 'border-t-amber-500/40' : 'border-t-slate-700/40',
         alert: props.stats.critical_errors > 0,
     },
     {
@@ -129,6 +132,7 @@ const statCards = computed(() => [
         icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
         iconColor: 'text-emerald-400',
         iconBg: 'bg-emerald-500/10',
+        topBorder: 'border-t-emerald-500/40',
         alert: false,
     },
 ]);
@@ -177,207 +181,211 @@ const { startTour } = useTour('tenant-dashboard', [
 <template>
     <Head title="Dashboard" />
 
-    <main class="flex-1 px-8 py-10 space-y-8">
-
-        <!-- Welcome -->
-        <div id="tour-welcome" class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-white">
+    <div class="flex flex-col flex-1 bg-[#030712]">
+        <header class="h-16 border-b border-white/[0.05] flex items-center px-8 shrink-0 bg-[#030712]">
+            <div id="tour-welcome">
+                <h1 class="font-grotesk text-lg font-semibold text-white">
                     {{ greeting() }}, {{ user?.name?.split(' ')[0] ?? 'there' }}
                 </h1>
-                <p class="text-slate-400 mt-1 text-sm">Here's what's happening in your tenant right now.</p>
+                <p class="text-slate-500 text-xs mt-0.5">Here's what's happening in your tenant right now.</p>
             </div>
-        </div>
+            <div id="tour-quick-actions" class="ml-auto flex items-center gap-3">
+                <Link
+                    href="/tenant/reports"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer transition-all duration-150"
+                    style="background: linear-gradient(135deg, #10b981, #0d9488); box-shadow: 0 0 20px rgba(16,185,129,0.2)"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Queue Report
+                </Link>
+                <Link
+                    href="/documents"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Documents
+                </Link>
+                <Link
+                    href="/tenant/errors"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Errors
+                </Link>
+            </div>
+        </header>
 
-        <!-- Stats row -->
-        <div id="tour-stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <component
-                :is="card.href ? 'a' : 'div'"
-                v-for="card in statCards"
-                :key="card.id"
-                :id="card.id"
-                :href="card.href ?? undefined"
-                :class="[
-                    'bg-slate-900 border rounded-xl p-5 transition',
-                    card.alert
-                        ? 'border-red-500/30 hover:border-red-500/50'
-                        : 'border-white/5 hover:border-white/10',
-                    card.href ? 'cursor-pointer' : '',
-                ]"
-            >
-                <div class="flex items-start justify-between mb-3">
-                    <div :class="['w-9 h-9 rounded-lg flex items-center justify-center', card.iconBg]">
-                        <svg :class="['w-4 h-4', card.iconColor]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="card.icon" />
-                        </svg>
+        <main class="flex-1 px-8 py-8 space-y-6">
+
+            <!-- Stats row -->
+            <div id="tour-stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <component
+                    :is="card.href ? 'a' : 'div'"
+                    v-for="card in statCards"
+                    :key="card.id"
+                    :id="card.id"
+                    :href="card.href ?? undefined"
+                    :class="[
+                        'bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-5 transition border-t-2',
+                        card.topBorder,
+                        card.href ? 'cursor-pointer hover:bg-white/[0.05]' : '',
+                    ]"
+                >
+                    <div class="flex items-start justify-between mb-3">
+                        <div :class="['w-9 h-9 rounded-lg flex items-center justify-center', card.iconBg]">
+                            <svg :class="['w-4 h-4', card.iconColor]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="card.icon" />
+                            </svg>
+                        </div>
+                        <span v-if="card.alert" class="w-2 h-2 rounded-full bg-red-500 mt-1 animate-pulse" />
                     </div>
-                    <span v-if="card.alert" class="w-2 h-2 rounded-full bg-red-500 mt-1 animate-pulse" />
+                    <div class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-1">{{ card.label }}</div>
+                    <div class="text-3xl font-grotesk font-semibold text-white tabular-nums">{{ card.value }}</div>
+                    <div class="text-xs mt-1" :class="card.alert ? 'text-red-400' : 'text-slate-500'">{{ card.sub }}</div>
+                </component>
+            </div>
+
+            <!-- Bottom grid: reports + errors | documents -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+                <!-- Recent Reports (spans 2 cols) -->
+                <div id="tour-recent-reports" class="lg:col-span-2 bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+                    <div class="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                        <h2 class="font-grotesk font-semibold text-white text-sm">Recent Reports</h2>
+                        <Link href="/tenant/reports" class="text-xs text-emerald-400 hover:text-emerald-300 transition font-mono">
+                            View all →
+                        </Link>
+                    </div>
+
+                    <div v-if="recentReports.length === 0" class="px-5 py-12 text-center text-slate-500 text-sm">
+                        No reports yet.
+                        <Link href="/tenant/reports" class="text-emerald-400 hover:underline ml-1">Queue your first report.</Link>
+                    </div>
+
+                    <table v-else class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-white/[0.06]">
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Type</th>
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Format</th>
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Queued</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/[0.04]">
+                            <tr v-for="report in recentReports" :key="report.id" class="hover:bg-white/[0.02] transition-colors">
+                                <td class="px-5 py-3.5 text-slate-300 font-medium capitalize">{{ report.type }}</td>
+                                <td class="px-5 py-3.5 text-slate-500 uppercase text-xs font-mono">{{ report.format }}</td>
+                                <td class="px-5 py-3.5">
+                                    <span :class="['inline-flex items-center text-xs font-mono px-2.5 py-1 rounded-full border', reportStatusBadge(report.status).cls]">
+                                        {{ reportStatusBadge(report.status).label }}
+                                    </span>
+                                </td>
+                                <td class="px-5 py-3.5 text-xs text-slate-500">{{ formatDate(report.created_at) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <p class="text-2xl font-bold text-white tabular-nums">{{ card.value }}</p>
-                <p class="text-xs text-slate-500 mt-0.5">{{ card.label }}</p>
-                <p class="text-xs mt-2" :class="card.alert ? 'text-red-400' : 'text-slate-600'">{{ card.sub }}</p>
-            </component>
-        </div>
 
-        <!-- Quick actions -->
-        <div id="tour-quick-actions" class="flex flex-wrap gap-3">
-            <Link
-                href="/tenant/reports"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Queue Report
-            </Link>
-            <Link
-                href="/documents"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 hover:text-white text-sm font-medium rounded-lg transition"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Browse Documents
-            </Link>
-            <Link
-                href="/tenant/errors"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 hover:text-white text-sm font-medium rounded-lg transition"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                Review Errors
-            </Link>
-        </div>
+                <!-- Recent Documents (1 col) -->
+                <div id="tour-recent-documents" class="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+                    <div class="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                        <h2 class="font-grotesk font-semibold text-white text-sm">Recent Documents</h2>
+                        <Link href="/documents" class="text-xs text-emerald-400 hover:text-emerald-300 transition font-mono">
+                            View all →
+                        </Link>
+                    </div>
 
-        <!-- Bottom grid: reports + errors | documents -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div v-if="recentDocuments.length === 0" class="px-5 py-12 text-center text-slate-500 text-sm">
+                        No documents yet.
+                    </div>
 
-            <!-- Recent Reports (spans 2 cols) -->
-            <div id="tour-recent-reports" class="lg:col-span-2 bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
-                <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                    <h2 class="font-semibold text-white text-sm">Recent Reports</h2>
-                    <Link href="/tenant/reports" class="text-xs text-emerald-400 hover:text-emerald-300 transition">
+                    <ul v-else class="divide-y divide-white/[0.04]">
+                        <li v-for="doc in recentDocuments" :key="doc.id" class="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                            <div class="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0">
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-slate-300 truncate">{{ doc.title }}</p>
+                                <p class="text-xs text-slate-600">{{ formatBytes(doc.file_size) }} · {{ formatDate(doc.created_at) }}</p>
+                            </div>
+                            <a :href="`/documents/${doc.id}/download`" class="text-slate-600 hover:text-emerald-400 transition shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Open Error Logs -->
+            <div id="tour-recent-errors" class="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <h2 class="font-grotesk font-semibold text-white text-sm">Open Error Logs</h2>
+                        <span v-if="stats.critical_errors > 0"
+                              class="inline-flex items-center text-xs font-mono px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-300">
+                            {{ stats.critical_errors }} critical
+                        </span>
+                    </div>
+                    <Link href="/tenant/errors" class="text-xs text-emerald-400 hover:text-emerald-300 transition font-mono">
                         View all →
                     </Link>
                 </div>
 
-                <div v-if="recentReports.length === 0" class="px-6 py-12 text-center text-slate-500 text-sm">
-                    No reports yet. <Link href="/tenant/reports" class="text-emerald-400 hover:underline">Queue your first report.</Link>
+                <div v-if="recentErrors.length === 0" class="px-5 py-8 text-center text-slate-500 text-sm">
+                    No open errors — all clear.
                 </div>
 
                 <table v-else class="w-full text-sm">
                     <thead>
-                        <tr class="border-b border-white/5 text-xs text-slate-500 uppercase tracking-wide">
-                            <th class="text-left px-6 py-3 font-medium">Type</th>
-                            <th class="text-left px-6 py-3 font-medium">Format</th>
-                            <th class="text-left px-6 py-3 font-medium">Status</th>
-                            <th class="text-left px-6 py-3 font-medium">Queued</th>
+                        <tr class="border-b border-white/[0.06]">
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Error Code</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Exception</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Message</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Severity</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Occurred</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/5">
-                        <tr v-for="report in recentReports" :key="report.id" class="hover:bg-white/[0.02] transition">
-                            <td class="px-6 py-3 text-white font-medium capitalize">{{ report.type }}</td>
-                            <td class="px-6 py-3 text-slate-400 uppercase text-xs">{{ report.format }}</td>
-                            <td class="px-6 py-3">
-                                <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium', reportStatusBadge(report.status).cls]">
-                                    {{ reportStatusBadge(report.status).label }}
+                    <tbody class="divide-y divide-white/[0.04]">
+                        <tr v-for="err in recentErrors" :key="err.id" class="hover:bg-white/[0.02] transition-colors">
+                            <td class="px-5 py-3.5">
+                                <Link :href="`/tenant/errors/${err.id}`"
+                                      class="font-mono text-xs text-emerald-400 hover:text-emerald-300 transition">
+                                    {{ err.error_code }}
+                                </Link>
+                            </td>
+                            <td class="px-5 py-3.5 font-mono text-xs text-slate-400">{{ shortClass(err.exception_class) }}</td>
+                            <td class="px-5 py-3.5 text-sm text-slate-400 max-w-xs">
+                                <span class="truncate block" :title="err.message">{{ err.message }}</span>
+                            </td>
+                            <td class="px-5 py-3.5">
+                                <span :class="['inline-flex items-center text-xs font-mono px-2.5 py-1 rounded-full border', errorSeverityBadge(err.severity).cls]">
+                                    {{ errorSeverityBadge(err.severity).label }}
                                 </span>
                             </td>
-                            <td class="px-6 py-3 text-xs text-slate-500">{{ formatDate(report.created_at) }}</td>
+                            <td class="px-5 py-3.5 text-xs text-slate-500">{{ formatDate(err.created_at) }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Recent Documents (1 col) -->
-            <div id="tour-recent-documents" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
-                <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                    <h2 class="font-semibold text-white text-sm">Recent Documents</h2>
-                    <Link href="/documents" class="text-xs text-emerald-400 hover:text-emerald-300 transition">
-                        View all →
-                    </Link>
-                </div>
-
-                <div v-if="recentDocuments.length === 0" class="px-6 py-12 text-center text-slate-500 text-sm">
-                    No documents yet.
-                </div>
-
-                <ul v-else class="divide-y divide-white/5">
-                    <li v-for="doc in recentDocuments" :key="doc.id" class="flex items-center gap-3 px-6 py-3 hover:bg-white/[0.02] transition">
-                        <div class="w-8 h-8 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center shrink-0">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm text-white truncate">{{ doc.title }}</p>
-                            <p class="text-xs text-slate-500">{{ formatBytes(doc.file_size) }} · {{ formatDate(doc.created_at) }}</p>
-                        </div>
-                        <a :href="`/documents/${doc.id}/download`" class="text-slate-500 hover:text-emerald-400 transition shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-        </div>
-
-        <!-- Open Error Logs -->
-        <div id="tour-recent-errors" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
-            <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <h2 class="font-semibold text-white text-sm">Open Error Logs</h2>
-                    <span v-if="stats.critical_errors > 0"
-                          class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-900/40 text-red-300 font-bold">
-                        {{ stats.critical_errors }} critical
-                    </span>
-                </div>
-                <Link href="/tenant/errors" class="text-xs text-emerald-400 hover:text-emerald-300 transition">
-                    View all →
-                </Link>
-            </div>
-
-            <div v-if="recentErrors.length === 0" class="px-6 py-8 text-center text-slate-500 text-sm">
-                No open errors — all clear.
-            </div>
-
-            <table v-else class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-white/5 text-xs text-slate-500 uppercase tracking-wide">
-                        <th class="text-left px-6 py-3 font-medium">Error Code</th>
-                        <th class="text-left px-6 py-3 font-medium">Exception</th>
-                        <th class="text-left px-6 py-3 font-medium">Message</th>
-                        <th class="text-left px-6 py-3 font-medium">Severity</th>
-                        <th class="text-left px-6 py-3 font-medium">Occurred</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5">
-                    <tr v-for="err in recentErrors" :key="err.id" class="hover:bg-white/[0.02] transition">
-                        <td class="px-6 py-3">
-                            <Link :href="`/tenant/errors/${err.id}`"
-                                  class="font-mono text-xs text-emerald-400 hover:text-emerald-300 transition">
-                                {{ err.error_code }}
-                            </Link>
-                        </td>
-                        <td class="px-6 py-3 font-mono text-xs text-slate-300">{{ shortClass(err.exception_class) }}</td>
-                        <td class="px-6 py-3 text-sm text-slate-300 max-w-xs">
-                            <span class="truncate block" :title="err.message">{{ err.message }}</span>
-                        </td>
-                        <td class="px-6 py-3">
-                            <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium', errorSeverityBadge(err.severity).cls]">
-                                {{ errorSeverityBadge(err.severity).label }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-3 text-xs text-slate-500">{{ formatDate(err.created_at) }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-    </main>
+        </main>
+    </div>
 
     <TourButton @click="startTour" />
 </template>
+
+<style scoped>
+.font-grotesk { font-family: 'Space Grotesk', sans-serif; }
+.font-mono { font-family: 'DM Mono', monospace; }
+</style>

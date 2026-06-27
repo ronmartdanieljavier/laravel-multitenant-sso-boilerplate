@@ -4,6 +4,7 @@ use App\Admin\Http\Controllers\AppManagementApiController;
 use App\Admin\Http\Controllers\DashboardApiController;
 use App\Admin\Http\Controllers\SystemSettingsApiController;
 use App\Admin\Http\Controllers\TenantErrorsApiController;
+use App\Admin\Http\Controllers\TenantJobsApiController;
 use App\Admin\Http\Controllers\TenantManagementApiController;
 use App\Admin\Http\Controllers\TenantReportQueueApiController;
 use App\Admin\Http\Controllers\TenantSettingsApiController;
@@ -49,6 +50,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->name('admin.')->group(functi
     Route::patch('tenants/{tenant}/errors/{error}/resolve', [TenantErrorsApiController::class, 'resolve'])->name('api.tenants.errors.resolve');
     Route::patch('tenants/{tenant}/errors/{error}/unresolve', [TenantErrorsApiController::class, 'unresolve'])->name('api.tenants.errors.unresolve');
     Route::delete('tenants/{tenant}/errors/{error}', [TenantErrorsApiController::class, 'destroy'])->name('api.tenants.errors.destroy');
+
+    Route::get('jobs', [TenantJobsApiController::class, 'index'])->name('api.jobs');
+    Route::get('tenants/{tenant}/jobs', [TenantJobsApiController::class, 'indexForTenant'])->name('api.tenants.jobs');
 
     // Look up any error code (no tenant scope — for support lookups).
     Route::get('errors/{errorCode}', [TenantErrorsApiController::class, 'findByCode'])->name('api.errors.findByCode');

@@ -203,6 +203,16 @@ class TenantRepository
         return $this->model->pluck('id');
     }
 
+    /**
+     * Get a map of tenant id => tenant name.
+     *
+     * @return BaseCollection<int, string>
+     */
+    public function pluckNames(): BaseCollection
+    {
+        return $this->model->pluck('name', 'id');
+    }
+
     public function assignAdminUsersToTenant(int $tenantId): void
     {
         $adminUserApps = UserApp::where('role', 'admin')->get();

@@ -17,6 +17,7 @@ const tenantNav = computed(() => {
         { label: 'Users',    href: `/admin/tenants/${id}/users`    },
         { label: 'Reports',  href: `/admin/tenants/${id}/reports`  },
         { label: 'Errors',   href: `/admin/tenants/${id}/errors`   },
+        { label: 'Jobs',     href: `/admin/tenants/${id}/jobs`     },
     ];
 });
 

@@ -44,6 +44,22 @@ class TenantJobRecordRepository
     /**
      * @return LengthAwarePaginator<int, TenantJobRecordRepositoryData>
      */
+    public function listAll(
+        ?int $tenantId = null,
+        ?TenantJobStatus $status = null,
+        int $perPage = 20,
+    ): LengthAwarePaginator {
+        return $this->model->query()
+            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->latest()
+            ->paginate($perPage)
+            ->through(fn (TenantJobRecord $record) => TenantJobRecordRepositoryData::from($record));
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, TenantJobRecordRepositoryData>
+     */
     public function listForTenant(
         int $tenantId,
         ?TenantJobStatus $status = null,

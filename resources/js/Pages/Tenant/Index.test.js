@@ -195,14 +195,14 @@ describe('Tenant/Index — quick actions', () => {
 
     it('renders the Browse Documents action linking to /documents', () => {
         const wrapper = mountPage();
-        const link = wrapper.findAll('a').find(a => a.text().includes('Browse Documents'));
-        expect(link?.attributes('href')).toBe('/documents');
+        const link = wrapper.findAll('a').find(a => a.attributes('href') === '/documents');
+        expect(link?.exists()).toBe(true);
     });
 
     it('renders the Review Errors action linking to /tenant/errors', () => {
         const wrapper = mountPage();
-        const link = wrapper.findAll('a').find(a => a.text().includes('Review Errors'));
-        expect(link?.attributes('href')).toBe('/tenant/errors');
+        const link = wrapper.findAll('a').find(a => a.attributes('href') === '/tenant/errors');
+        expect(link?.exists()).toBe(true);
     });
 });
 

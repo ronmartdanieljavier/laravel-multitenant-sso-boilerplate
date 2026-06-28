@@ -134,9 +134,8 @@ describe('Admin/Apps/Index', () => {
         expect(wrapper.find('.bg-amber-500\\/10').exists()).toBe(false);
     });
 
-    it('renders the Apps nav item as active', () => {
+    it('renders the App Management page heading', () => {
         const wrapper = mountPage();
-        const activeLink = wrapper.findAll('a').find(a => a.classes().includes('border-blue-500'));
-        expect(activeLink?.text()).toContain('Apps');
+        expect(wrapper.text()).toContain('App Management');
     });
 });

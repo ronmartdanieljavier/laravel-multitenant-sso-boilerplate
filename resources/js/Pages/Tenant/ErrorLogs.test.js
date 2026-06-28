@@ -204,6 +204,6 @@ describe('Tenant/ErrorLogs', () => {
     it('applies reduced opacity to resolved rows', () => {
         const wrapper = mountPage([resolvedLog]);
         const row = wrapper.find('tbody tr');
-        expect(row.classes()).toContain('opacity-60');
+        expect(row.classes()).toContain('opacity-50');
     });
 });

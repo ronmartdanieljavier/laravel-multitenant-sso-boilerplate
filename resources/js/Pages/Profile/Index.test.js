@@ -53,16 +53,16 @@ describe('Profile/Index', () => {
         expect(wrapper.text()).toContain('My Profile');
     });
 
-    it('renders the App Selection link pointing to /apps', async () => {
+    it('renders the Display Name input pre-filled with user name', async () => {
         const wrapper = await mountPage();
-        const hrefs = wrapper.findAll('a').map(a => a.attributes('href'));
-        expect(hrefs).toContain('/apps');
+        const input = wrapper.find('input[type="text"]');
+        expect(input.element.value).toBe('Alice Admin');
     });
 
-    it('App Selection link displays correct label', async () => {
+    it('renders a Save Name button', async () => {
         const wrapper = await mountPage();
-        const appLink = wrapper.findAll('a').find(a => a.attributes('href') === '/apps');
-        expect(appLink?.text()).toMatch(/app selection/i);
+        const btn = wrapper.findAll('button').find(b => b.text().includes('Save Name'));
+        expect(btn?.exists()).toBe(true);
     });
 
     it('does not render a Dashboard nav link', async () => {
@@ -86,14 +86,14 @@ describe('Profile/Index', () => {
         expect(wrapper.text()).toContain('Change Password');
     });
 
-    it('renders user name in the sidebar', async () => {
+    it('renders user initial in the avatar', async () => {
         const wrapper = await mountPage();
-        expect(wrapper.text()).toContain('Alice Admin');
+        expect(wrapper.text()).toContain('A');
     });
 
-    it('renders user email in the sidebar', async () => {
+    it('renders the Display Name section heading', async () => {
         const wrapper = await mountPage();
-        expect(wrapper.text()).toContain('alice@example.com');
+        expect(wrapper.text()).toContain('Display Name');
     });
 
     it('renders profile picture img when url is provided', async () => {
@@ -108,13 +108,13 @@ describe('Profile/Index', () => {
         expect(wrapper.text()).toContain('A');
     });
 
-    it('calls router.post /logout when sign-out button is clicked', async () => {
-        const { router } = await import('@inertiajs/vue3');
+    it('calls nameForm.put when Save Name button is submitted', async () => {
         const wrapper = await mountPage();
-        const logoutBtn = wrapper.find('button[title="Sign out"]');
-        expect(logoutBtn.exists()).toBe(true);
-        await logoutBtn.trigger('click');
-        expect(router.post).toHaveBeenCalledWith('/logout');
+        const form = wrapper.find('form');
+        await form.trigger('submit');
+        const { useForm } = await import('@inertiajs/vue3');
+        const mockForm = useForm.mock.results[0]?.value;
+        expect(mockForm?.put).toHaveBeenCalledWith('/profile/name', expect.any(Object));
     });
 
     it('renders flash success message when present', async () => {

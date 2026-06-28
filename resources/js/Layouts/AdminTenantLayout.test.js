@@ -77,25 +77,25 @@ describe('AdminTenantLayout', () => {
     it('highlights the Settings link when on the settings page', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/settings');
         const settingsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/settings');
-        expect(settingsLink?.classes().join(' ')).toContain('blue-500');
+        expect(settingsLink?.classes().join(' ')).toContain('tab-pill--active');
     });
 
     it('highlights the Reports link when on the reports page', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/reports');
         const reportsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/reports');
-        expect(reportsLink?.classes().join(' ')).toContain('blue');
+        expect(reportsLink?.classes().join(' ')).toContain('tab-pill--active');
     });
 
     it('highlights the Errors link when on the errors page', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/errors');
         const errorsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/errors');
-        expect(errorsLink?.classes().join(' ')).toContain('blue-500');
+        expect(errorsLink?.classes().join(' ')).toContain('tab-pill--active');
     });
 
     it('highlights the Errors link when on an error detail page', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/errors/abc-123');
         const errorsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/errors');
-        expect(errorsLink?.classes().join(' ')).toContain('blue-500');
+        expect(errorsLink?.classes().join(' ')).toContain('tab-pill--active');
     });
 
     it('renders a sign out button that posts to /logout', async () => {
@@ -124,7 +124,7 @@ describe('AdminTenantLayout', () => {
     it('strips query strings when computing active state', async () => {
         const wrapper = await mountLayout('/admin/tenants/5/settings?tab=email');
         const settingsLink = wrapper.findAll('a').find(a => a.attributes('href') === '/admin/tenants/5/settings');
-        expect(settingsLink?.classes().join(' ')).toContain('blue-500');
+        expect(settingsLink?.classes().join(' ')).toContain('tab-pill--active');
     });
 
     it('renders the App Selection link pointing to /apps', async () => {
@@ -136,6 +136,6 @@ describe('AdminTenantLayout', () => {
     it('App Selection link displays correct label', async () => {
         const wrapper = await mountLayout();
         const appLink = wrapper.findAll('a').find(a => a.attributes('href') === '/apps');
-        expect(appLink?.text()).toMatch(/app selection/i);
+        expect(appLink?.text()).toMatch(/switch to app/i);
     });
 });

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('db_port')->default(3306);
             $table->string('db_name');
             $table->string('db_username');
-            $table->string('db_password');
+            $table->text('db_password');
             $table->string('report_db_host')->nullable();
             $table->string('report_db_name')->nullable();
             $table->string('report_url')->nullable();

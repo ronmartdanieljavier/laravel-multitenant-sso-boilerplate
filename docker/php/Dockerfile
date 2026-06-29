@@ -37,15 +37,25 @@ RUN apk add --no-cache $PHPIZE_DEPS \
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Node.js for frontend build
+COPY --from=node:22-alpine /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:22-alpine /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+
 ENV COMPOSER_MEMORY_LIMIT=-1
 
 WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
-
 RUN composer install --no-dev --no-scripts --no-interaction
 
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
 COPY . .
+
+RUN npm run build \
+    && rm -rf node_modules
 
 RUN composer dump-autoload --optimize --no-interaction \
     && php artisan package:discover --ansi

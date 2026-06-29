@@ -22,3 +22,8 @@ variable "db_username" {
   description = "PostgreSQL username"
   default     = "laravel"
 }
+
+variable "staging_domain" {
+  description = "Full subdomain for the staging environment"
+  default     = "staging.multi-tenancy.ronmartdanieljavier.com"
+}

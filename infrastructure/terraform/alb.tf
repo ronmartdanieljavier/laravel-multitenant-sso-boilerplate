@@ -63,6 +63,25 @@ resource "aws_acm_certificate_validation" "main" {
   }
 }
 
+resource "aws_acm_certificate" "staging" {
+  domain_name       = var.staging_domain
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = { Name = "${var.app_name}-staging" }
+}
+
+resource "aws_acm_certificate_validation" "staging" {
+  certificate_arn = aws_acm_certificate.staging.arn
+
+  timeouts {
+    create = "60m"
+  }
+}
+
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = 443

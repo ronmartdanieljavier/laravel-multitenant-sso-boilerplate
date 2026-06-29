@@ -47,7 +47,7 @@ resource "aws_efs_access_point" "redis" {
   }
 
   root_directory {
-    path = "/redis"
+    path = "/redisdata"
     creation_info {
       owner_uid   = 999
       owner_gid   = 999

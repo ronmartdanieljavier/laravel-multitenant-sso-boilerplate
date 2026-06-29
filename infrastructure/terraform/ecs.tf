@@ -33,7 +33,7 @@ resource "aws_ecs_task_definition" "app" {
       transit_encryption = "ENABLED"
       authorization_config {
         access_point_id = aws_efs_access_point.postgres.id
-        iam             = "DISABLED"
+        iam             = "ENABLED"
       }
     }
   }
@@ -45,7 +45,7 @@ resource "aws_ecs_task_definition" "app" {
       transit_encryption = "ENABLED"
       authorization_config {
         access_point_id = aws_efs_access_point.redis.id
-        iam             = "DISABLED"
+        iam             = "ENABLED"
       }
     }
   }
@@ -57,7 +57,7 @@ resource "aws_ecs_task_definition" "app" {
       transit_encryption = "ENABLED"
       authorization_config {
         access_point_id = aws_efs_access_point.storage.id
-        iam             = "DISABLED"
+        iam             = "ENABLED"
       }
     }
   }

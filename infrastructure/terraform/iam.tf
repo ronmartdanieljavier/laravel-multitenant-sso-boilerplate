@@ -45,6 +45,24 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
+resource "aws_iam_role_policy" "ecs_task_efs" {
+  name = "efs-access"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "elasticfilesystem:ClientMount",
+        "elasticfilesystem:ClientWrite",
+        "elasticfilesystem:ClientRootAccess"
+      ]
+      Resource = [aws_efs_file_system.main.arn]
+    }]
+  })
+}
+
 # GitHub Actions OIDC — allows GitHub to assume an AWS role without stored keys
 resource "aws_iam_openid_connect_provider" "github" {
   url             = "https://token.actions.githubusercontent.com"

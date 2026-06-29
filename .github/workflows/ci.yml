@@ -129,10 +129,12 @@ jobs:
       - name: Build and push nginx image
         env:
           ECR_NGINX: ${{ secrets.ECR_NGINX_REPOSITORY }}
+          ECR_APP: ${{ secrets.ECR_APP_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build \
             --platform linux/amd64 \
+            --build-arg APP_IMAGE=$ECR_APP:$IMAGE_TAG \
             -t $ECR_NGINX:$IMAGE_TAG \
             -t $ECR_NGINX:latest \
             -f docker/nginx/Dockerfile docker/nginx/

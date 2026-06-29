@@ -82,6 +82,26 @@ resource "aws_acm_certificate_validation" "staging" {
   }
 }
 
+resource "aws_lb_target_group" "staging" {
+  name        = "${var.app_name}-staging"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/health"
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = { Name = "${var.app_name}-staging" }
+}
+
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = 443
@@ -92,5 +112,26 @@ resource "aws_lb_listener" "https" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn
+  }
+}
+
+resource "aws_lb_listener_certificate" "staging" {
+  listener_arn    = aws_lb_listener.https.arn
+  certificate_arn = aws_acm_certificate_validation.staging.certificate_arn
+}
+
+resource "aws_lb_listener_rule" "staging" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 10
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.staging.arn
+  }
+
+  condition {
+    host_header {
+      values = [var.staging_domain]
+    }
   }
 }

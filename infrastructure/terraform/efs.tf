@@ -26,11 +26,11 @@ resource "aws_efs_access_point" "postgres" {
   }
 
   root_directory {
-    path = "/postgres"
+    path = "/pgdata"
     creation_info {
       owner_uid   = 70
       owner_gid   = 70
-      permissions = "755"
+      permissions = "700"
     }
   }
 

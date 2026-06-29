@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, production]
   pull_request:
 
 permissions:
@@ -94,8 +94,8 @@ jobs:
       - name: Run test suite
         run: php artisan test
 
-  deploy:
-    name: Deploy to ECS
+  deploy-staging:
+    name: Deploy to Staging
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -113,7 +113,73 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push PHP app image
+      - name: Build and push PHP app image (staging)
+        env:
+          ECR_APP: ${{ secrets.ECR_APP_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t $ECR_APP:$IMAGE_TAG \
+            -t $ECR_APP:staging-latest \
+            -f docker/php/Dockerfile .
+          docker push $ECR_APP:$IMAGE_TAG
+          docker push $ECR_APP:staging-latest
+
+      - name: Build and push nginx image (staging)
+        env:
+          ECR_NGINX: ${{ secrets.ECR_NGINX_REPOSITORY }}
+          ECR_APP: ${{ secrets.ECR_APP_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            --build-arg APP_IMAGE=$ECR_APP:$IMAGE_TAG \
+            -t $ECR_NGINX:$IMAGE_TAG \
+            -t $ECR_NGINX:staging-latest \
+            -f docker/nginx/Dockerfile docker/nginx/
+          docker push $ECR_NGINX:$IMAGE_TAG
+          docker push $ECR_NGINX:staging-latest
+
+      - name: Deploy to staging ECS service
+        env:
+          CLUSTER: ${{ secrets.ECS_CLUSTER }}
+        run: |
+          aws ecs update-service \
+            --cluster $CLUSTER \
+            --service multitenant-sso-staging \
+            --force-new-deployment \
+            --region us-east-1
+
+      - name: Wait for staging deployment to stabilize
+        env:
+          CLUSTER: ${{ secrets.ECS_CLUSTER }}
+        run: |
+          aws ecs wait services-stable \
+            --cluster $CLUSTER \
+            --services multitenant-sso-staging \
+            --region us-east-1
+
+  deploy-production:
+    name: Deploy to Production
+    needs: test
+    if: github.ref == 'refs/heads/production' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push PHP app image (production)
         env:
           ECR_APP: ${{ secrets.ECR_APP_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
@@ -126,7 +192,7 @@ jobs:
           docker push $ECR_APP:$IMAGE_TAG
           docker push $ECR_APP:latest
 
-      - name: Build and push nginx image
+      - name: Build and push nginx image (production)
         env:
           ECR_NGINX: ${{ secrets.ECR_NGINX_REPOSITORY }}
           ECR_APP: ${{ secrets.ECR_APP_REPOSITORY }}
@@ -141,7 +207,7 @@ jobs:
           docker push $ECR_NGINX:$IMAGE_TAG
           docker push $ECR_NGINX:latest
 
-      - name: Deploy new revision to ECS
+      - name: Deploy to production ECS service
         env:
           CLUSTER: ${{ secrets.ECS_CLUSTER }}
           SERVICE: ${{ secrets.ECS_SERVICE }}
@@ -152,7 +218,7 @@ jobs:
             --force-new-deployment \
             --region us-east-1
 
-      - name: Wait for deployment to stabilize
+      - name: Wait for production deployment to stabilize
         env:
           CLUSTER: ${{ secrets.ECS_CLUSTER }}
           SERVICE: ${{ secrets.ECS_SERVICE }}

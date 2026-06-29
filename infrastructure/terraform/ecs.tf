@@ -247,5 +247,5 @@ resource "aws_ecs_service" "app" {
     ignore_changes = [task_definition]
   }
 
-  # depends_on = [aws_lb_listener.https] — ALB defined in Task 7; apply Task 7 before Task 8
+  depends_on = [aws_lb_listener.https]
 }

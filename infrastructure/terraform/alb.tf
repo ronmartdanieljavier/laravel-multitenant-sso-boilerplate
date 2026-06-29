@@ -59,7 +59,7 @@ resource "aws_acm_certificate_validation" "main" {
   certificate_arn = aws_acm_certificate.main.arn
 
   timeouts {
-    create = "30m"
+    create = "60m"
   }
 }
 

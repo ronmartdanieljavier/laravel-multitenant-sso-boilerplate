@@ -4,7 +4,7 @@ use App\Reports\Http\Controllers\ReportController;
 use App\Reports\Http\Controllers\ReportSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->prefix('reports')->name('reports.')->group(function (): void {
+Route::middleware('auth:sanctum')->prefix('reports')->name('api.reports.')->group(function (): void {
     Route::get('/', [ReportController::class, 'index'])->name('index');
     Route::post('/', [ReportController::class, 'store'])->name('store');
     Route::post('/batch', [ReportController::class, 'batch'])->name('batch');

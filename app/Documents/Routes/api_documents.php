@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', ResolveTenantDatabase::class])
     ->prefix('documents')
-    ->name('documents.')
+    ->name('api.documents.')
     ->group(function (): void {
         Route::get('/', [DocumentApiController::class, 'index'])->name('index');
         Route::post('/', [DocumentApiController::class, 'store'])->name('store');

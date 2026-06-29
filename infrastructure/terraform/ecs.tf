@@ -148,7 +148,8 @@ resource "aws_ecs_task_definition" "app" {
         { name = "CACHE_STORE", value = "redis" },
         { name = "SESSION_DRIVER", value = "redis" },
         { name = "QUEUE_CONNECTION", value = "redis" },
-        { name = "LOG_CHANNEL", value = "stderr" }
+        { name = "LOG_CHANNEL", value = "stderr" },
+        { name = "LARAVEL_PDF_DRIVER", value = "dompdf" }
       ]
       mountPoints = [{
         sourceVolume  = "app-storage"
@@ -210,7 +211,8 @@ resource "aws_ecs_task_definition" "app" {
         { name = "CACHE_STORE", value = "redis" },
         { name = "SESSION_DRIVER", value = "redis" },
         { name = "QUEUE_CONNECTION", value = "redis" },
-        { name = "LOG_CHANNEL", value = "stderr" }
+        { name = "LOG_CHANNEL", value = "stderr" },
+        { name = "LARAVEL_PDF_DRIVER", value = "dompdf" }
       ]
       logConfiguration = {
         logDriver = "awslogs"

@@ -100,7 +100,7 @@ resource "aws_ecs_task_definition" "app" {
       name      = "redis"
       image     = "redis:7-alpine"
       essential = true
-      command   = ["redis-server", "--appendonly", "yes"]
+      command   = ["redis-server", "--save", "60", "1"]
       mountPoints = [{
         sourceVolume  = "redis-data"
         containerPath = "/data"

@@ -37,7 +37,7 @@ resource "aws_efs_access_point" "postgres" {
   tags = { Name = "${var.app_name}-postgres" }
 }
 
-# Access point for Redis AOF data (UID 999 = redis user in Alpine)
+# Access point for Redis RDB snapshots (UID 999 = redis user in Alpine)
 resource "aws_efs_access_point" "redis" {
   file_system_id = aws_efs_file_system.main.id
 
@@ -47,7 +47,7 @@ resource "aws_efs_access_point" "redis" {
   }
 
   root_directory {
-    path = "/redisdata"
+    path = "/rdbdata"
     creation_info {
       owner_uid   = 999
       owner_gid   = 999

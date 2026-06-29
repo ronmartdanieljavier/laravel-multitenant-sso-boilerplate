@@ -107,6 +107,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build \
+            --platform linux/amd64 \
             -t $ECR_APP:$IMAGE_TAG \
             -t $ECR_APP:latest \
             -f docker/php/Dockerfile .
@@ -119,6 +120,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build \
+            --platform linux/amd64 \
             -t $ECR_NGINX:$IMAGE_TAG \
             -t $ECR_NGINX:latest \
             -f docker/nginx/Dockerfile docker/nginx/

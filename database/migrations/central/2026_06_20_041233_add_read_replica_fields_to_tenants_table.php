@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('read_replica_host')->nullable()->after('db_password');
             $table->unsignedSmallInteger('read_replica_port')->nullable()->after('read_replica_host');
             $table->string('read_replica_username')->nullable()->after('read_replica_port');
-            $table->string('read_replica_password')->nullable()->after('read_replica_username');
+            $table->text('read_replica_password')->nullable()->after('read_replica_username');
         });
     }
 

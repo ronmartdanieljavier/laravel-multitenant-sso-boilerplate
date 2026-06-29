@@ -12,7 +12,7 @@ return new class extends Migration
             $table->string('db_host')->nullable()->change();
             $table->string('db_name')->nullable()->change();
             $table->string('db_username')->nullable()->change();
-            $table->string('db_password')->nullable()->change();
+            $table->text('db_password')->nullable()->change();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('db_host')->nullable(false)->change();
             $table->string('db_name')->nullable(false)->change();
             $table->string('db_username')->nullable(false)->change();
-            $table->string('db_password')->nullable(false)->change();
+            $table->text('db_password')->nullable(false)->change();
         });
     }
 };

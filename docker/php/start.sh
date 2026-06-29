@@ -10,9 +10,8 @@ php artisan optimize:clear
 echo "Running database migrations..."
 php artisan migrate --force
 
-echo "Caching config and routes..."
+echo "Caching config..."
 php artisan config:cache
-php artisan route:cache
 
 echo "Starting php-fpm..."
 exec php-fpm

@@ -55,4 +55,5 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 EXPOSE 9000
 
 COPY docker/php/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 CMD ["/usr/local/bin/start.sh"]

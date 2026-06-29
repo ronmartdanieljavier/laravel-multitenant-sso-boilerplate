@@ -61,7 +61,7 @@ jobs:
       - name: Prepare .env.testing
         run: |
           cp .env.example .env.testing
-          sed -i 's|DB_CONNECTION=sqlite|DB_CONNECTION=pgsql|' .env.testing
+          sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=pgsql|' .env.testing
           echo "DB_HOST=127.0.0.1" >> .env.testing
           echo "DB_PORT=5432" >> .env.testing
           echo "DB_DATABASE=laravel_test" >> .env.testing

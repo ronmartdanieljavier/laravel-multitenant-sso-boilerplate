@@ -78,3 +78,66 @@ resource "aws_efs_access_point" "storage" {
 
   tags = { Name = "${var.app_name}-storage" }
 }
+
+# Staging: PostgreSQL data (UID 70 = postgres user in postgres:17-alpine)
+resource "aws_efs_access_point" "staging_postgres" {
+  file_system_id = aws_efs_file_system.main.id
+
+  posix_user {
+    uid = 70
+    gid = 70
+  }
+
+  root_directory {
+    path = "/staging/pgdata"
+    creation_info {
+      owner_uid   = 70
+      owner_gid   = 70
+      permissions = "700"
+    }
+  }
+
+  tags = { Name = "${var.app_name}-staging-postgres" }
+}
+
+# Staging: Redis RDB snapshots (UID 999 = redis user in Alpine)
+resource "aws_efs_access_point" "staging_redis" {
+  file_system_id = aws_efs_file_system.main.id
+
+  posix_user {
+    uid = 999
+    gid = 999
+  }
+
+  root_directory {
+    path = "/staging/rdbdata"
+    creation_info {
+      owner_uid   = 999
+      owner_gid   = 999
+      permissions = "755"
+    }
+  }
+
+  tags = { Name = "${var.app_name}-staging-redis" }
+}
+
+# Staging: Laravel storage/ (UID 82 = www-data in Alpine)
+resource "aws_efs_access_point" "staging_storage" {
+  file_system_id = aws_efs_file_system.main.id
+
+  posix_user {
+    uid = 82
+    gid = 82
+  }
+
+  root_directory {
+    path = "/staging/storage"
+    creation_info {
+      owner_uid   = 82
+      owner_gid   = 82
+      permissions = "755"
+    }
+  }
+
+  tags = { Name = "${var.app_name}-staging-storage" }
+}

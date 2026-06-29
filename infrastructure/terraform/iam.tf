@@ -26,7 +26,10 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
     Statement = [{
       Effect   = "Allow"
       Action   = ["secretsmanager:GetSecretValue"]
-      Resource = [aws_secretsmanager_secret.app.arn]
+      Resource = [
+        aws_secretsmanager_secret.app.arn,
+        aws_secretsmanager_secret.staging.arn,
+      ]
     }]
   })
 }

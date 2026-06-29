@@ -36,6 +36,11 @@ output "ecs_service_name" {
   value = aws_ecs_service.app.name
 }
 
+output "staging_secrets_manager_arn" {
+  description = "ARN of the staging Secrets Manager secret — populate with staging app_key and db_password"
+  value       = aws_secretsmanager_secret.staging.arn
+}
+
 output "staging_acm_validation_cname" {
   description = "Add this CNAME in A2Hosting to validate the staging ACM SSL certificate"
   value       = tolist(aws_acm_certificate.staging.domain_validation_options)[0]

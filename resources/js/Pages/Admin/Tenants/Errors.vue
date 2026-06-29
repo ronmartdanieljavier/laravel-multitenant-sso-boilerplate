@@ -96,152 +96,159 @@ const { startTour } = useTour('admin-tenant-errors', [
 ]);
 </script>
 
+
 <template>
     <Head :title="`${tenant.name} — Error Logs`" />
 
     <main class="p-8">
-            <div v-if="flash.success" class="mb-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg px-4 py-3 text-sm">
-                {{ flash.success }}
-            </div>
+        <div v-if="flash.success" class="mb-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl px-4 py-3 text-sm">
+            {{ flash.success }}
+        </div>
 
-            <!-- Breadcrumb -->
-            <div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
-                <Link href="/admin/tenants" class="hover:text-slate-300 transition">Tenants</Link>
-                <span>/</span>
-                <span class="text-slate-300">{{ tenant.name }}</span>
-                <span>/</span>
-                <span class="text-slate-400">Errors</span>
-            </div>
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-sm text-slate-500 mb-6 font-mono">
+            <Link href="/admin/tenants" class="hover:text-slate-300 transition">Tenants</Link>
+            <span class="text-slate-700">/</span>
+            <span class="text-slate-300">{{ tenant.name }}</span>
+            <span class="text-slate-700">/</span>
+            <span class="text-slate-400">Errors</span>
+        </div>
 
-            <!-- Header -->
-            <div class="flex items-start justify-between mb-6">
-                <div>
-                    <h1 class="text-2xl font-bold text-white">{{ tenant.name }} — Error Logs</h1>
-                    <p class="text-sm text-slate-400 mt-1">All exceptions recorded in this tenant's request context.</p>
-                </div>
-                <div class="flex gap-2">
-                    <Link :href="`/admin/tenants/${tenant.id}/settings`"
-                          class="px-4 py-2 text-sm rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 transition">
-                        Settings
-                    </Link>
-                    <Link :href="`/admin/tenants/${tenant.id}/users`"
-                          class="px-4 py-2 text-sm rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 transition">
-                        Users
-                    </Link>
-                </div>
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <h1 class="font-grotesk text-2xl font-bold text-white">{{ tenant.name }} — Error Logs</h1>
+                <p class="text-sm text-slate-400 mt-1">All exceptions recorded in this tenant's request context.</p>
             </div>
-
-            <!-- Stats -->
-            <div id="tour-errors-stats" class="grid grid-cols-4 gap-4 mb-6">
-                <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
-                    <p class="text-xs text-slate-500 mb-1">Total</p>
-                    <p class="text-2xl font-bold text-white">{{ stats.total }}</p>
-                </div>
-                <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
-                    <p class="text-xs text-slate-500 mb-1">Unresolved</p>
-                    <p class="text-2xl font-bold" :class="stats.unresolved > 0 ? 'text-amber-400' : 'text-white'">{{ stats.unresolved }}</p>
-                </div>
-                <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
-                    <p class="text-xs text-slate-500 mb-1">Critical</p>
-                    <p class="text-2xl font-bold" :class="stats.critical > 0 ? 'text-red-400' : 'text-white'">{{ stats.critical }}</p>
-                </div>
-                <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
-                    <p class="text-xs text-slate-500 mb-1">Errors</p>
-                    <p class="text-2xl font-bold text-white">{{ stats.errors }}</p>
-                </div>
+            <div class="flex gap-2">
+                <Link :href="`/admin/tenants/${tenant.id}/settings`"
+                      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all">
+                    Settings
+                </Link>
+                <Link :href="`/admin/tenants/${tenant.id}/users`"
+                      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all">
+                    Users
+                </Link>
             </div>
+        </div>
 
-            <!-- Filters -->
-            <div id="tour-errors-filters" class="flex items-center gap-4 mb-4">
-                <select v-model="severity" @change="applyFilters"
-                        class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-                    <option value="">All severities</option>
-                    <option value="critical">Critical</option>
-                    <option value="error">Error</option>
-                    <option value="warning">Warning</option>
-                </select>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" v-model="unresolvedOnly" @change="applyFilters" class="accent-blue-500" />
-                    <span class="text-sm text-slate-300">Unresolved only</span>
-                </label>
+        <!-- Stats -->
+        <div id="tour-errors-stats" class="grid grid-cols-4 gap-4 mb-6">
+            <div class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+                <p class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-2">Total</p>
+                <p class="text-3xl font-semibold font-grotesk text-white">{{ stats.total }}</p>
             </div>
-
-            <!-- Table -->
-            <div v-if="logs.length === 0" class="bg-slate-900 border border-white/5 rounded-xl p-12 text-center">
-                <p class="text-slate-400">No error logs found.</p>
+            <div class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+                <p class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-2">Unresolved</p>
+                <p class="text-3xl font-semibold font-grotesk" :class="stats.unresolved > 0 ? 'text-amber-400' : 'text-white'">{{ stats.unresolved }}</p>
             </div>
+            <div class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+                <p class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-2">Critical</p>
+                <p class="text-3xl font-semibold font-grotesk" :class="stats.critical > 0 ? 'text-red-400' : 'text-white'">{{ stats.critical }}</p>
+            </div>
+            <div class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+                <p class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-2">Errors</p>
+                <p class="text-3xl font-semibold font-grotesk text-white">{{ stats.errors }}</p>
+            </div>
+        </div>
 
-            <div v-else id="tour-errors-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
-                <table class="w-full">
-                    <thead>
-                        <tr class="border-b border-white/5">
-                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Error Code</th>
-                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Exception</th>
-                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Message</th>
-                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Severity</th>
-                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Status</th>
-                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Occurred</th>
-                            <th class="px-5 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wide">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5">
-                        <tr v-for="log in logs" :key="log.id"
-                            :class="log.resolved ? 'opacity-60' : ''"
-                            class="hover:bg-white/2 transition">
-                            <td class="px-5 py-3">
+        <!-- Filters -->
+        <div id="tour-errors-filters" class="flex items-center gap-4 mb-5">
+            <select v-model="severity" @change="applyFilters"
+                    class="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition">
+                <option value="">All severities</option>
+                <option value="critical">Critical</option>
+                <option value="error">Error</option>
+                <option value="warning">Warning</option>
+            </select>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" v-model="unresolvedOnly" @change="applyFilters" class="accent-blue-500 w-4 h-4" />
+                <span class="text-sm text-slate-300">Unresolved only</span>
+            </label>
+        </div>
+
+        <!-- Empty state -->
+        <div v-if="logs.length === 0" class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-12 text-center">
+            <p class="text-slate-400">No error logs found.</p>
+        </div>
+
+        <!-- Table -->
+        <div v-else id="tour-errors-table" class="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-white/[0.06]">
+                        <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Error Code</th>
+                        <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Exception</th>
+                        <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Message</th>
+                        <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Severity</th>
+                        <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Status</th>
+                        <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Occurred</th>
+                        <th class="px-5 py-3 text-right text-xs font-mono text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/[0.04]">
+                    <tr v-for="log in logs" :key="log.id"
+                        :class="log.resolved ? 'opacity-50' : ''"
+                        class="hover:bg-white/[0.02] transition-colors">
+                        <td class="px-5 py-3.5">
+                            <Link :href="`/admin/tenants/${tenant.id}/errors/${log.id}`"
+                                  class="font-mono text-xs text-blue-400 hover:text-blue-300 transition">
+                                {{ log.error_code }}
+                            </Link>
+                        </td>
+                        <td class="px-5 py-3.5 text-xs text-slate-300 font-mono">
+                            {{ shortClass(log.exception_class) }}
+                        </td>
+                        <td class="px-5 py-3.5 text-sm text-slate-300 max-w-xs">
+                            <span class="truncate block" :title="log.message">{{ log.message }}</span>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <span :class="badge(log.severity).cls"
+                                  class="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full border">
+                                {{ badge(log.severity).label }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <span v-if="log.resolved"
+                                  class="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300">
+                                Resolved
+                            </span>
+                            <span v-else
+                                  class="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300">
+                                Open
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5 text-xs text-slate-500 font-mono">{{ formatDate(log.created_at) }}</td>
+                        <td class="px-5 py-3.5 text-right">
+                            <div class="flex items-center justify-end gap-2">
                                 <Link :href="`/admin/tenants/${tenant.id}/errors/${log.id}`"
-                                      class="font-mono text-xs text-blue-400 hover:text-blue-300 transition">
-                                    {{ log.error_code }}
+                                      class="text-xs text-slate-400 hover:text-slate-200 transition">
+                                    Detail
                                 </Link>
-                            </td>
-                            <td class="px-5 py-3 text-xs text-slate-300 font-mono">
-                                {{ shortClass(log.exception_class) }}
-                            </td>
-                            <td class="px-5 py-3 text-sm text-slate-300 max-w-xs">
-                                <span class="truncate block" :title="log.message">{{ log.message }}</span>
-                            </td>
-                            <td class="px-5 py-3">
-                                <span :class="badge(log.severity).cls"
-                                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium">
-                                    {{ badge(log.severity).label }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-3">
-                                <span v-if="log.resolved"
-                                      class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-400">
-                                    Resolved
-                                </span>
-                                <span v-else
-                                      class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-300">
-                                    Open
-                                </span>
-                            </td>
-                            <td class="px-5 py-3 text-xs text-slate-500">{{ formatDate(log.created_at) }}</td>
-                            <td class="px-5 py-3 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <Link :href="`/admin/tenants/${tenant.id}/errors/${log.id}`"
-                                          class="text-xs text-slate-400 hover:text-slate-200 transition">
-                                        Detail
-                                    </Link>
-                                    <button v-if="!log.resolved" @click="resolve(log)"
-                                            class="text-xs text-emerald-400 hover:text-emerald-300 transition">
-                                        Resolve
-                                    </button>
-                                    <button v-else @click="unresolve(log)"
-                                            class="text-xs text-amber-400 hover:text-amber-300 transition">
-                                        Reopen
-                                    </button>
-                                    <button @click="deleteLog(log)"
-                                            class="text-xs text-red-400 hover:text-red-300 transition">
-                                        Delete
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                                <button v-if="!log.resolved" @click="resolve(log)"
+                                        class="text-xs text-emerald-400 hover:text-emerald-300 transition cursor-pointer">
+                                    Resolve
+                                </button>
+                                <button v-else @click="unresolve(log)"
+                                        class="text-xs text-amber-400 hover:text-amber-300 transition cursor-pointer">
+                                    Reopen
+                                </button>
+                                <button @click="deleteLog(log)"
+                                        class="text-xs text-red-400 hover:text-red-300 transition cursor-pointer">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </main>
 
     <TourButton @click="startTour" />
 </template>
+
+<style scoped>
+.font-grotesk { font-family: 'Space Grotesk', sans-serif; }
+.font-mono { font-family: 'DM Mono', monospace; }
+</style>

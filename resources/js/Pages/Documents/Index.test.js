@@ -175,21 +175,21 @@ describe('Documents/Index', () => {
 
     it('applies correct css class for report source badge', () => {
         const wrapper = mountPage(buildDocuments([reportDoc]));
-        const badge = wrapper.find('span.bg-blue-500\\/15');
+        const badge = wrapper.find('span.bg-blue-500\\/10');
         expect(badge.exists()).toBe(true);
         expect(badge.text()).toBe('Report');
     });
 
     it('applies correct css class for subscription source badge', () => {
         const wrapper = mountPage(buildDocuments([subscriptionDoc]));
-        const badge = wrapper.find('span.bg-purple-500\\/15');
+        const badge = wrapper.find('span.bg-purple-500\\/10');
         expect(badge.exists()).toBe(true);
         expect(badge.text()).toBe('Subscription');
     });
 
     it('applies correct css class for upload source badge', () => {
         const wrapper = mountPage(buildDocuments([uploadDoc]));
-        const badge = wrapper.find('span.bg-slate-700');
+        const badge = wrapper.find('span.bg-slate-700\\/30');
         expect(badge.exists()).toBe(true);
         expect(badge.text()).toBe('User Upload');
     });
@@ -275,13 +275,13 @@ describe('Documents/Index', () => {
 
         it('opens the modal when Upload Document button is clicked', async () => {
             const wrapper = mountPage();
-            await wrapper.find('button.bg-emerald-600').trigger('click');
+            await wrapper.findAll('button').find(b => b.text().includes('Upload Document')).trigger('click');
             expect(wrapper.find('form').exists()).toBe(true);
         });
 
         it('closes the modal when Cancel is clicked', async () => {
             const wrapper = mountPage();
-            await wrapper.find('button.bg-emerald-600').trigger('click');
+            await wrapper.findAll('button').find(b => b.text().includes('Upload Document')).trigger('click');
             expect(wrapper.find('form').exists()).toBe(true);
             const cancelBtn = wrapper.findAll('button').find(b => b.text() === 'Cancel');
             await cancelBtn.trigger('click');
@@ -290,7 +290,7 @@ describe('Documents/Index', () => {
 
         it('closes the modal after successful upload', async () => {
             const wrapper = mountPage();
-            await wrapper.find('button.bg-emerald-600').trigger('click');
+            await wrapper.findAll('button').find(b => b.text().includes('Upload Document')).trigger('click');
             expect(wrapper.find('form').exists()).toBe(true);
             await wrapper.find('form').trigger('submit');
             expect(wrapper.find('form').exists()).toBe(false);
@@ -363,7 +363,7 @@ describe('Documents/Index', () => {
 
             const wrapper = mountPage(buildDocuments([uploadDoc]));
             await wrapper.find('tbody input[type="checkbox"]').setValue(true);
-            await wrapper.find('button.bg-slate-700').trigger('click');
+            await wrapper.findAll('button').find(b => b.text().includes('Download Selected')).trigger('click');
 
             expect(submitSpy).toHaveBeenCalled();
             createElementSpy.mockRestore();

@@ -20,8 +20,8 @@ test.describe('Tenant portal', () => {
 
     test('shows quick action links', async ({ page }) => {
         await expect(page.getByRole('link', { name: /queue report/i })).toBeVisible();
-        await expect(page.getByRole('link', { name: /browse documents/i })).toBeVisible();
-        await expect(page.getByRole('link', { name: /review errors/i })).toBeVisible();
+        await expect(page.locator('#tour-quick-actions a[href="/documents"]')).toBeVisible();
+        await expect(page.locator('#tour-quick-actions a[href="/tenant/errors"]')).toBeVisible();
     });
 
     test('shows recent activity sections', async ({ page }) => {

@@ -6,6 +6,7 @@ const postMock = vi.fn();
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<slot />' },
+    Link: { template: '<a><slot /></a>' },
     useForm: () => ({
         email: '',
         password: '',

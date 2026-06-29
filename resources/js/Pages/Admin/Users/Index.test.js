@@ -122,15 +122,14 @@ describe('Admin/Users/Index', () => {
         expect(editButtons.length).toBe(2);
     });
 
-    it('renders the Users nav item as active', () => {
+    it('renders the User Management page heading', () => {
         const wrapper = mountPage();
-        const activeLink = wrapper.findAll('a').find(a => a.classes().includes('border-blue-500'));
-        expect(activeLink?.text()).toContain('Users');
+        expect(wrapper.text()).toContain('User Management');
     });
 
     it('does not show missing settings banner when settings are complete', () => {
         const wrapper = mountPage();
-        expect(wrapper.find('.bg-amber-500\\/10').exists()).toBe(false);
+        expect(wrapper.find('.missing-settings-banner').exists()).toBe(false);
     });
 
     describe('Invite modal', () => {

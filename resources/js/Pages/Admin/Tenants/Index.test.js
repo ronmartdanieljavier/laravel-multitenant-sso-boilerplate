@@ -225,8 +225,8 @@ describe('Admin/Tenants/Index', () => {
     describe('users online display', () => {
         it('shows total user count for each tenant', () => {
             const wrapper = mountPage();
-            expect(wrapper.text()).toContain('3 total');
-            expect(wrapper.text()).toContain('1 total');
+            expect(wrapper.text()).toContain('3');
+            expect(wrapper.text()).toContain('1');
         });
 
         it('shows online count in green when users are logged in', () => {

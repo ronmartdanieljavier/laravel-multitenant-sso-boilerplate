@@ -3,6 +3,9 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import TourButton from '../../Partials/TourButton.vue';
 import { useTour } from '../../../composables/useTour';
+import AdminLayout from '../../../Layouts/AdminLayout.vue';
+
+defineOptions({ layout: AdminLayout });
 
 const page = usePage();
 const missingSettings = page.props.missingRequiredSettings ?? [];
@@ -231,281 +234,206 @@ const { startTour } = useTour('admin-tenants', [
 <template>
     <Head title="Tenant Management" />
 
-    <div class="min-h-screen bg-slate-950 text-slate-100">
-        <!-- Sidebar -->
-        <aside class="fixed inset-y-0 left-0 w-60 bg-slate-900 border-r border-white/5 flex flex-col">
-            <div class="h-16 flex items-center px-6 border-b border-white/5">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    <div class="flex flex-col flex-1">
+        <!-- Flash success -->
+        <div v-if="page.props.flash?.success"
+             class="bg-emerald-500/10 border-b border-emerald-500/20 px-8 py-3 flex items-center gap-3">
+            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <p class="text-sm text-emerald-300">{{ page.props.flash.success }}</p>
+        </div>
+
+        <!-- Header -->
+        <header id="tour-tenants-header" class="h-16 border-b border-white/[0.05] flex items-center px-8 shrink-0 bg-[#030712]">
+            <h1 class="font-grotesk text-lg font-semibold text-white">Tenant Management</h1>
+            <div class="ml-auto flex items-center gap-3">
+                <button @click="migrateAll"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all">
+                    Run All Migrations
+                </button>
+                <button @click="toggleMaintenanceAll(true)"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-amber-400 bg-amber-500/[0.08] border border-amber-500/20 hover:bg-amber-500/15 cursor-pointer transition-all">
+                    Maintenance: All On
+                </button>
+                <button @click="toggleMaintenanceAll(false)"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-emerald-400 bg-emerald-500/[0.08] border border-emerald-500/20 hover:bg-emerald-500/15 cursor-pointer transition-all">
+                    Maintenance: All Off
+                </button>
+                <button @click="openCreate"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer transition-all duration-150"
+                        style="background: linear-gradient(135deg, #2563eb, #7c3aed); box-shadow: 0 0 20px rgba(99,102,241,0.25)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
+                    Add Tenant
+                </button>
+            </div>
+        </header>
+
+        <main class="p-8 space-y-6">
+            <!-- Summary Cards -->
+            <div id="tour-tenants-summary" class="grid grid-cols-5 gap-4">
+                <div v-for="card in summaryCards" :key="card.key"
+                     class="bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm rounded-2xl p-5">
+                    <p class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-2">{{ card.label }}</p>
+                    <p :class="card.color" class="text-3xl font-semibold font-grotesk">{{ summary[card.key] }}</p>
                 </div>
-                <span class="font-semibold text-white">SSO Admin</span>
             </div>
-            <nav class="flex-1 px-3 py-4 space-y-1">
-                <Link href="/admin"
-                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
-                    Dashboard
-                </Link>
-                <Link href="/admin/users"
-                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
-                    Users
-                </Link>
-                <Link href="/admin/apps"
-                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
-                    Apps
-                </Link>
-                <Link href="/admin/tenants"
-                      class="flex items-center gap-3 py-2 text-sm font-medium transition border-l-2 border-blue-500 rounded-r-lg pl-[10px] pr-3 text-white">
-                    Tenants
-                </Link>
-                <Link href="/admin/settings"
-                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-white/5">
-                    Settings
-                </Link>
-            </nav>
-            <!-- App selection -->
-            <div class="px-3 pb-1 shrink-0">
-                <Link href="/apps" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition">
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                    App Selection
-                </Link>
-            </div>
-            <div class="p-4 border-t border-white/5">
-                <div class="flex items-center gap-3">
-                    <Link href="/profile" class="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition">
-                        <div v-if="page.props.auth.user?.profile_picture_url" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                            <img :src="page.props.auth.user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
-                        </div>
-                        <div v-else class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
-                            {{ page.props.auth.user?.name?.[0]?.toUpperCase() ?? 'A' }}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-white truncate">{{ page.props.auth.user?.name ?? 'Admin' }}</p>
-                            <p class="text-xs text-slate-400 truncate">{{ page.props.auth.user?.email }}</p>
-                        </div>
-                    </Link>
-                    <button @click="logout" title="Sign out" class="text-slate-400 hover:text-white transition shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+
+            <!-- Tenants Table -->
+            <div id="tour-tenants-table" class="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                    <h3 class="font-grotesk font-semibold text-white">
+                        All Tenants
+                        <span v-if="healthFilter" class="ml-2 text-xs font-normal text-slate-500">— filtered by</span>
+                    </h3>
+                    <button v-if="healthFilter"
+                            @click="clearHealthFilter"
+                            :class="{
+                                'bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20': healthFilter === 'healthy',
+                                'bg-amber-500/10 border-amber-500/20 text-amber-300 hover:bg-amber-500/20': healthFilter === 'warning',
+                                'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20': healthFilter === 'critical',
+                            }"
+                            class="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full border capitalize transition cursor-pointer">
+                        {{ healthFilter }}
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-            </div>
-        </aside>
-
-        <!-- Main -->
-        <div class="ml-60">
-            <!-- Missing settings banner -->
-            <div v-if="missingSettings.length > 0"
-                 class="bg-amber-500/10 border-b border-amber-500/20 px-8 py-3 flex items-center gap-3">
-                <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                </svg>
-                <p class="text-sm text-amber-300">
-                    Required settings not configured:
-                    <span class="font-medium">{{ missingSettings.join(', ') }}</span>.
-                    <Link href="/admin/settings" class="underline hover:text-amber-200 ml-1">Go to Settings</Link>
-                </p>
-            </div>
-
-            <!-- Flash success -->
-            <div v-if="page.props.flash?.success"
-                 class="bg-emerald-500/10 border-b border-emerald-500/20 px-8 py-3 flex items-center gap-3">
-                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <p class="text-sm text-emerald-300">{{ page.props.flash.success }}</p>
-            </div>
-
-            <!-- Header -->
-            <header id="tour-tenants-header" class="h-16 bg-slate-900/50 border-b border-white/5 flex items-center justify-between px-8">
-                <h2 class="text-lg font-semibold">Tenant Management</h2>
-                <div class="flex items-center gap-3">
-                    <button @click="migrateAll"
-                            class="text-sm px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
-                        Run All Migrations
-                    </button>
-                    <button @click="toggleMaintenanceAll(true)"
-                            class="text-sm px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 transition">
-                        Maintenance: All On
-                    </button>
-                    <button @click="toggleMaintenanceAll(false)"
-                            class="text-sm px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 transition">
-                        Maintenance: All Off
-                    </button>
-                    <button @click="openCreate"
-                            class="text-sm px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition">
-                        + Add Tenant
-                    </button>
-                </div>
-            </header>
-
-            <main class="p-8 space-y-8">
-                <!-- Summary Cards -->
-                <div id="tour-tenants-summary" class="grid grid-cols-5 gap-4">
-                    <div v-for="card in summaryCards" :key="card.key"
-                         class="bg-slate-900 border border-white/5 rounded-xl p-5">
-                        <p class="text-slate-400 text-sm">{{ card.label }}</p>
-                        <p :class="card.color" class="text-2xl font-bold mt-1">{{ summary[card.key] }}</p>
-                    </div>
-                </div>
-
-                <!-- Tenants Table -->
-                <div id="tour-tenants-table" class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
-                    <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                        <h3 class="font-semibold text-white">
-                            All Tenants
-                            <span v-if="healthFilter" class="ml-2 text-xs font-normal text-slate-400">
-                                — filtered by
-                            </span>
-                        </h3>
-                        <button v-if="healthFilter"
-                                @click="clearHealthFilter"
-                                :class="{
-                                    'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30': healthFilter === 'healthy',
-                                    'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30': healthFilter === 'warning',
-                                    'bg-red-500/20 text-red-400 hover:bg-red-500/30': healthFilter === 'critical',
-                                }"
-                                class="flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full capitalize transition">
-                            {{ healthFilter }}
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                    <table class="w-full text-sm">
-                        <thead class="text-slate-400 border-b border-white/5">
-                            <tr>
-                                <th class="text-left px-6 py-3 font-medium">Tenant</th>
-                                <th class="text-left px-6 py-3 font-medium">Status</th>
-                                <th class="text-left px-6 py-3 font-medium">Health</th>
-                                <th class="text-left px-6 py-3 font-medium">Users</th>
-                                <th class="text-left px-6 py-3 font-medium">Migrations</th>
-                                <th class="text-left px-6 py-3 font-medium">Reports (P/F)</th>
-                                <th class="text-left px-6 py-3 font-medium">Read Replica</th>
-                                <th class="text-left px-6 py-3 font-medium">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
-                            <tr v-for="tenant in filteredTenants" :key="tenant.id" class="hover:bg-white/2 transition">
-                                <td class="px-6 py-4">
-                                    <p class="font-medium text-white">{{ tenant.name }}</p>
-                                    <p class="text-xs text-slate-500">{{ tenant.slug }}</p>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-col gap-1">
-                                        <span :class="tenant.is_active ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-500/20 text-slate-400'"
-                                              class="text-xs px-2 py-0.5 rounded-full w-fit">
-                                            {{ tenant.is_active ? 'Active' : 'Inactive' }}
-                                        </span>
-                                        <span v-if="tenant.is_maintenance"
-                                              class="text-xs px-2 py-0.5 rounded-full w-fit bg-amber-500/20 text-amber-300">
-                                            Maintenance
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span :class="healthBadge[tenant.health_status]"
-                                          class="text-xs px-2 py-0.5 rounded-full capitalize">
-                                        {{ tenant.health_status }}
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-white/[0.06]">
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Tenant</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Status</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Health</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Users</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Migrations</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Reports P/F</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Read Replica</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/[0.04]">
+                        <tr v-for="tenant in filteredTenants" :key="tenant.id" class="hover:bg-white/[0.02] transition-colors">
+                            <td class="px-5 py-3.5">
+                                <p class="font-medium text-white">{{ tenant.name }}</p>
+                                <p class="text-xs font-mono text-slate-500 mt-0.5">{{ tenant.slug }}</p>
+                            </td>
+                            <td class="px-5 py-3.5">
+                                <div class="flex flex-col gap-1">
+                                    <span :class="tenant.is_active
+                                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                                        : 'bg-slate-500/10 border-slate-500/20 text-slate-400'"
+                                          class="inline-flex items-center text-xs font-mono px-2 py-0.5 rounded-full border w-fit">
+                                        {{ tenant.is_active ? 'Active' : 'Inactive' }}
                                     </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-col gap-1">
-                                        <span class="text-slate-300">{{ tenant.user_count }} total</span>
-                                        <span class="inline-flex items-center gap-1 text-xs"
-                                              :class="tenant.logged_in_count > 0 ? 'text-emerald-400' : 'text-slate-600'">
-                                            <span class="w-1.5 h-1.5 rounded-full inline-block"
-                                                  :class="tenant.logged_in_count > 0 ? 'bg-emerald-400' : 'bg-slate-600'"></span>
-                                            {{ tenant.logged_in_count }} online
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-slate-400">{{ tenant.migration_count }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="text-slate-400">{{ tenant.pending_reports }}</span>
-                                    <span class="text-slate-600 mx-1">/</span>
-                                    <span :class="tenant.failed_reports > 0 ? 'text-red-400' : 'text-slate-400'">{{ tenant.failed_reports }}</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span :class="tenant.has_read_replica ? 'bg-blue-600/20 text-blue-300' : 'bg-slate-500/20 text-slate-500'"
-                                          class="text-xs px-2 py-0.5 rounded-full">
-                                        {{ tenant.has_read_replica ? 'Yes' : 'No' }}
+                                    <span v-if="tenant.is_maintenance"
+                                          class="inline-flex items-center text-xs font-mono px-2 py-0.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-300 w-fit">
+                                        Maintenance
                                     </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-col gap-1.5">
-                                        <!-- Navigation links -->
-                                        <div class="flex items-center gap-1">
-                                            <button @click="openEdit(tenant)"
-                                                    class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
-                                                Edit
-                                            </button>
-                                            <Link :href="`/admin/tenants/${tenant.id}/settings`"
-                                                  class="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-300 hover:bg-blue-500/30 transition">
-                                                Settings
-                                            </Link>
-                                            <Link :href="`/admin/tenants/${tenant.id}/users`"
-                                                  class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
-                                                Users
-                                            </Link>
-                                            <Link :href="`/admin/tenants/${tenant.id}/reports`"
-                                                  class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition">
-                                                Reports
-                                            </Link>
-                                            <Link :href="`/admin/tenants/${tenant.id}/errors`"
-                                                  class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
-                                                Errors
-                                            </Link>
-                                        </div>
-                                        <!-- Admin actions -->
-                                        <div class="flex items-center gap-1">
-                                            <button @click="migrateTenant(tenant)"
-                                                    class="text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
-                                                Migrate
-                                            </button>
-                                            <button @click="toggleActive(tenant)"
-                                                    :class="tenant.is_active
-                                                        ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
-                                                        : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'"
-                                                    class="text-xs px-2 py-1 rounded transition">
-                                                {{ tenant.is_active ? 'Deactivate' : 'Activate' }}
-                                            </button>
-                                            <button @click="toggleMaintenance(tenant)"
-                                                    :class="tenant.is_maintenance
-                                                        ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
-                                                        : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'"
-                                                    class="text-xs px-2 py-1 rounded transition">
-                                                {{ tenant.is_maintenance ? 'End Maint.' : 'Maintenance' }}
-                                            </button>
-                                            <button @click="deleteTenant(tenant)"
-                                                    class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
-                                                Delete
-                                            </button>
-                                        </div>
+                                </div>
+                            </td>
+                            <td class="px-5 py-3.5">
+                                <span :class="healthBadge[tenant.health_status]"
+                                      class="inline-flex items-center text-xs font-mono px-2.5 py-1 rounded-full capitalize"
+                                      :style="tenant.health_status === 'healthy' ? 'background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2)' :
+                                              tenant.health_status === 'warning' ? 'background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2)' :
+                                              'background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2)'">
+                                    {{ tenant.health_status }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3.5">
+                                <p class="text-slate-300 text-sm">{{ tenant.user_count }}</p>
+                                <span class="inline-flex items-center gap-1 text-xs mt-0.5"
+                                      :class="tenant.logged_in_count > 0 ? 'text-emerald-400' : 'text-slate-600'">
+                                    <span class="w-1.5 h-1.5 rounded-full inline-block"
+                                          :class="tenant.logged_in_count > 0 ? 'bg-emerald-400' : 'bg-slate-600'"></span>
+                                    {{ tenant.logged_in_count }} online
+                                </span>
+                            </td>
+                            <td class="px-5 py-3.5 text-slate-400 font-mono text-xs">{{ tenant.migration_count }}</td>
+                            <td class="px-5 py-3.5 font-mono text-xs">
+                                <span class="text-slate-400">{{ tenant.pending_reports }}</span>
+                                <span class="text-slate-600 mx-1">/</span>
+                                <span :class="tenant.failed_reports > 0 ? 'text-red-400' : 'text-slate-400'">{{ tenant.failed_reports }}</span>
+                            </td>
+                            <td class="px-5 py-3.5">
+                                <span :class="tenant.has_read_replica
+                                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-300'
+                                    : 'bg-slate-500/10 border-slate-500/20 text-slate-500'"
+                                      class="inline-flex items-center text-xs font-mono px-2 py-0.5 rounded-full border">
+                                    {{ tenant.has_read_replica ? 'Yes' : 'No' }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3.5">
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex items-center gap-1 flex-wrap">
+                                        <button @click="openEdit(tenant)"
+                                                class="text-xs px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:bg-white/[0.07] transition cursor-pointer">
+                                            Edit
+                                        </button>
+                                        <Link :href="`/admin/tenants/${tenant.id}/settings`"
+                                              class="text-xs px-2 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-500/20 transition">
+                                            Settings
+                                        </Link>
+                                        <Link :href="`/admin/tenants/${tenant.id}/users`"
+                                              class="text-xs px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:bg-white/[0.07] transition">
+                                            Users
+                                        </Link>
+                                        <Link :href="`/admin/tenants/${tenant.id}/reports`"
+                                              class="text-xs px-2 py-1 rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 transition">
+                                            Reports
+                                        </Link>
+                                        <Link :href="`/admin/tenants/${tenant.id}/errors`"
+                                              class="text-xs px-2 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition">
+                                            Errors
+                                        </Link>
                                     </div>
-                                </td>
-                            </tr>
-                            <tr v-if="tenants.length === 0">
-                                <td colspan="8" class="px-6 py-8 text-center text-slate-500">No tenants found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </main>
-        </div>
+                                    <div class="flex items-center gap-1 flex-wrap">
+                                        <button @click="migrateTenant(tenant)"
+                                                class="text-xs px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:bg-white/[0.07] transition cursor-pointer">
+                                            Migrate
+                                        </button>
+                                        <button @click="toggleActive(tenant)"
+                                                :class="tenant.is_active
+                                                    ? 'bg-amber-500/[0.08] border-amber-500/20 text-amber-300 hover:bg-amber-500/15'
+                                                    : 'bg-emerald-500/[0.08] border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/15'"
+                                                class="text-xs px-2 py-1 rounded-md border transition cursor-pointer">
+                                            {{ tenant.is_active ? 'Deactivate' : 'Activate' }}
+                                        </button>
+                                        <button @click="toggleMaintenance(tenant)"
+                                                :class="tenant.is_maintenance
+                                                    ? 'bg-emerald-500/[0.08] border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/15'
+                                                    : 'bg-amber-500/[0.08] border-amber-500/20 text-amber-300 hover:bg-amber-500/15'"
+                                                class="text-xs px-2 py-1 rounded-md border transition cursor-pointer">
+                                            {{ tenant.is_maintenance ? 'End Maint.' : 'Maintenance' }}
+                                        </button>
+                                        <button @click="deleteTenant(tenant)"
+                                                class="text-xs px-2 py-1 rounded-md bg-red-500/[0.08] border border-red-500/20 text-red-400 hover:bg-red-500/15 transition cursor-pointer">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr v-if="tenants.length === 0">
+                            <td colspan="8" class="px-5 py-12 text-center text-slate-500 font-mono text-sm">No tenants found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
     </div>
 
     <!-- Create Modal -->
     <div v-if="showCreateModal"
-         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-        <div class="bg-slate-900 border border-white/10 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                <h3 class="font-semibold text-white">Add Tenant</h3>
-                <button @click="closeCreate" class="text-slate-400 hover:text-white transition">
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-[#0d1117] border border-white/[0.08] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                <h3 class="font-grotesk font-semibold text-white">Add Tenant</h3>
+                <button @click="closeCreate" class="text-slate-500 hover:text-white transition cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -514,106 +442,95 @@ const { startTour } = useTour('admin-tenants', [
             <form @submit.prevent="submitCreate" class="p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Name *</label>
-                        <input v-model="createForm.name" @input="autoSlug"
-                               type="text" placeholder="Acme Corp"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Name *</label>
+                        <input v-model="createForm.name" @input="autoSlug" type="text" placeholder="Acme Corp"
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="createForm.errors.name" class="text-red-400 text-xs mt-1">{{ createForm.errors.name }}</p>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Slug *</label>
-                        <input v-model="createForm.slug"
-                               type="text" placeholder="acme-corp"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Slug *</label>
+                        <input v-model="createForm.slug" type="text" placeholder="acme-corp"
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="createForm.errors.slug" class="text-red-400 text-xs mt-1">{{ createForm.errors.slug }}</p>
                     </div>
                 </div>
-
-                <p class="text-xs text-slate-500 font-medium uppercase tracking-wide pt-2">Database Connection</p>
+                <p class="text-xs font-mono text-slate-500 uppercase tracking-wide pt-2">Database Connection</p>
                 <div class="grid grid-cols-3 gap-4">
                     <div class="col-span-2">
-                        <label class="block text-xs text-slate-400 mb-1">Host</label>
-                        <input v-model="createForm.db_host"
-                               type="text" placeholder="127.0.0.1"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Host</label>
+                        <input v-model="createForm.db_host" type="text" placeholder="127.0.0.1"
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="createForm.errors.db_host" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_host }}</p>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Port</label>
-                        <input v-model="createForm.db_port"
-                               type="number" placeholder="5432"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Port</label>
+                        <input v-model="createForm.db_port" type="number" placeholder="5432"
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="createForm.errors.db_port" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_port }}</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Database Name</label>
-                        <input v-model="createForm.db_name"
-                               type="text" placeholder="tenant_acme"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Database Name</label>
+                        <input v-model="createForm.db_name" type="text" placeholder="tenant_acme"
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="createForm.errors.db_name" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_name }}</p>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Username</label>
-                        <input v-model="createForm.db_username"
-                               type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Username</label>
+                        <input v-model="createForm.db_username" type="text"
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="createForm.errors.db_username" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_username }}</p>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Password</label>
-                    <input v-model="createForm.db_password"
-                           type="password"
-                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Password</label>
+                    <input v-model="createForm.db_password" type="password"
+                           class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                     <p v-if="createForm.errors.db_password" class="text-red-400 text-xs mt-1">{{ createForm.errors.db_password }}</p>
                 </div>
-
-                <!-- Read Replica toggle -->
                 <button type="button" @click="showCreateReadReplica = !showCreateReadReplica"
-                        class="text-xs text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
+                        class="text-xs text-blue-400 hover:text-blue-300 transition flex items-center gap-1.5 cursor-pointer">
                     <svg :class="showCreateReadReplica ? 'rotate-90' : ''" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                     {{ showCreateReadReplica ? 'Hide' : 'Add' }} Read Replica
                 </button>
-
-                <div v-if="showCreateReadReplica" class="space-y-4 border border-white/5 rounded-lg p-4">
-                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Read Replica</p>
+                <div v-if="showCreateReadReplica" class="space-y-4 border border-white/[0.06] rounded-xl p-4">
+                    <p class="text-xs font-mono text-slate-500 uppercase tracking-wide">Read Replica</p>
                     <div class="grid grid-cols-3 gap-4">
                         <div class="col-span-2">
-                            <label class="block text-xs text-slate-400 mb-1">Host</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Host</label>
                             <input v-model="createForm.read_replica_host" type="text"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                                   class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Port</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Port</label>
                             <input v-model="createForm.read_replica_port" type="number"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                                   class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Username</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Username</label>
                             <input v-model="createForm.read_replica_username" type="text"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                                   class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Password</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Password</label>
                             <input v-model="createForm.read_replica_password" type="password"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                                   class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         </div>
                     </div>
                 </div>
-
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="closeCreate"
-                            class="px-4 py-2 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all">
                         Cancel
                     </button>
                     <button type="submit" :disabled="createForm.processing"
-                            class="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition disabled:opacity-50">
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer transition-all duration-150 disabled:opacity-50"
+                            style="background: linear-gradient(135deg, #2563eb, #7c3aed); box-shadow: 0 0 20px rgba(99,102,241,0.25)">
                         {{ createForm.processing ? 'Creating…' : 'Create Tenant' }}
                     </button>
                 </div>
@@ -623,11 +540,11 @@ const { startTour } = useTour('admin-tenants', [
 
     <!-- Edit Modal -->
     <div v-if="showEditModal"
-         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-        <div class="bg-slate-900 border border-white/10 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                <h3 class="font-semibold text-white">Edit Tenant</h3>
-                <button @click="closeEdit" class="text-slate-400 hover:text-white transition">
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-[#0d1117] border border-white/[0.08] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                <h3 class="font-grotesk font-semibold text-white">Edit Tenant</h3>
+                <button @click="closeEdit" class="text-slate-500 hover:text-white transition cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -636,102 +553,98 @@ const { startTour } = useTour('admin-tenants', [
             <form @submit.prevent="submitEdit" class="p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Name *</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Name *</label>
                         <input v-model="editForm.name" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="editForm.errors.name" class="text-red-400 text-xs mt-1">{{ editForm.errors.name }}</p>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Slug *</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Slug *</label>
                         <input v-model="editForm.slug" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="editForm.errors.slug" class="text-red-400 text-xs mt-1">{{ editForm.errors.slug }}</p>
                     </div>
                 </div>
-
-                <p class="text-xs text-slate-500 font-medium uppercase tracking-wide pt-2">Database Connection</p>
+                <p class="text-xs font-mono text-slate-500 uppercase tracking-wide pt-2">Database Connection</p>
                 <div class="grid grid-cols-3 gap-4">
                     <div class="col-span-2">
-                        <label class="block text-xs text-slate-400 mb-1">Host</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Host</label>
                         <input v-model="editForm.db_host" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="editForm.errors.db_host" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_host }}</p>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Port</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Port</label>
                         <input v-model="editForm.db_port" type="number"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="editForm.errors.db_port" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_port }}</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Database Name</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Database Name</label>
                         <input v-model="editForm.db_name" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="editForm.errors.db_name" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_name }}</p>
                     </div>
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Username</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Username</label>
                         <input v-model="editForm.db_username" type="text"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         <p v-if="editForm.errors.db_username" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_username }}</p>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">
                         Password
-                        <span v-if="editingTenant?.is_password_set" class="text-slate-500 ml-1">(leave blank to keep existing)</span>
+                        <span v-if="editingTenant?.is_password_set" class="text-slate-600 normal-case">(leave blank to keep existing)</span>
                     </label>
                     <input v-model="editForm.db_password" type="password"
-                           class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                           class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                     <p v-if="editForm.errors.db_password" class="text-red-400 text-xs mt-1">{{ editForm.errors.db_password }}</p>
                 </div>
-
-                <!-- Read Replica toggle -->
                 <button type="button" @click="showEditReadReplica = !showEditReadReplica"
-                        class="text-xs text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
+                        class="text-xs text-blue-400 hover:text-blue-300 transition flex items-center gap-1.5 cursor-pointer">
                     <svg :class="showEditReadReplica ? 'rotate-90' : ''" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                     {{ showEditReadReplica ? 'Hide' : 'Edit' }} Read Replica
                 </button>
-
-                <div v-if="showEditReadReplica" class="space-y-4 border border-white/5 rounded-lg p-4">
-                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Read Replica</p>
+                <div v-if="showEditReadReplica" class="space-y-4 border border-white/[0.06] rounded-xl p-4">
+                    <p class="text-xs font-mono text-slate-500 uppercase tracking-wide">Read Replica</p>
                     <div class="grid grid-cols-3 gap-4">
                         <div class="col-span-2">
-                            <label class="block text-xs text-slate-400 mb-1">Host</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Host</label>
                             <input v-model="editForm.read_replica_host" type="text"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                                   class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Port</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Port</label>
                             <input v-model="editForm.read_replica_port" type="number"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                                   class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Username</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Username</label>
                             <input v-model="editForm.read_replica_username" type="text"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                                   class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Password <span class="text-slate-500">(blank = keep existing)</span></label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Password <span class="text-slate-600 normal-case">(blank = keep)</span></label>
                             <input v-model="editForm.read_replica_password" type="password"
-                                   class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                                   class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition" />
                         </div>
                     </div>
                 </div>
-
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="closeEdit"
-                            class="px-4 py-2 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition">
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all">
                         Cancel
                     </button>
                     <button type="submit" :disabled="editForm.processing"
-                            class="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition disabled:opacity-50">
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer transition-all duration-150 disabled:opacity-50"
+                            style="background: linear-gradient(135deg, #2563eb, #7c3aed); box-shadow: 0 0 20px rgba(99,102,241,0.25)">
                         {{ editForm.processing ? 'Saving…' : 'Save Changes' }}
                     </button>
                 </div>
@@ -741,3 +654,8 @@ const { startTour } = useTour('admin-tenants', [
 
     <TourButton @click="startTour" />
 </template>
+
+<style scoped>
+.font-grotesk { font-family: 'Space Grotesk', sans-serif; }
+.font-mono { font-family: 'DM Mono', monospace; }
+</style>

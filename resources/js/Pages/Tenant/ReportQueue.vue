@@ -27,24 +27,24 @@ usePoll(4000, { only: ['reports'] }, { autoStart: true });
 // ── Status / format badges ──────────────────────────────────────────────────
 
 const statusConfig = {
-    pending:    { label: 'Pending',    cls: 'bg-amber-500/20 text-amber-300' },
-    processing: { label: 'Processing', cls: 'bg-blue-500/20 text-blue-300 animate-pulse' },
-    success:    { label: 'Done',       cls: 'bg-emerald-500/20 text-emerald-400' },
-    failed:     { label: 'Failed',     cls: 'bg-red-500/20 text-red-400' },
+    pending:    { label: 'Pending',    cls: 'bg-amber-500/10 border-amber-500/20 text-amber-300' },
+    processing: { label: 'Processing', cls: 'bg-blue-500/10 border-blue-500/20 text-blue-300 animate-pulse' },
+    success:    { label: 'Done',       cls: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' },
+    failed:     { label: 'Failed',     cls: 'bg-red-500/10 border-red-500/20 text-red-300' },
 };
 
 function statusBadge(status) {
-    return statusConfig[status] ?? { label: status, cls: 'bg-slate-700 text-slate-400' };
+    return statusConfig[status] ?? { label: status, cls: 'bg-slate-700/50 border-white/10 text-slate-400' };
 }
 
 const formatConfig = {
-    pdf:    { label: 'PDF',    cls: 'bg-red-500/20 text-red-300' },
-    excel:  { label: 'Excel',  cls: 'bg-emerald-500/20 text-emerald-300' },
-    screen: { label: 'Screen', cls: 'bg-blue-500/20 text-blue-300' },
+    pdf:    { label: 'PDF',    cls: 'bg-red-500/10 border-red-500/20 text-red-300' },
+    excel:  { label: 'Excel',  cls: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' },
+    screen: { label: 'Screen', cls: 'bg-blue-500/10 border-blue-500/20 text-blue-300' },
 };
 
 function formatBadge(format) {
-    return formatConfig[format] ?? { label: format, cls: 'bg-slate-700 text-slate-400' };
+    return formatConfig[format] ?? { label: format, cls: 'bg-slate-700/50 border-white/10 text-slate-400' };
 }
 
 function formatDate(val) {
@@ -189,216 +189,232 @@ const { startTour } = useTour('tenant-report-queue', [
 <template>
     <Head title="Report Queue" />
 
-    <main class="flex-1 px-8 py-10">
-
-        <!-- Header -->
-        <div id="tour-rq-header" class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-xl font-semibold text-white">Report Queue</h1>
-                <p class="text-sm text-slate-500 mt-0.5">All report jobs for this tenant · auto-refreshes every 4 s while jobs are active.</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <div v-if="hasActiveJobs" class="flex items-center gap-2 text-xs text-blue-400">
+    <div class="flex flex-col flex-1 bg-[#030712]">
+        <header id="tour-rq-header" class="h-16 border-b border-white/[0.05] flex items-center px-8 shrink-0 bg-[#030712]">
+            <h1 class="font-grotesk text-lg font-semibold text-white">Report Queue</h1>
+            <p class="text-slate-500 text-xs ml-3 mt-0.5 hidden sm:block">auto-refreshes every 4s while jobs are active</p>
+            <div class="ml-auto flex items-center gap-3">
+                <div v-if="hasActiveJobs" class="flex items-center gap-2 text-xs text-blue-400 font-mono">
                     <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse inline-block"></span>
                     Live
                 </div>
                 <button id="tour-rq-generate"
                         @click="showGenerateModal = true"
-                        class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition">
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer transition-all duration-150"
+                        style="background: linear-gradient(135deg, #10b981, #0d9488); box-shadow: 0 0 20px rgba(16,185,129,0.2)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
                     Generate Report
                 </button>
             </div>
-        </div>
+        </header>
 
-        <!-- Flash -->
-        <div v-if="flash.success"
-             class="mb-6 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">
-            {{ flash.success }}
-        </div>
+        <main class="flex-1 px-8 py-8 space-y-6">
 
-        <!-- Stat cards -->
-        <div id="tour-rq-stats" class="grid grid-cols-4 gap-4 mb-8">
-            <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
-                <p class="text-xs text-slate-500 mb-1">Total</p>
-                <p class="text-2xl font-semibold text-white">{{ reports.total }}</p>
+            <!-- Flash -->
+            <div v-if="flash.success"
+                 class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ flash.success }}
             </div>
-            <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
-                <p class="text-xs text-amber-400 mb-1">Pending</p>
-                <p class="text-2xl font-semibold text-white">{{ reports.data.filter(r => r.status === 'pending').length }}</p>
-            </div>
-            <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
-                <p class="text-xs text-blue-400 mb-1">Processing</p>
-                <p class="text-2xl font-semibold text-white">{{ reports.data.filter(r => r.status === 'processing').length }}</p>
-            </div>
-            <div class="bg-slate-900 border border-white/5 rounded-xl p-4">
-                <p class="text-xs text-red-400 mb-1">Failed</p>
-                <p class="text-2xl font-semibold text-white">{{ reports.data.filter(r => r.status === 'failed').length }}</p>
-            </div>
-        </div>
 
-        <!-- Report jobs table -->
-        <div id="tour-rq-table" class="bg-slateate-900 bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-white/5 text-xs text-slate-500 uppercase tracking-wide">
-                        <th class="text-left px-4 py-3 font-medium">Type</th>
-                        <th class="text-left px-4 py-3 font-medium">Format</th>
-                        <th class="text-left px-4 py-3 font-medium">Requested by</th>
-                        <th class="text-left px-4 py-3 font-medium">Status</th>
-                        <th class="text-left px-4 py-3 font-medium">Queued</th>
-                        <th class="text-left px-4 py-3 font-medium">Duration</th>
-                        <th class="text-left px-4 py-3 font-medium">Error</th>
-                        <th class="px-4 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-if="reports.data.length === 0">
-                        <td colspan="8" class="px-4 py-12 text-center text-slate-600">No report jobs found.</td>
-                    </tr>
-                    <tr v-for="report in reports.data" :key="report.id"
-                        class="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition">
-                        <td class="px-4 py-3 text-slate-300 font-mono text-xs">{{ report.type }}</td>
-                        <td class="px-4 py-3">
-                            <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', formatBadge(report.format).cls]">
-                                {{ formatBadge(report.format).label }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-slate-400 text-xs">{{ report.user?.name ?? '—' }}</td>
-                        <td class="px-4 py-3">
-                            <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', statusBadge(report.status).cls]">
-                                {{ statusBadge(report.status).label }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-slate-500 text-xs">{{ formatDate(report.created_at) }}</td>
-                        <td class="px-4 py-3 text-slate-500 text-xs">{{ duration(report) ?? '—' }}</td>
-                        <td class="px-4 py-3 text-red-400 text-xs max-w-48 truncate" :title="report.error_message ?? ''">
-                            {{ report.error_message ?? '—' }}
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            <a v-if="report.status === 'success' && report.file_path"
-                               :href="`/tenant/reports/${report.id}/download`"
-                               class="text-xs text-emerald-400 hover:text-emerald-300 transition font-medium">
-                                Download
-                            </a>
-                            <button v-else-if="report.status === 'failed'"
-                                    @click="retryReport(report.id)"
-                                    class="text-xs text-amber-400 hover:text-amber-300 transition font-medium">
-                                Retry
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div v-if="reports.last_page > 1" class="flex items-center justify-between mt-4 text-sm text-slate-500">
-            <span>Page {{ reports.current_page }} of {{ reports.last_page }}</span>
-            <div class="flex gap-2">
-                <button @click="goToPage(reports.prev_page_url)"
-                        :disabled="!reports.prev_page_url"
-                        class="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition text-slate-300">
-                    Previous
-                </button>
-                <button @click="goToPage(reports.next_page_url)"
-                        :disabled="!reports.next_page_url"
-                        class="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition text-slate-300">
-                    Next
-                </button>
-            </div>
-        </div>
-
-        <!-- Subscriptions panel -->
-        <div id="tour-rq-subscriptions" class="mt-10">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-base font-semibold text-white">Scheduled Subscriptions</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Recurring report jobs dispatched automatically on a schedule.</p>
+            <!-- Stat cards -->
+            <div id="tour-rq-stats" class="grid grid-cols-4 gap-4">
+                <div class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 border-t-2 border-t-slate-700/40">
+                    <div class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-1">Total</div>
+                    <div class="text-3xl font-grotesk font-semibold text-white">{{ reports.total }}</div>
                 </div>
-                <button @click="showSubscriptionModal = true"
-                        class="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-slate-300 text-sm transition">
-                    + New Subscription
-                </button>
+                <div class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 border-t-2 border-t-amber-500/40">
+                    <div class="text-xs font-mono text-amber-400 uppercase tracking-wider mb-1">Pending</div>
+                    <div class="text-3xl font-grotesk font-semibold text-white">{{ reports.data.filter(r => r.status === 'pending').length }}</div>
+                </div>
+                <div class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 border-t-2 border-t-blue-500/40">
+                    <div class="text-xs font-mono text-blue-400 uppercase tracking-wider mb-1">Processing</div>
+                    <div class="text-3xl font-grotesk font-semibold text-white">{{ reports.data.filter(r => r.status === 'processing').length }}</div>
+                </div>
+                <div class="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 border-t-2 border-t-red-500/40">
+                    <div class="text-xs font-mono text-red-400 uppercase tracking-wider mb-1">Failed</div>
+                    <div class="text-3xl font-grotesk font-semibold text-white">{{ reports.data.filter(r => r.status === 'failed').length }}</div>
+                </div>
             </div>
 
-            <div class="bg-slate-900 border border-white/5 rounded-xl overflow-hidden">
+            <!-- Report jobs table -->
+            <div id="tour-rq-table" class="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="border-b border-white/5 text-xs text-slate-500 uppercase tracking-wide">
-                            <th class="text-left px-4 py-3 font-medium">Type</th>
-                            <th class="text-left px-4 py-3 font-medium">Format</th>
-                            <th class="text-left px-4 py-3 font-medium">Frequency</th>
-                            <th class="text-left px-4 py-3 font-medium">Delivery</th>
-                            <th class="text-left px-4 py-3 font-medium">Status</th>
-                            <th class="text-left px-4 py-3 font-medium">Last Run</th>
-                            <th class="px-4 py-3"></th>
+                        <tr class="border-b border-white/[0.06]">
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Type</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Format</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Requested by</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Status</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Queued</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Duration</th>
+                            <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Error</th>
+                            <th class="px-5 py-3"></th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr v-if="!subscriptions || subscriptions.length === 0">
-                            <td colspan="7" class="px-4 py-10 text-center text-slate-600">No subscriptions yet.</td>
+                    <tbody class="divide-y divide-white/[0.04]">
+                        <tr v-if="reports.data.length === 0">
+                            <td colspan="8" class="px-5 py-12 text-center text-slate-600 font-mono text-sm">No report jobs found.</td>
                         </tr>
-                        <tr v-for="sub in subscriptions" :key="sub.id"
-                            class="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition">
-                            <td class="px-4 py-3 text-slate-300 font-mono text-xs">{{ sub.type }}</td>
-                            <td class="px-4 py-3">
-                                <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', formatBadge(sub.format).cls]">
-                                    {{ formatBadge(sub.format).label }}
+                        <tr v-for="report in reports.data" :key="report.id"
+                            class="hover:bg-white/[0.02] transition-colors">
+                            <td class="px-5 py-3.5 text-slate-400 font-mono text-xs">{{ report.type }}</td>
+                            <td class="px-5 py-3.5">
+                                <span :class="['inline-flex items-center text-xs font-mono px-2.5 py-1 rounded-full border', formatBadge(report.format).cls]">
+                                    {{ formatBadge(report.format).label }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-slate-400 text-xs capitalize">{{ frequencyLabel[sub.frequency] ?? sub.frequency }}</td>
-                            <td class="px-4 py-3 text-slate-400 text-xs">{{ deliveryLabel[sub.delivery] ?? sub.delivery }}</td>
-                            <td class="px-4 py-3">
-                                <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', sub.is_active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-500']">
-                                    {{ sub.is_active ? 'Active' : 'Paused' }}
+                            <td class="px-5 py-3.5 text-slate-400 text-xs">{{ report.user?.name ?? '—' }}</td>
+                            <td class="px-5 py-3.5">
+                                <span :class="['inline-flex items-center text-xs font-mono px-2.5 py-1 rounded-full border', statusBadge(report.status).cls]">
+                                    {{ statusBadge(report.status).label }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-slate-500 text-xs">{{ formatDate(sub.last_dispatched_at) }}</td>
-                            <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-3">
-                                    <button @click="toggleSubscription(sub.id)"
-                                            class="text-xs text-slate-400 hover:text-white transition">
-                                        {{ sub.is_active ? 'Pause' : 'Resume' }}
-                                    </button>
-                                    <button @click="deleteSubscription(sub.id)"
-                                            class="text-xs text-red-400 hover:text-red-300 transition">
-                                        Delete
-                                    </button>
-                                </div>
+                            <td class="px-5 py-3.5 text-slate-500 text-xs">{{ formatDate(report.created_at) }}</td>
+                            <td class="px-5 py-3.5 text-slate-500 text-xs font-mono">{{ duration(report) ?? '—' }}</td>
+                            <td class="px-5 py-3.5 text-red-400 text-xs max-w-48 truncate font-mono" :title="report.error_message ?? ''">
+                                {{ report.error_message ?? '—' }}
+                            </td>
+                            <td class="px-5 py-3.5 text-right">
+                                <a v-if="report.status === 'success' && report.file_path"
+                                   :href="`/tenant/reports/${report.id}/download`"
+                                   class="text-xs text-emerald-400 hover:text-emerald-300 transition font-medium font-mono">
+                                    Download
+                                </a>
+                                <button v-else-if="report.status === 'failed'"
+                                        @click="retryReport(report.id)"
+                                        class="text-xs text-amber-400 hover:text-amber-300 transition font-medium font-mono cursor-pointer">
+                                    Retry
+                                </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
-    </main>
+
+            <!-- Pagination -->
+            <div v-if="reports.last_page > 1" class="flex items-center justify-between text-sm text-slate-500">
+                <span class="font-mono text-xs">Page {{ reports.current_page }} of {{ reports.last_page }}</span>
+                <div class="flex gap-2">
+                    <button @click="goToPage(reports.prev_page_url)"
+                            :disabled="!reports.prev_page_url"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all">
+                        Previous
+                    </button>
+                    <button @click="goToPage(reports.next_page_url)"
+                            :disabled="!reports.next_page_url"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all">
+                        Next
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subscriptions panel -->
+            <div id="tour-rq-subscriptions" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="font-grotesk text-base font-semibold text-white">Scheduled Subscriptions</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Recurring report jobs dispatched automatically on a schedule.</p>
+                    </div>
+                    <button @click="showSubscriptionModal = true"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        New Subscription
+                    </button>
+                </div>
+
+                <div class="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-white/[0.06]">
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Type</th>
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Format</th>
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Frequency</th>
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Delivery</th>
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-5 py-3 text-left text-xs font-mono text-slate-500 uppercase tracking-wider">Last Run</th>
+                                <th class="px-5 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/[0.04]">
+                            <tr v-if="!subscriptions || subscriptions.length === 0">
+                                <td colspan="7" class="px-5 py-10 text-center text-slate-600 font-mono text-sm">No subscriptions yet.</td>
+                            </tr>
+                            <tr v-for="sub in subscriptions" :key="sub.id"
+                                class="hover:bg-white/[0.02] transition-colors">
+                                <td class="px-5 py-3.5 text-slate-400 font-mono text-xs">{{ sub.type }}</td>
+                                <td class="px-5 py-3.5">
+                                    <span :class="['inline-flex items-center text-xs font-mono px-2.5 py-1 rounded-full border', formatBadge(sub.format).cls]">
+                                        {{ formatBadge(sub.format).label }}
+                                    </span>
+                                </td>
+                                <td class="px-5 py-3.5 text-slate-400 text-xs capitalize">{{ frequencyLabel[sub.frequency] ?? sub.frequency }}</td>
+                                <td class="px-5 py-3.5 text-slate-400 text-xs">{{ deliveryLabel[sub.delivery] ?? sub.delivery }}</td>
+                                <td class="px-5 py-3.5">
+                                    <span :class="['inline-flex items-center text-xs font-mono px-2.5 py-1 rounded-full border', sub.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-slate-700/30 border-white/10 text-slate-500']">
+                                        {{ sub.is_active ? 'Active' : 'Paused' }}
+                                    </span>
+                                </td>
+                                <td class="px-5 py-3.5 text-slate-500 text-xs">{{ formatDate(sub.last_dispatched_at) }}</td>
+                                <td class="px-5 py-3.5 text-right">
+                                    <div class="flex items-center justify-end gap-3">
+                                        <button @click="toggleSubscription(sub.id)"
+                                                class="text-xs text-slate-400 hover:text-white transition cursor-pointer font-mono">
+                                            {{ sub.is_active ? 'Pause' : 'Resume' }}
+                                        </button>
+                                        <button @click="deleteSubscription(sub.id)"
+                                                class="text-xs text-red-400 hover:text-red-300 transition cursor-pointer font-mono">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <!-- Generate Report Modal -->
     <Teleport to="body">
         <div v-if="showGenerateModal"
-             class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+             class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
              @click.self="showGenerateModal = false">
-            <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-xl">
-                <h2 class="text-base font-semibold text-white mb-5">Generate Report</h2>
+            <div class="bg-[#0d1117] border border-white/[0.08] rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="font-grotesk text-base font-semibold text-white">Generate Report</h2>
+                    <button @click="showGenerateModal = false" class="text-slate-500 hover:text-white transition cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
                 <form @submit.prevent="submitQuickReport" class="space-y-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1.5">Report Type</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Report Type</label>
                         <select v-model="quickForm.type"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-transparent transition">
                             <option v-for="rt in reportTypes" :key="rt.value" :value="rt.value">{{ rt.label }}</option>
                         </select>
                         <p v-if="quickForm.errors.type" class="mt-1 text-xs text-red-400">{{ quickForm.errors.type }}</p>
                     </div>
 
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1.5">Format</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Format</label>
                         <div class="flex gap-2">
                             <label v-for="rf in reportFormats" :key="rf.value"
-                                   :class="['flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition',
+                                   :class="['flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-sm cursor-pointer transition',
                                             quickForm.format === rf.value
-                                                ? 'border-blue-500 bg-blue-500/10 text-blue-300'
-                                                : 'border-white/10 text-slate-400 hover:border-white/20']">
+                                                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                                                : 'border-white/[0.08] text-slate-400 hover:border-white/20']">
                                 <input type="radio" :value="rf.value" v-model="quickForm.format" class="sr-only" />
                                 {{ rf.label }}
                             </label>
@@ -408,12 +424,13 @@ const { startTour } = useTour('tenant-report-queue', [
 
                     <div class="flex gap-3 pt-2">
                         <button type="button" @click="showGenerateModal = false"
-                                class="flex-1 px-4 py-2 rounded-lg border border-white/10 text-slate-400 text-sm hover:bg-white/5 transition">
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all">
                             Cancel
                         </button>
                         <button type="submit"
                                 :disabled="quickForm.processing"
-                                class="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition">
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 cursor-pointer transition-all duration-150"
+                                style="background: linear-gradient(135deg, #10b981, #0d9488); box-shadow: 0 0 20px rgba(16,185,129,0.2)">
                             {{ quickForm.processing ? 'Dispatching…' : 'Dispatch Job' }}
                         </button>
                     </div>
@@ -425,29 +442,36 @@ const { startTour } = useTour('tenant-report-queue', [
     <!-- New Subscription Modal -->
     <Teleport to="body">
         <div v-if="showSubscriptionModal"
-             class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+             class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
              @click.self="showSubscriptionModal = false">
-            <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-xl">
-                <h2 class="text-base font-semibold text-white mb-5">New Subscription</h2>
+            <div class="bg-[#0d1117] border border-white/[0.08] rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="font-grotesk text-base font-semibold text-white">New Subscription</h2>
+                    <button @click="showSubscriptionModal = false" class="text-slate-500 hover:text-white transition cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
                 <form @submit.prevent="submitSubscription" class="space-y-4">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1.5">Report Type</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Report Type</label>
                         <select v-model="subForm.type"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-transparent transition">
                             <option v-for="rt in reportTypes" :key="rt.value" :value="rt.value">{{ rt.label }}</option>
                         </select>
                         <p v-if="subForm.errors.type" class="mt-1 text-xs text-red-400">{{ subForm.errors.type }}</p>
                     </div>
 
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1.5">Format</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Format</label>
                         <div class="flex gap-2">
                             <label v-for="rf in reportFormats" :key="rf.value"
-                                   :class="['flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition',
+                                   :class="['flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-sm cursor-pointer transition',
                                             subForm.format === rf.value
-                                                ? 'border-blue-500 bg-blue-500/10 text-blue-300'
-                                                : 'border-white/10 text-slate-400 hover:border-white/20']">
+                                                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                                                : 'border-white/[0.08] text-slate-400 hover:border-white/20']">
                                 <input type="radio" :value="rf.value" v-model="subForm.format" class="sr-only" />
                                 {{ rf.label }}
                             </label>
@@ -455,37 +479,38 @@ const { startTour } = useTour('tenant-report-queue', [
                     </div>
 
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1.5">Frequency</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Frequency</label>
                         <select v-model="subForm.frequency"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-transparent transition">
                             <option v-for="f in frequencies" :key="f.value" :value="f.value">{{ f.label }}</option>
                         </select>
                         <p v-if="subForm.errors.frequency" class="mt-1 text-xs text-red-400">{{ subForm.errors.frequency }}</p>
                     </div>
 
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1.5">Delivery</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Delivery</label>
                         <select v-model="subForm.delivery"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-transparent transition">
                             <option v-for="d in deliveries" :key="d.value" :value="d.value">{{ d.label }}</option>
                         </select>
                     </div>
 
                     <div v-if="subForm.delivery === 'email' || subForm.delivery === 'email_and_s3'">
-                        <label class="block text-xs text-slate-400 mb-1.5">Recipients <span class="text-slate-600">(comma-separated)</span></label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 font-mono uppercase tracking-wide">Recipients <span class="text-slate-600 normal-case">(comma-separated)</span></label>
                         <input v-model="subForm.recipients" type="text" placeholder="admin@example.com, ops@example.com"
-                               class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                               class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-transparent transition" />
                         <p v-if="subForm.errors.recipients" class="mt-1 text-xs text-red-400">{{ subForm.errors.recipients }}</p>
                     </div>
 
                     <div class="flex gap-3 pt-2">
                         <button type="button" @click="showSubscriptionModal = false"
-                                class="flex-1 px-4 py-2 rounded-lg border border-white/10 text-slate-400 text-sm hover:bg-white/5 transition">
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] cursor-pointer transition-all">
                             Cancel
                         </button>
                         <button type="submit"
                                 :disabled="subForm.processing"
-                                class="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition">
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 cursor-pointer transition-all duration-150"
+                                style="background: linear-gradient(135deg, #10b981, #0d9488); box-shadow: 0 0 20px rgba(16,185,129,0.2)">
                             {{ subForm.processing ? 'Saving…' : 'Create Subscription' }}
                         </button>
                     </div>
@@ -496,3 +521,8 @@ const { startTour } = useTour('tenant-report-queue', [
 
     <TourButton @click="startTour" />
 </template>
+
+<style scoped>
+.font-grotesk { font-family: 'Space Grotesk', sans-serif; }
+.font-mono { font-family: 'DM Mono', monospace; }
+</style>

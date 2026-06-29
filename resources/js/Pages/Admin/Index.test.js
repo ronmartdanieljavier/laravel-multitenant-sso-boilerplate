@@ -82,18 +82,18 @@ describe('Admin/Index', () => {
         expect(wrapper.text()).toContain('Dashboard');
     });
 
-    it('renders the App Selection link pointing to /apps', () => {
+    it('renders a link to the tenants list', () => {
         const wrapper = mount(AdminPage, { props: defaultProps });
         const hrefs = wrapper.findAll('a').map(l => l.attributes('href'));
 
-        expect(hrefs).toContain('/apps');
+        expect(hrefs).toContain('/admin/tenants');
     });
 
-    it('App Selection link displays correct label', () => {
+    it('renders a link to the users list', () => {
         const wrapper = mount(AdminPage, { props: defaultProps });
-        const appLink = wrapper.findAll('a').find(a => a.attributes('href') === '/apps');
+        const hrefs = wrapper.findAll('a').map(l => l.attributes('href'));
 
-        expect(appLink?.text()).toMatch(/app selection/i);
+        expect(hrefs).toContain('/admin/users');
     });
 
     it('renders all four stat cards', () => {

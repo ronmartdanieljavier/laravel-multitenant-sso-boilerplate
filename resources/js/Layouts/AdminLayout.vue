@@ -1,52 +1,51 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { useIdleTimeout } from '../composables/useIdleTimeout';
-import TenantSwitcher from '../Pages/Partials/TenantSwitcher.vue';
 
 const page = usePage();
-const tenant = computed(() => page.props.tenant);
 const user = computed(() => page.props.auth?.user);
-const availableTenants = computed(() => page.props.availableTenants ?? []);
+const missingSettings = computed(() => page.props.missingRequiredSettings ?? []);
+const currentPath = computed(() => page.url.split('?')[0]);
 
-useIdleTimeout(page.props.idleTimeoutMinutes);
-
-function logout() {
-    router.post('/logout');
+function isActive(href) {
+    return currentPath.value === href || currentPath.value.startsWith(href + '/');
 }
 
 const nav = [
     {
         label: 'Dashboard',
-        href: '/tenant',
-        icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+        href: '/admin',
+        icon: 'M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z',
     },
     {
-        label: 'Report Queue',
-        href: '/tenant/reports',
-        icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+        label: 'Users',
+        href: '/admin/users',
+        icon: 'M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z',
     },
     {
-        label: 'Documents',
-        href: '/documents',
-        icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+        label: 'Apps',
+        href: '/admin/apps',
+        icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z',
     },
     {
-        label: 'Job Queue',
-        href: '/tenant/jobs',
-        icon: 'M4 6h16M4 10h16M4 14h16M4 18h16',
+        label: 'Tenants',
+        href: '/admin/tenants',
+        icon: 'M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z',
     },
     {
-        label: 'Error Logs',
-        href: '/tenant/errors',
-        icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+        label: 'Jobs',
+        href: '/admin/jobs',
+        icon: 'M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z',
+    },
+    {
+        label: 'Settings',
+        href: '/admin/settings',
+        icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
     },
 ];
 
-const currentPath = computed(() => page.url.split('?')[0]);
-
-function isActive(href) {
-    return currentPath.value === href;
+function logout() {
+    router.post('/logout');
 }
 </script>
 
@@ -55,33 +54,28 @@ function isActive(href) {
         <!-- Sidebar -->
         <aside class="sidebar">
             <!-- Aurora orb -->
-            <div class="aurora-orb aurora-orb--tenant" aria-hidden="true"></div>
+            <div class="aurora-orb aurora-orb--admin" aria-hidden="true"></div>
 
-            <!-- Tenant identity & switcher -->
+            <!-- Brand -->
             <div class="sidebar-brand">
-                <div class="brand-logo brand-logo--tenant">
+                <div class="brand-logo brand-logo--admin">
                     <svg class="brand-logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                 </div>
-                <div class="brand-text">
-                    <p class="brand-name font-grotesk">{{ tenant?.name ?? 'Tenant Portal' }}</p>
-                    <p class="brand-subtitle font-mono">{{ tenant?.slug }}</p>
+                <div>
+                    <p class="brand-name font-grotesk">SSO Admin</p>
+                    <p class="brand-subtitle font-mono">Management Console</p>
                 </div>
             </div>
 
-            <!-- Tenant switcher -->
-            <div class="switcher-wrap">
-                <TenantSwitcher :tenants="availableTenants" />
-            </div>
-
-            <!-- Nav links -->
+            <!-- Nav -->
             <nav class="sidebar-nav">
                 <Link
                     v-for="item in nav"
                     :key="item.href"
                     :href="item.href"
-                    :class="['nav-item font-sans', isActive(item.href) ? 'nav-item--active-tenant' : 'nav-item--inactive']"
+                    :class="['nav-item font-sans', isActive(item.href) ? 'nav-item--active-admin' : 'nav-item--inactive']"
                 >
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="item.icon" />
@@ -107,11 +101,11 @@ function isActive(href) {
                         <div v-if="user?.profile_picture_url" class="avatar">
                             <img :src="user.profile_picture_url" class="w-full h-full object-cover" alt="Profile" />
                         </div>
-                        <div v-else class="avatar avatar--tenant font-grotesk">
-                            {{ user?.name?.[0]?.toUpperCase() ?? 'U' }}
+                        <div v-else class="avatar avatar--admin font-grotesk">
+                            {{ user?.name?.[0]?.toUpperCase() ?? 'A' }}
                         </div>
                         <div class="user-text">
-                            <p class="user-name font-sans">{{ user?.name }}</p>
+                            <p class="user-name font-sans">{{ user?.name ?? 'Admin' }}</p>
                             <p class="user-email font-mono">{{ user?.email }}</p>
                         </div>
                     </Link>
@@ -124,8 +118,19 @@ function isActive(href) {
             </div>
         </aside>
 
-        <!-- Page content -->
+        <!-- Content area -->
         <div class="content-area">
+            <!-- Missing settings banner -->
+            <div v-if="missingSettings.length > 0" class="missing-settings-banner">
+                <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p class="text-sm text-amber-300 font-sans">
+                    Required settings not configured:
+                    <span class="font-medium">{{ missingSettings.join(', ') }}</span>.
+                    <Link href="/admin/settings" class="underline hover:text-amber-200 ml-1">Configure now</Link>
+                </p>
+            </div>
             <slot />
         </div>
     </div>
@@ -161,6 +166,7 @@ function isActive(href) {
     overflow: hidden;
 }
 
+/* Aurora orb */
 .aurora-orb {
     position: absolute;
     width: 320px;
@@ -168,12 +174,12 @@ function isActive(href) {
     border-radius: 50%;
     pointer-events: none;
     filter: blur(80px);
-    opacity: 0.16;
+    opacity: 0.18;
     top: -100px;
     left: -80px;
 }
-.aurora-orb--tenant {
-    background: radial-gradient(circle, #10b981, #0d9488);
+.aurora-orb--admin {
+    background: radial-gradient(circle, #3b82f6, #6d28d9);
 }
 
 /* Brand */
@@ -181,7 +187,7 @@ function isActive(href) {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 20px 20px 14px;
+    padding: 20px 20px 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     flex-shrink: 0;
     position: relative;
@@ -195,28 +201,21 @@ function isActive(href) {
     justify-content: center;
     flex-shrink: 0;
 }
-.brand-logo--tenant {
-    background: linear-gradient(135deg, #10b981, #0d9488);
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+.brand-logo--admin {
+    background: linear-gradient(135deg, #3b82f6, #6d28d9);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
 }
 .brand-logo-icon {
     width: 18px;
     height: 18px;
     color: white;
 }
-.brand-text {
-    min-width: 0;
-    flex: 1;
-}
 .brand-name {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: white;
     line-height: 1;
     letter-spacing: -0.01em;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 .brand-subtitle {
     font-size: 10px;
@@ -224,21 +223,12 @@ function isActive(href) {
     margin-top: 3px;
     line-height: 1;
     letter-spacing: 0.02em;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Switcher */
-.switcher-wrap {
-    padding: 10px 12px 4px;
-    flex-shrink: 0;
 }
 
 /* Nav */
 .sidebar-nav {
     flex: 1;
-    padding: 8px 10px;
+    padding: 12px 10px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -257,10 +247,10 @@ function isActive(href) {
     text-decoration: none;
     border: 1px solid transparent;
 }
-.nav-item--active-tenant {
-    background: rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.2);
-    color: #6ee7b7;
+.nav-item--active-admin {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
 }
 .nav-item--inactive {
     color: #64748b;
@@ -337,8 +327,8 @@ function isActive(href) {
     color: white;
     outline: 2px solid rgba(255, 255, 255, 0.1);
 }
-.avatar--tenant {
-    background: rgba(16, 185, 129, 0.7);
+.avatar--admin {
+    background: rgba(59, 130, 246, 0.7);
 }
 .user-text {
     flex: 1;
@@ -388,5 +378,16 @@ function isActive(href) {
     flex-direction: column;
     min-height: 100vh;
     background-color: #030712;
+    overflow: auto;
+}
+
+/* Missing settings banner */
+.missing-settings-banner {
+    background: rgba(245, 158, 11, 0.08);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 </style>

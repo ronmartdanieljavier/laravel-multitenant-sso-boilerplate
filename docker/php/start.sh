@@ -4,8 +4,15 @@ set -e
 mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs
 chmod -R 775 storage bootstrap/cache
 
+echo "Clearing stale caches..."
+php artisan optimize:clear
+
 echo "Running database migrations..."
 php artisan migrate --force
+
+echo "Caching config and routes..."
+php artisan config:cache
+php artisan route:cache
 
 echo "Starting php-fpm..."
 exec php-fpm

@@ -1,160 +1,147 @@
-name: CI
+name: CI/CD
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
-    branches: ["**"]
+
+permissions:
+  id-token: write   # required for OIDC
+  contents: read
 
 jobs:
-  commitlint:
-    name: Commitlint
+  test:
+    name: Test
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
-
-      - run: npm ci
-
-      - name: Lint commits
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-
-  frontend:
-    name: Frontend Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
-
-      - run: npm ci
-
-      - name: Build assets
-        run: npm run build
-
-  frontend-unit:
-    name: Frontend Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
-
-      - run: npm ci
-
-      - name: Run Vitest
-        run: npm run test:unit
-        env:
-          LARAVEL_BYPASS_ENV_CHECK: 1
-
-  frontend-e2e:
-    name: Frontend E2E Tests
-    runs-on: ubuntu-latest
-    needs: [frontend]
 
     services:
       postgres:
-        image: postgres:17
+        image: postgres:17-alpine
         env:
-          POSTGRES_DB: laravel
+          POSTGRES_DB: laravel_test
           POSTGRES_USER: laravel
           POSTGRES_PASSWORD: secret
         ports:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
           --health-timeout 5s
           --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: shivammathur/setup-php@v2
+      - name: Setup PHP 8.5
+        uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.4"
+          php-version: '8.5'
+          extensions: pdo_pgsql, redis, zip, bcmath, intl, pcntl, gd
           coverage: none
 
-      - uses: actions/cache@v4
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
 
-      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
-
-      - run: npm ci
-
-      - name: Build assets
-        run: npm run build
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Start Laravel server
+      - name: Prepare .env.testing
         run: |
-          cp .env.example .env
-          # Switch to PostgreSQL so the tenant DB is reachable (SQLite has no host/port)
-          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=pgsql/' .env
-          echo "DB_HOST=127.0.0.1" >> .env
-          echo "DB_PORT=5432" >> .env
-          echo "DB_DATABASE=laravel" >> .env
-          echo "DB_USERNAME=laravel" >> .env
-          echo "DB_PASSWORD=secret" >> .env
-          php artisan key:generate
-          php artisan migrate --force
-          php artisan db:seed --force
-          php artisan tenant:migrate --force
-          php artisan serve --port=8000 &
-          timeout 30 bash -c 'until curl -sf http://localhost:8000/up; do sleep 1; done'
+          cp .env.example .env.testing
+          sed -i 's|DB_CONNECTION=sqlite|DB_CONNECTION=pgsql|' .env.testing
+          echo "DB_HOST=127.0.0.1" >> .env.testing
+          echo "DB_PORT=5432" >> .env.testing
+          echo "DB_DATABASE=laravel_test" >> .env.testing
+          echo "DB_USERNAME=laravel" >> .env.testing
+          echo "DB_PASSWORD=secret" >> .env.testing
+          echo "REDIS_HOST=127.0.0.1" >> .env.testing
+          echo "REDIS_PORT=6379" >> .env.testing
+          echo "CACHE_STORE=redis" >> .env.testing
+          echo "SESSION_DRIVER=redis" >> .env.testing
+          echo "QUEUE_CONNECTION=redis" >> .env.testing
 
-      - name: Run Playwright E2E tests
-        run: npm run test:e2e
-        env:
-          APP_URL: http://localhost:8000
+      - name: Generate app key
+        run: php artisan key:generate --env=testing
 
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+      - name: Run migrations
+        run: php artisan migrate --env=testing --force
 
-  phpstan:
-    name: PHPStan
+      - name: Run test suite
+        run: php artisan test
+
+  deploy:
+    name: Deploy to ECS
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: shivammathur/setup-php@v2
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          php-version: "8.4"
-          coverage: none
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
 
-      - uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Build and push PHP app image
+        env:
+          ECR_APP: ${{ secrets.ECR_APP_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_APP:$IMAGE_TAG \
+            -t $ECR_APP:latest \
+            -f docker/php/Dockerfile .
+          docker push $ECR_APP:$IMAGE_TAG
+          docker push $ECR_APP:latest
 
-      - run: composer analyse
+      - name: Build and push nginx image
+        env:
+          ECR_NGINX: ${{ secrets.ECR_NGINX_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_NGINX:$IMAGE_TAG \
+            -t $ECR_NGINX:latest \
+            -f docker/nginx/Dockerfile docker/nginx/
+          docker push $ECR_NGINX:$IMAGE_TAG
+          docker push $ECR_NGINX:latest
+
+      - name: Deploy new revision to ECS
+        env:
+          CLUSTER: ${{ secrets.ECS_CLUSTER }}
+          SERVICE: ${{ secrets.ECS_SERVICE }}
+        run: |
+          aws ecs update-service \
+            --cluster $CLUSTER \
+            --service $SERVICE \
+            --force-new-deployment \
+            --region us-east-1
+
+      - name: Wait for deployment to stabilize
+        env:
+          CLUSTER: ${{ secrets.ECS_CLUSTER }}
+          SERVICE: ${{ secrets.ECS_SERVICE }}
+        run: |
+          aws ecs wait services-stable \
+            --cluster $CLUSTER \
+            --services $SERVICE \
+            --region us-east-1

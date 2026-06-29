@@ -10,3 +10,5 @@ foreach (glob(app_path('*/Routes/web_*.php')) as $routeFile) {
 Route::get('/', function () {
     return Inertia::render('Landing/Index');
 })->name('home');
+
+Route::get('/health', fn () => response()->json(['status' => 'ok']));

@@ -10,7 +10,6 @@ bootstrap/cache/*.php
 .env
 .env.*
 !.env.example
-docker
 *.md
 tests
 test-results

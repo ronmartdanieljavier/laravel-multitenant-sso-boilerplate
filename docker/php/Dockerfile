@@ -54,4 +54,5 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 9000
 
-CMD ["php-fpm"]
+COPY docker/php/start.sh /usr/local/bin/start.sh
+CMD ["/usr/local/bin/start.sh"]

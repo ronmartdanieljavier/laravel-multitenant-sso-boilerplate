@@ -67,6 +67,7 @@ resource "aws_ecs_task_definition" "app" {
       name      = "postgres"
       image     = "postgres:17-alpine"
       essential = true
+      user      = "70:70"
       environment = [
         { name = "POSTGRES_DB", value = var.db_name },
         { name = "POSTGRES_USER", value = var.db_username }

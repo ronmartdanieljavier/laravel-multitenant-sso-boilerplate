@@ -16,20 +16,20 @@ resource "aws_efs_mount_target" "b" {
   security_groups = [aws_security_group.efs.id]
 }
 
-# Access point for PostgreSQL data (UID 999 = postgres user in Alpine)
+# Access point for PostgreSQL data (UID 70 = postgres user in postgres:17-alpine)
 resource "aws_efs_access_point" "postgres" {
   file_system_id = aws_efs_file_system.main.id
 
   posix_user {
-    uid = 999
-    gid = 999
+    uid = 70
+    gid = 70
   }
 
   root_directory {
     path = "/postgres"
     creation_info {
-      owner_uid   = 999
-      owner_gid   = 999
+      owner_uid   = 70
+      owner_gid   = 70
       permissions = "755"
     }
   }

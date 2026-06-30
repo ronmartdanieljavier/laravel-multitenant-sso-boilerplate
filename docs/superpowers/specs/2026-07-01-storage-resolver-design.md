@@ -69,8 +69,13 @@ StorageResolver
 | `DocumentService::createFromReport()` | hardcodes `Storage::disk('reports')` | `StorageResolver::forTenant($report->tenant_id)` |
 | `DocumentService::downloadZipResponse()` | mixes `reports` disk and `resolveDisk()` | unified via `StorageResolver::forTenant()` |
 | `ReportDeliveryService::uploadToS3()` | hardcodes `Storage::disk('s3')` | renamed `uploadToStorage()`, uses `StorageResolver::forTenant($report->tenant_id)` |
+| `ProfileController::updatePicture()` | hardcodes `Storage::disk('public')` | uses `StorageResolver::forSystem()` |
+| `ProfileApiController::updatePicture()` | hardcodes `Storage::disk('public')` | uses `StorageResolver::forSystem()` |
+| `User::profilePictureUrl` accessor | hardcodes `Storage::disk('public')->url()` | uses `StorageResolver::forSystem()->url()` |
+| `UserResource::profilePictureUrl` | hardcodes `Storage::disk('public')->url()` | uses `StorageResolver::forSystem()->url()` |
+| `HandleInertiaRequests` profile picture URL | hardcodes `Storage::disk('public')->url()` | uses `StorageResolver::forSystem()->url()` |
 
-**Out of scope:** `Storage::disk('public')` for profile pictures and system branding assets (logo, favicon URLs) — these are always local/public and not governed by storage settings.
+**Out of scope:** System branding `logo_url` and `favicon_url` in `SystemSettingsData` — these are plain URL string fields (admins paste a URL, no file upload involved), so no `Storage` call exists to route through the resolver.
 
 ---
 
@@ -88,12 +93,11 @@ Scenarios for `forSystem()`:
 - System `storage_driver` set → uses system credentials
 - System `storage_driver` empty → ENV fallback disk returned
 
-Existing tests for `DocumentService`, `ReportFileService`, and `TenantSettingsService` must be updated to mock/stub `StorageResolver` where appropriate.
+Existing tests for `DocumentService`, `ReportFileService`, `TenantSettingsService`, `ProfileController`, and `ProfileApiController` must be updated to mock/stub `StorageResolver` where appropriate.
 
 ---
 
 ## Out of Scope
 
-- Profile picture uploads (`Storage::disk('public')`) — always local, governed by profile feature not storage settings.
-- System branding logo/favicon URLs stored in `SystemSettingsData` — these are URLs, not uploaded files managed by this resolver.
+- System branding logo/favicon URLs stored in `SystemSettingsData` — these are plain URL string fields, no file upload or `Storage` call involved.
 - The `config/filesystems.php` `reports` disk definition — it remains as a local default but is no longer the primary code path.

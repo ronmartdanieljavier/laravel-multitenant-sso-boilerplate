@@ -9,7 +9,7 @@ use App\Documents\Services\DocumentService;
 use App\Models\Central\Report;
 use App\Models\Central\User;
 use App\Models\Tenant\Document;
-use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
@@ -24,7 +24,7 @@ class DocumentServiceTest extends TestCase
 
     private DocumentService $service;
 
-    private Filesystem $fakeDisk;
+    private FilesystemAdapter $fakeDisk;
 
     protected function setUp(): void
     {

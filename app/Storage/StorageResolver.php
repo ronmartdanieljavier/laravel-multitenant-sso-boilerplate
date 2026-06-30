@@ -4,7 +4,7 @@ namespace App\Storage;
 
 use App\Models\Central\SystemSetting;
 use App\Repositories\Central\TenantSettingRepository;
-use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -15,7 +15,7 @@ class StorageResolver
         private readonly TenantSettingRepository $repository,
     ) {}
 
-    public function forTenant(int $tenantId): Filesystem
+    public function forTenant(int $tenantId): FilesystemAdapter
     {
         $tenant = $this->repository->allForTenant($tenantId)->all();
         $t = fn (string $key): ?string => $tenant[$key] ?? null;
@@ -29,7 +29,7 @@ class StorageResolver
         return $this->buildDisk($driver, $t);
     }
 
-    public function forSystem(): Filesystem
+    public function forSystem(): FilesystemAdapter
     {
         $driver = SystemSetting::get('storage_driver');
 
@@ -40,7 +40,7 @@ class StorageResolver
         return $this->buildDisk($driver, null);
     }
 
-    private function buildDisk(string $driver, ?callable $tenantGet): Filesystem
+    private function buildDisk(string $driver, ?callable $tenantGet): FilesystemAdapter
     {
         $get = fn (string $key, ?string $envKey = null): ?string => ($tenantGet !== null ? $tenantGet($key) : null)
             ?? SystemSetting::get($key)
@@ -114,7 +114,13 @@ class StorageResolver
 
         $this->validateConfig($driver, $config);
 
-        return Storage::build($config);
+        $disk = Storage::build($config);
+
+        if (! $disk instanceof FilesystemAdapter) {
+            throw new \RuntimeException('Storage::build() did not return a FilesystemAdapter.');
+        }
+
+        return $disk;
     }
 
     /**
@@ -140,7 +146,7 @@ class StorageResolver
         }
     }
 
-    private function envFallback(): Filesystem
+    private function envFallback(): FilesystemAdapter
     {
         return Storage::disk(config('filesystems.default'));
     }

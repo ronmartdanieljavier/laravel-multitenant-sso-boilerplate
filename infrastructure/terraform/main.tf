@@ -9,9 +9,9 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "multitenant-sso-terraform-state"
+    bucket         = "multitenant-sso-terraform-state-apse2"
     key            = "production/terraform.tfstate"
-    region         = "us-east-1"
+    region         = "ap-southeast-2"
     dynamodb_table = "multitenant-sso-terraform-locks"
     encrypt        = true
   }

@@ -70,6 +70,7 @@ class StorageResolver
                 'visibility' => 'private',
                 'throw' => false,
                 'report' => false,
+                'r2_account_id' => $get('r2_account_id', 'R2_ACCOUNT_ID'),
             ],
             'gcs' => [
                 'driver' => 'gcs',
@@ -123,7 +124,7 @@ class StorageResolver
     {
         $required = match ($driver) {
             's3' => ['key', 'secret', 'bucket'],
-            'r2' => ['key', 'secret', 'bucket'],
+            'r2' => ['key', 'secret', 'bucket', 'r2_account_id'],
             'gcs' => ['project_id', 'bucket'],
             'ftp' => ['host', 'username'],
             'sftp' => ['host', 'username'],

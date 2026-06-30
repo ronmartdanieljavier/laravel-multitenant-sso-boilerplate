@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs
+mkdir -p storage/app storage/framework/sessions storage/framework/views storage/framework/cache storage/logs
 chmod -R 775 storage bootstrap/cache
 
 echo "Clearing stale caches..."

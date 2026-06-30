@@ -21,12 +21,14 @@ class PdfReportGenerator implements ReportGenerator
     {
         $filename = "report_{$this->report->id}.pdf";
         $storagePath = ReportFileService::prefix($this->report).'/'.$filename;
-        $absolutePath = Storage::disk('reports')->path($storagePath);
+        $disk = Storage::disk('reports');
 
-        @mkdir(dirname($absolutePath), recursive: true);
+        $disk->makeDirectory(dirname($storagePath));
 
         $tenantId = $this->report->tenant_id;
         $settings = $tenantId ? $this->settingsService->getSettings($tenantId) : null;
+
+        $absolutePath = $disk->path($storagePath);
 
         Pdf::view('reports.pdf', [
             'report' => $this->report,
@@ -37,6 +39,10 @@ class PdfReportGenerator implements ReportGenerator
         ])
             ->format('a4')
             ->save($absolutePath);
+
+        if (! $disk->exists($storagePath)) {
+            throw new \RuntimeException("PDF report was not written to disk at {$storagePath}.");
+        }
 
         return new ReportResultData(filePath: $storagePath);
     }

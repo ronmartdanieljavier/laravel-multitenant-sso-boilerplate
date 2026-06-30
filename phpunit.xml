@@ -23,6 +23,9 @@
         <testsuite name="Documents">
             <directory>app/Documents/Tests</directory>
         </testsuite>
+        <testsuite name="Storage">
+            <directory>app/Storage/Tests</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -43,6 +46,10 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="FILESYSTEM_DISK" value="local"/>
+        <env name="AWS_ACCESS_KEY_ID" value=""/>
+        <env name="AWS_SECRET_ACCESS_KEY" value=""/>
+        <env name="AWS_BUCKET" value=""/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

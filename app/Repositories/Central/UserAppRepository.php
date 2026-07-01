@@ -56,7 +56,7 @@ class UserAppRepository
             ->where('app_id', $app->id)
             ->with('tenant')
             ->get()
-            ->filter(fn (UserAppTenant $uat): bool => $uat->tenant->is_active && ! $uat->tenant->is_maintenance)
+            ->filter(fn (UserAppTenant $uat): bool => $uat->tenant->is_active)
             ->map(fn (UserAppTenant $uat): TenantRepositoryData => new TenantRepositoryData(
                 id: $uat->tenant->id,
                 name: $uat->tenant->name,
@@ -69,6 +69,9 @@ class UserAppRepository
                 dbUsername: $uat->tenant->db_username,
                 dbPassword: $uat->tenant->db_password,
                 hasReadReplica: $uat->tenant->hasReadReplica(),
+                readReplicaHost: $uat->tenant->read_replica_host,
+                readReplicaPort: $uat->tenant->read_replica_port,
+                readReplicaUsername: $uat->tenant->read_replica_username,
             ))
             ->values();
     }

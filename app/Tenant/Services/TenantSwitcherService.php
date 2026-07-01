@@ -29,6 +29,7 @@ class TenantSwitcherService
                 name: $tenant->name,
                 slug: $tenant->slug,
                 isCurrent: $tenant->slug === $currentSlug,
+                isMaintenance: $tenant->isMaintenance,
             ));
     }
 

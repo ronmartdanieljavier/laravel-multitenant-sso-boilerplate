@@ -56,8 +56,9 @@ class TenantSwitcherServiceTest extends TestCase
 
         $tenants = $this->service->getTenantsForUser($user->id, 'tenant');
 
-        $this->assertCount(1, $tenants);
-        $this->assertSame($active->slug, $tenants->first()->slug);
+        $this->assertCount(2, $tenants);
+        $this->assertTrue($tenants->contains(fn (TenantData $t) => $t->slug === $active->slug));
+        $this->assertTrue($tenants->contains(fn (TenantData $t) => $t->slug === $maintenance->slug && $t->isMaintenance));
     }
 
     public function test_initialize_for_user_sets_session_with_default_tenant(): void

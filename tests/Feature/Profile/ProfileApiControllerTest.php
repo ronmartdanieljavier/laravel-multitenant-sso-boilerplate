@@ -62,7 +62,7 @@ class ProfileApiControllerTest extends TestCase
 
     public function test_user_can_upload_profile_picture(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $user = User::factory()->create();
 
         $file = UploadedFile::fake()->image('avatar.jpg');
@@ -74,12 +74,12 @@ class ProfileApiControllerTest extends TestCase
 
         $user->refresh();
         $this->assertNotNull($user->profile_picture);
-        Storage::disk('public')->assertExists($user->profile_picture);
+        Storage::disk('local')->assertExists($user->profile_picture);
     }
 
     public function test_uploading_new_picture_deletes_old_one(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $user = User::factory()->create();
 
         $first = UploadedFile::fake()->image('first.jpg');
@@ -90,7 +90,7 @@ class ProfileApiControllerTest extends TestCase
         $second = UploadedFile::fake()->image('second.jpg');
         $this->actingAs($user, 'sanctum')->postJson('/api/v1/profile/picture', ['profile_picture' => $second])->assertCreated();
 
-        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('local')->assertMissing($oldPath);
     }
 
     public function test_profile_picture_must_be_an_image(): void

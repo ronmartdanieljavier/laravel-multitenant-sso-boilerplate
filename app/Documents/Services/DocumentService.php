@@ -2,17 +2,17 @@
 
 namespace App\Documents\Services;
 
-use App\Admin\Services\TenantSettingsService;
 use App\Data\Repositories\Central\DocumentRepositoryData;
 use App\Documents\Data\DocumentData;
 use App\Documents\Enums\DocumentSource;
 use App\Models\Central\Report;
 use App\Repositories\Central\DocumentRepository;
+use App\Storage\StorageResolver;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
 
@@ -20,7 +20,7 @@ class DocumentService
 {
     public function __construct(
         protected DocumentRepository $documentRepository,
-        protected TenantSettingsService $tenantSettingsService,
+        protected StorageResolver $resolver,
     ) {}
 
     /**
@@ -59,7 +59,7 @@ class DocumentService
         string $tenantSlug,
         int $tenantId,
     ): DocumentData {
-        $disk = $this->tenantSettingsService->resolveDisk($tenantId);
+        $disk = $this->resolver->forTenant($tenantId);
         $path = $disk->putFileAs("{$tenantSlug}/documents", $file, $file->hashName());
 
         $dto = $this->documentRepository->create([
@@ -84,7 +84,7 @@ class DocumentService
         $extension = pathinfo((string) $report->file_path, PATHINFO_EXTENSION);
         $mime = $extension === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         $fileName = basename((string) $report->file_path);
-        $fileSize = Storage::disk('reports')->size((string) $report->file_path);
+        $fileSize = $this->diskForReport($report)->size((string) $report->file_path);
         $title = ucwords(str_replace('_', ' ', $report->type)).' Report';
 
         $dto = $this->documentRepository->create([
@@ -105,7 +105,7 @@ class DocumentService
     public function delete(int $id, int $tenantId): void
     {
         $dto = $this->documentRepository->find($id);
-        $disk = $this->tenantSettingsService->resolveDisk($tenantId);
+        $disk = $this->resolver->forTenant($tenantId);
         $disk->delete($dto->filePath);
         $this->documentRepository->delete($id);
     }
@@ -122,10 +122,10 @@ class DocumentService
         $dto = $this->documentRepository->find($id);
 
         if ($dto->source === DocumentSource::Report) {
-            return Storage::disk('reports')->download($dto->filePath, $dto->fileName);
+            return $this->resolver->forTenant($tenantId)->download($dto->filePath, $dto->fileName);
         }
 
-        $disk = $this->tenantSettingsService->resolveDisk($tenantId);
+        $disk = $this->resolver->forTenant($tenantId);
 
         try {
             $url = $disk->temporaryUrl($dto->filePath, now()->addMinutes(5));
@@ -151,9 +151,7 @@ class DocumentService
         $zip->open($tmpPath, ZipArchive::OVERWRITE);
 
         foreach ($documents as $doc) {
-            $disk = $doc->source === DocumentSource::Report
-                ? Storage::disk('reports')
-                : $this->tenantSettingsService->resolveDisk($tenantId);
+            $disk = $this->resolver->forTenant($tenantId);
 
             if (! $disk->exists($doc->filePath)) {
                 continue;
@@ -170,6 +168,13 @@ class DocumentService
             fclose($stream);
             @unlink($tmpPath);
         }, 'documents.zip', ['Content-Type' => 'application/zip']);
+    }
+
+    private function diskForReport(Report $report): Filesystem
+    {
+        return $report->tenant_id !== null
+            ? $this->resolver->forTenant($report->tenant_id)
+            : $this->resolver->forSystem();
     }
 
     private function toData(DocumentRepositoryData $d): DocumentData

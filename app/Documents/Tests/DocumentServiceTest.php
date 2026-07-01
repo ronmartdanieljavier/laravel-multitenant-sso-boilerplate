@@ -2,13 +2,13 @@
 
 namespace App\Documents\Tests;
 
-use App\Admin\Services\TenantSettingsService;
 use App\Documents\Data\DocumentData;
 use App\Documents\Enums\DocumentSource;
 use App\Documents\Services\DocumentService;
 use App\Models\Central\Report;
 use App\Models\Central\User;
 use App\Models\Tenant\Document;
+use App\Storage\StorageResolver;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\RedirectResponse;
@@ -38,9 +38,10 @@ class DocumentServiceTest extends TestCase
         Storage::fake('local');
         $this->fakeDisk = Storage::disk('local');
 
-        $settingsService = \Mockery::mock(TenantSettingsService::class);
-        $settingsService->allows('resolveDisk')->andReturn($this->fakeDisk);
-        $this->app->instance(TenantSettingsService::class, $settingsService);
+        $resolver = \Mockery::mock(StorageResolver::class);
+        $resolver->allows('forTenant')->andReturn($this->fakeDisk);
+        $resolver->allows('forSystem')->andReturn($this->fakeDisk);
+        $this->app->instance(StorageResolver::class, $resolver);
 
         $this->service = app(DocumentService::class);
     }
@@ -203,14 +204,12 @@ class DocumentServiceTest extends TestCase
 
     public function test_create_from_report_creates_document_with_report_source(): void
     {
-        Storage::fake('reports');
-
         $user = User::factory()->create(['name' => 'Bob']);
         $report = Report::factory()->pdf()->success()->create([
             'user_id' => $user->id,
             'file_path' => 'demo/reports/report_test.pdf',
         ]);
-        Storage::disk('reports')->put('demo/reports/report_test.pdf', 'pdf-content');
+        $this->fakeDisk->put('demo/reports/report_test.pdf', 'pdf-content');
 
         $result = $this->service->createFromReport($report);
 
@@ -226,15 +225,13 @@ class DocumentServiceTest extends TestCase
 
     public function test_create_from_report_uses_report_type_as_title(): void
     {
-        Storage::fake('reports');
-
         $user = User::factory()->create();
         $report = Report::factory()->pdf()->success()->create([
             'user_id' => $user->id,
             'type' => 'documents_summary',
             'file_path' => 'demo/reports/report_abc.pdf',
         ]);
-        Storage::disk('reports')->put('demo/reports/report_abc.pdf', 'pdf-content');
+        $this->fakeDisk->put('demo/reports/report_abc.pdf', 'pdf-content');
 
         $result = $this->service->createFromReport($report);
 
@@ -243,8 +240,7 @@ class DocumentServiceTest extends TestCase
 
     public function test_download_response_for_report_document_uses_reports_disk(): void
     {
-        Storage::fake('reports');
-        Storage::disk('reports')->put('demo/reports/report.pdf', 'pdf-content');
+        $this->fakeDisk->put('demo/reports/report.pdf', 'pdf-content');
 
         $document = Document::on('tenant')->create([
             'title' => 'Report Document',

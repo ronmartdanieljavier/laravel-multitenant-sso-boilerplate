@@ -5,9 +5,9 @@ namespace App\Http\Middleware;
 use App\Admin\Services\SystemSettingsService;
 use App\Models\Central\User;
 use App\Repositories\Central\SystemSettingRepository;
+use App\Storage\StorageResolver;
 use App\Tenant\Services\TenantSwitcherService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -20,6 +20,10 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    public function __construct(
+        private readonly StorageResolver $resolver,
+    ) {}
 
     /**
      * Determines the current asset version.
@@ -41,7 +45,7 @@ class HandleInertiaRequests extends Middleware
             'name' => $user->name,
             'email' => $user->email,
             'profile_picture_url' => $user->profile_picture
-                ? Storage::disk('public')->url($user->profile_picture)
+                ? $this->resolver->forSystem()->url($user->profile_picture)
                 : null,
         ];
     }

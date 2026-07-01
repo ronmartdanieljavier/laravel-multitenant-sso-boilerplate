@@ -3,9 +3,9 @@
 namespace App\Http\Resources;
 
 use App\Models\Central\User;
+use App\Storage\StorageResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /** @mixin User */
 class UserResource extends JsonResource
@@ -22,7 +22,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'profile_picture_url' => $this->profile_picture
-                ? Storage::disk('public')->url($this->profile_picture)
+                ? app(StorageResolver::class)->forSystem()->url($this->profile_picture)
                 : null,
             'created_at' => $this->created_at,
         ];

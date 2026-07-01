@@ -9,15 +9,16 @@ use App\Profile\Http\Requests\UpdateNameRequest;
 use App\Profile\Http\Requests\UpdatePasswordRequest;
 use App\Profile\Http\Requests\UpdatePictureRequest;
 use App\Profile\Services\ProfileService;
+use App\Storage\StorageResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Storage;
 
 class ProfileApiController extends Controller
 {
     public function __construct(
-        protected ProfileService $profileService
+        protected ProfileService $profileService,
+        private readonly StorageResolver $resolver,
     ) {}
 
     /**
@@ -51,11 +52,15 @@ class ProfileApiController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $disk = $this->resolver->forSystem();
+
         if ($user->profile_picture) {
-            Storage::disk('public')->delete($user->profile_picture);
+            $disk->delete($user->profile_picture);
         }
 
-        $path = $request->file('profile_picture')->storePublicly('profile-pictures', 'public');
+        $file = $request->file('profile_picture');
+        $path = 'profile-pictures/'.$file->hashName();
+        $disk->put($path, $file->get(), 'public');
         $this->profileService->updatePicture($user->id, $path);
 
         return $this->profileService->getProfile($user->id);

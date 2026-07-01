@@ -8,16 +8,17 @@ use App\Profile\Http\Requests\UpdateNameRequest;
 use App\Profile\Http\Requests\UpdatePasswordRequest;
 use App\Profile\Http\Requests\UpdatePictureRequest;
 use App\Profile\Services\ProfileService;
+use App\Storage\StorageResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
     public function __construct(
-        protected ProfileService $profileService
+        protected ProfileService $profileService,
+        private readonly StorageResolver $resolver,
     ) {}
 
     /**
@@ -48,11 +49,15 @@ class ProfileController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
+        $disk = $this->resolver->forSystem();
+
         if ($user->profile_picture) {
-            Storage::disk('public')->delete($user->profile_picture);
+            $disk->delete($user->profile_picture);
         }
 
-        $path = $request->file('profile_picture')->storePublicly('profile-pictures', 'public');
+        $file = $request->file('profile_picture');
+        $path = 'profile-pictures/'.$file->hashName();
+        $disk->put($path, $file->get(), 'public');
         $this->profileService->updatePicture($user->id, $path);
 
         return back()->with('success', 'Profile picture updated.');

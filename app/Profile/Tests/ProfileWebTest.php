@@ -69,7 +69,7 @@ class ProfileWebTest extends TestCase
 
     public function test_user_can_upload_profile_picture(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $user = User::factory()->create();
 
         $this->actingAs($user)
@@ -79,12 +79,12 @@ class ProfileWebTest extends TestCase
 
         $user->refresh();
         $this->assertNotNull($user->profile_picture);
-        Storage::disk('public')->assertExists($user->profile_picture);
+        Storage::disk('local')->assertExists($user->profile_picture);
     }
 
     public function test_uploading_new_picture_deletes_the_old_one(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $user = User::factory()->create();
 
         $this->actingAs($user)->post('/profile/picture', ['profile_picture' => UploadedFile::fake()->image('first.jpg')]);
@@ -93,7 +93,7 @@ class ProfileWebTest extends TestCase
 
         $this->actingAs($user)->post('/profile/picture', ['profile_picture' => UploadedFile::fake()->image('second.jpg')]);
 
-        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('local')->assertMissing($oldPath);
     }
 
     public function test_profile_picture_must_be_an_image(): void

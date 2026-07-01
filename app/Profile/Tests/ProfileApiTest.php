@@ -74,7 +74,7 @@ class ProfileApiTest extends TestCase
 
     public function test_user_can_upload_profile_picture_via_api(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $user = User::factory()->create();
 
         $this->actingAs($user, 'sanctum')
@@ -84,12 +84,12 @@ class ProfileApiTest extends TestCase
 
         $user->refresh();
         $this->assertNotNull($user->profile_picture);
-        Storage::disk('public')->assertExists($user->profile_picture);
+        Storage::disk('local')->assertExists($user->profile_picture);
     }
 
     public function test_uploading_new_picture_via_api_deletes_old_one(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $user = User::factory()->create();
 
         $this->actingAs($user, 'sanctum')
@@ -102,7 +102,7 @@ class ProfileApiTest extends TestCase
             ->postJson('/api/v1/profile/picture', ['profile_picture' => UploadedFile::fake()->image('second.jpg')])
             ->assertCreated();
 
-        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('local')->assertMissing($oldPath);
     }
 
     public function test_picture_upload_via_api_rejects_non_image_files(): void

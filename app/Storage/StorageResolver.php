@@ -46,6 +46,8 @@ class StorageResolver
             ?? SystemSetting::get($key)
             ?? ($envKey !== null ? Env::get($envKey) : null);
 
+        $r2AccountId = $driver === 'r2' ? $get('r2_account_id', 'R2_ACCOUNT_ID') : null;
+
         $config = match ($driver) {
             's3' => [
                 'driver' => 's3',
@@ -65,12 +67,12 @@ class StorageResolver
                 'region' => 'auto',
                 'bucket' => $get('r2_bucket', 'R2_BUCKET'),
                 'url' => $get('r2_url', 'R2_URL'),
-                'endpoint' => 'https://'.($get('r2_account_id', 'R2_ACCOUNT_ID') ?? '').'.r2.cloudflarestorage.com',
+                'endpoint' => $r2AccountId !== null ? 'https://'.$r2AccountId.'.r2.cloudflarestorage.com' : null,
                 'use_path_style_endpoint' => true,
                 'visibility' => 'private',
                 'throw' => false,
                 'report' => false,
-                'r2_account_id' => $get('r2_account_id', 'R2_ACCOUNT_ID'),
+                'r2_account_id' => $r2AccountId,
             ],
             'gcs' => [
                 'driver' => 'gcs',

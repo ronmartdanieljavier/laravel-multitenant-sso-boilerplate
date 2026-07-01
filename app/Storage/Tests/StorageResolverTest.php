@@ -6,6 +6,7 @@ use App\Models\Central\SystemSetting;
 use App\Models\Central\TenantSetting;
 use App\Storage\StorageResolver;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -78,7 +79,7 @@ class StorageResolverTest extends TestCase
         SystemSetting::set('s3_region', 'ap-southeast-2');
         SystemSetting::set('s3_bucket', 'system-bucket');
 
-        $fakeDisk = Mockery::mock(Filesystem::class);
+        $fakeDisk = Mockery::mock(FilesystemAdapter::class);
         Storage::shouldReceive('build')
             ->once()
             ->withArgs(fn (array $config) => $config['key'] === 'system-key'

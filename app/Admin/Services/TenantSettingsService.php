@@ -229,12 +229,6 @@ class TenantSettingsService
         ];
     }
 
-    /**
-     * Resolve and return the effective storage disk for a tenant.
-     *
-     * Falls back to the system default when the tenant has no storage settings.
-     * The returned disk is ephemeral — built from live settings at call time.
-     */
     public function resolveDisk(int $tenantId): FilesystemAdapter
     {
         return $this->resolver->forTenant($tenantId);

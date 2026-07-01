@@ -4,20 +4,37 @@ namespace Tests\Feature\Reports;
 
 use App\Models\Central\Report;
 use App\Models\Central\User;
+use App\Storage\StorageResolver;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class ReportDownloadTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function fakeResolverDisk(string $diskName): FilesystemAdapter
+    {
+        Storage::fake($diskName);
+
+        $fakeDisk = Storage::disk($diskName);
+
+        $this->mock(StorageResolver::class, function (MockInterface $mock) use ($fakeDisk): void {
+            $mock->shouldReceive('forSystem')->andReturn($fakeDisk);
+            $mock->shouldReceive('forTenant')->andReturn($fakeDisk);
+        });
+
+        return $fakeDisk;
+    }
+
     public function test_user_can_download_a_successful_report(): void
     {
-        Storage::fake('reports');
+        $disk = $this->fakeResolverDisk('reports');
 
         $user = User::factory()->create();
-        Storage::disk('reports')->put("reports/{$user->id}/report.pdf", 'fake-pdf-content');
+        $disk->put("reports/{$user->id}/report.pdf", 'fake-pdf-content');
 
         $report = Report::factory()->success()->create([
             'user_id' => $user->id,
@@ -51,11 +68,11 @@ class ReportDownloadTest extends TestCase
 
     public function test_user_cannot_download_another_users_report(): void
     {
-        Storage::fake('reports');
+        $disk = $this->fakeResolverDisk('reports');
 
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
-        Storage::disk('reports')->put("reports/{$otherUser->id}/report.pdf", 'fake-pdf-content');
+        $disk->put("reports/{$otherUser->id}/report.pdf", 'fake-pdf-content');
 
         $report = Report::factory()->success()->create([
             'user_id' => $otherUser->id,

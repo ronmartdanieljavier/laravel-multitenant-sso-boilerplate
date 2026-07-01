@@ -14,12 +14,13 @@ use App\Reports\Http\Requests\StoreReportRequest;
 use App\Reports\Jobs\GenerateReportBatchJob;
 use App\Reports\Jobs\GenerateReportJob;
 use App\Repositories\Central\ReportRepository;
+use App\Storage\StorageResolver;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -28,6 +29,7 @@ class ReportController extends Controller
     public function __construct(
         private ReportRepository $reportRepository,
         private TenantSettingsService $tenantSettingsService,
+        private readonly StorageResolver $resolver,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -122,7 +124,7 @@ class ReportController extends Controller
             'Report is not ready for download.'
         );
 
-        $storage = Storage::disk('reports');
+        $storage = $this->diskFor($report);
 
         abort_unless($storage->exists($report->file_path), Response::HTTP_NOT_FOUND, 'Report file not found.');
 
@@ -134,11 +136,18 @@ class ReportController extends Controller
         Gate::authorize('delete', $report);
 
         if ($report->file_path !== null) {
-            Storage::disk('reports')->delete($report->file_path);
+            $this->diskFor($report)->delete($report->file_path);
         }
 
         $report->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function diskFor(Report $report): FilesystemAdapter
+    {
+        return $report->tenant_id !== null
+            ? $this->resolver->forTenant($report->tenant_id)
+            : $this->resolver->forSystem();
     }
 }

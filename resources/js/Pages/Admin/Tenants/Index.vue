@@ -135,9 +135,9 @@ function openEdit(tenant) {
     editForm.db_name = tenant.db_name ?? '';
     editForm.db_username = tenant.db_username ?? '';
     editForm.db_password = '';
-    editForm.read_replica_host = '';
-    editForm.read_replica_port = 5432;
-    editForm.read_replica_username = '';
+    editForm.read_replica_host = tenant.read_replica_host ?? '';
+    editForm.read_replica_port = tenant.read_replica_port ?? 5432;
+    editForm.read_replica_username = tenant.read_replica_username ?? '';
     editForm.read_replica_password = '';
     showEditReadReplica.value = tenant.has_read_replica;
     editForm.clearErrors();

@@ -139,6 +139,72 @@ class TenantManagementApiTest extends TestCase
         $this->deleteJson('/api/v1/admin/tenants/99999')->assertNotFound();
     }
 
+    public function test_update_tenant_with_read_replica_persists_and_returns_has_read_replica_true(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $tenant = Tenant::factory()->create(['read_replica_host' => null]);
+
+        $this->putJson("/api/v1/admin/tenants/{$tenant->id}", [
+            'name' => $tenant->name,
+            'slug' => $tenant->slug,
+            'db_host' => $tenant->db_host,
+            'db_port' => $tenant->db_port,
+            'db_name' => $tenant->db_name,
+            'db_username' => $tenant->db_username,
+            'read_replica_host' => 'replica.example.com',
+            'read_replica_port' => 5433,
+            'read_replica_username' => 'replica_user',
+            'read_replica_password' => 'replica_pass',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.has_read_replica', true)
+            ->assertJsonPath('data.read_replica_host', 'replica.example.com')
+            ->assertJsonPath('data.read_replica_username', 'replica_user');
+
+        $this->assertDatabaseHas('tenants', [
+            'id' => $tenant->id,
+            'read_replica_host' => 'replica.example.com',
+        ]);
+    }
+
+    public function test_update_tenant_clears_read_replica_when_host_is_null(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $tenant = Tenant::factory()->create(['read_replica_host' => 'old-replica.example.com']);
+
+        $this->putJson("/api/v1/admin/tenants/{$tenant->id}", [
+            'name' => $tenant->name,
+            'slug' => $tenant->slug,
+            'db_host' => $tenant->db_host,
+            'db_port' => $tenant->db_port,
+            'db_name' => $tenant->db_name,
+            'db_username' => $tenant->db_username,
+            'read_replica_host' => null,
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.has_read_replica', false);
+
+        $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'read_replica_host' => null]);
+    }
+
+    public function test_list_tenants_response_includes_read_replica_fields(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        Tenant::factory()->create([
+            'read_replica_host' => 'replica.example.com',
+            'read_replica_port' => 5433,
+            'read_replica_username' => 'ruser',
+        ]);
+
+        $this->getJson('/api/v1/admin/tenants')
+            ->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => ['has_read_replica', 'read_replica_host', 'read_replica_port', 'read_replica_username'],
+                ],
+            ]);
+    }
+
     public function test_update_returns_422_for_duplicate_slug(): void
     {
         Sanctum::actingAs(User::factory()->create());

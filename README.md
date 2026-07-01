@@ -133,7 +133,7 @@ A production-ready Laravel boilerplate for building multi-tenant SaaS platforms 
 - Persistent sidebar layout (`TenantLayout.vue`) so users navigate between Dashboard, Report Queue, Job Queue, Documents, and Error Logs without page flicker; all portal pages use full-width layout matching the admin panel
 - Report queue page at `/tenant/reports` — live status polling every 4 s, stat cards, format/status badges, download links
 - **Job queue page at `/tenant/jobs`** — general-purpose background job tracker; any job using `TenantJobTrackable` is automatically recorded; live polling every 4 s; filterable by status; shows job name, class, timestamps, duration, and expandable error detail for failed jobs
-- **Tenant switcher** — users assigned to more than one tenant see a dropdown in the sidebar below the tenant name; selecting a tenant posts to `POST /tenant/switch`, updates `session('tenant_app_current_tenant')`, and reloads the page with the new tenant's DB connection wired in
+- **Tenant switcher** — users assigned to more than one tenant see a dropdown in the sidebar below the tenant name; selecting a tenant posts to `POST /tenant/switch`, updates `session('tenant_app_current_tenant')`, and reloads the page with the new tenant's DB connection wired in; maintenance tenants are shown as disabled (greyed out, non-clickable) rather than hidden
 
 **Inertia.js + Vue 3 frontend**
 - Vue 3 page components served via Inertia.js — no separate frontend server
@@ -363,7 +363,7 @@ laravel-multitenant-sso-boilerplate/
 │   │           ├── AppRepositoryData.php           # id, name, slug, description, isActive
 │   │           ├── ReportRepositoryData.php         # id (UUID string), userId, type, format, status, …
 │   │           ├── TenantMigrationVersionRepositoryData.php  # migration, batch, migratedAt
-│   │           ├── TenantRepositoryData.php         # id, name, slug, isActive, dbHost/Port/Name/…, hasReadReplica, migrationVersions[]
+│   │           ├── TenantRepositoryData.php         # id, name, slug, isActive, dbHost/Port/Name/…, hasReadReplica, readReplicaHost/Port/Username, migrationVersions[]
 │   │           ├── UserAppRepositoryData.php        # appId, appName, role, tenantIds[]
 │   │           ├── UserRepositoryData.php           # id, name, email, profilePicture, isActive, invitationToken, invitationSentAt
 │   │           └── UserWithPermissionsRepositoryData.php  # id, name, email, isActive, invitationSentAt, profilePictureUrl, apps[]

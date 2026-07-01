@@ -71,6 +71,7 @@ class HandleInertiaRequests extends Middleware
             'name' => $t->name,
             'slug' => $t->slug,
             'isCurrent' => $t->isCurrent,
+            'isMaintenance' => $t->isMaintenance,
         ])->values()->all();
     }
 

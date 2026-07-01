@@ -326,6 +326,9 @@ class TenantRepository
             dbUsername: $tenant->db_username,
             dbPassword: $tenant->db_password,
             hasReadReplica: $tenant->hasReadReplica(),
+            readReplicaHost: $tenant->read_replica_host,
+            readReplicaPort: $tenant->read_replica_port,
+            readReplicaUsername: $tenant->read_replica_username,
             migrationVersions: $migrationVersions,
         );
     }

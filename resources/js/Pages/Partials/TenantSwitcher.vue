@@ -52,6 +52,15 @@ function switchTo(slug) {
                         </svg>
                         <span class="truncate">{{ tenant.name }}</span>
                     </div>
+                    <div
+                        v-else-if="tenant.isMaintenance"
+                        class="flex items-center gap-2 px-3 py-2 text-xs text-slate-600 cursor-not-allowed"
+                        :title="tenant.name + ' is under maintenance'"
+                    >
+                        <span class="w-3 h-3 shrink-0" />
+                        <span class="truncate">{{ tenant.name }}</span>
+                        <span class="ml-auto shrink-0 text-slate-600">🔧</span>
+                    </div>
                     <button
                         v-else
                         type="button"

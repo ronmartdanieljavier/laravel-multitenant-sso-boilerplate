@@ -72,7 +72,8 @@ class TenantSwitcherApiTest extends TestCase
         $this->actingAs($user, 'sanctum')
             ->getJson('/api/v1/tenant/tenants')
             ->assertOk()
-            ->assertJsonCount(1, 'data');
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.1.is_maintenance', true);
     }
 
     public function test_switch_updates_current_tenant(): void

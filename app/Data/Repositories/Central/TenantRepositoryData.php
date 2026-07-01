@@ -18,6 +18,9 @@ class TenantRepositoryData extends Data
         public ?string $dbUsername,
         public ?string $dbPassword,
         public bool $hasReadReplica,
+        public ?string $readReplicaHost,
+        public ?int $readReplicaPort,
+        public ?string $readReplicaUsername,
         /** @var TenantMigrationVersionRepositoryData[] */
         public array $migrationVersions = [],
     ) {}

@@ -3,12 +3,24 @@
 namespace App\Reports\Services;
 
 use App\Models\Central\Report;
-use Illuminate\Support\Facades\Storage;
+use App\Storage\StorageResolver;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use RuntimeException;
 use ZipArchive;
 
 class ReportFileService
 {
+    public function __construct(
+        private readonly StorageResolver $resolver,
+    ) {}
+
+    private function diskFor(Report $report): Filesystem
+    {
+        return $report->tenant_id !== null
+            ? $this->resolver->forTenant($report->tenant_id)
+            : $this->resolver->forSystem();
+    }
+
     /**
      * Compute the storage directory for a report's generated file.
      * Tenant reports live under {slug}/reports; user-only reports fall back to reports/{userId}.
@@ -26,7 +38,7 @@ class ReportFileService
     {
         $path = self::prefix($report).'/'.$filename;
 
-        if (Storage::disk('reports')->put($path, $content) === false) {
+        if ($this->diskFor($report)->put($path, $content) === false) {
             throw new RuntimeException("Failed to write report file at {$path}.");
         }
 
@@ -48,14 +60,15 @@ class ReportFileService
     public function zipFiles(array $storagePaths, string $zipName, string $prefix = 'reports'): string
     {
         $zip = new ZipArchive;
-        $zipPath = Storage::disk('reports')->path("{$prefix}/{$zipName}");
+        $disk = $this->resolver->forSystem();
+        $zipPath = $disk->path("{$prefix}/{$zipName}");
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             throw new RuntimeException("Cannot create ZIP archive at {$zipPath}");
         }
 
         foreach ($storagePaths as $storagePath) {
-            $absolutePath = Storage::disk('reports')->path($storagePath);
+            $absolutePath = $disk->path($storagePath);
             $zip->addFile($absolutePath, basename($storagePath));
         }
 
@@ -64,13 +77,13 @@ class ReportFileService
         return "{$prefix}/{$zipName}";
     }
 
-    public function absolutePath(string $storagePath): string
+    public function absolutePath(string $storagePath, Report $report): string
     {
-        return Storage::disk('reports')->path($storagePath);
+        return $this->diskFor($report)->path($storagePath);
     }
 
-    public function exists(string $storagePath): bool
+    public function exists(string $storagePath, Report $report): bool
     {
-        return Storage::disk('reports')->exists($storagePath);
+        return $this->diskFor($report)->exists($storagePath);
     }
 }

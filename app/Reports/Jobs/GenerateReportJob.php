@@ -96,7 +96,7 @@ class GenerateReportJob implements ShouldQueue
             ReportDelivery::Email => $isSubscriptionReport
                 ? $deliveryService->sendToRecipients($report, $parameters['recipients'] ?? [])
                 : $this->sendToReportUser($report),
-            ReportDelivery::S3 => $deliveryService->uploadToS3($report, $parameters['s3_path'] ?? null),
+            ReportDelivery::S3 => $deliveryService->uploadToStorage($report, $parameters['s3_path'] ?? null),
             ReportDelivery::EmailAndS3 => $this->handleEmailAndS3($report, $deliveryService, $parameters),
             default => null,
         };
@@ -114,7 +114,7 @@ class GenerateReportJob implements ShouldQueue
     private function handleEmailAndS3(Report $report, ReportDeliveryService $deliveryService, array $parameters): void
     {
         $deliveryService->sendToRecipients($report, $parameters['recipients'] ?? []);
-        $deliveryService->uploadToS3($report, $parameters['s3_path'] ?? null);
+        $deliveryService->uploadToStorage($report, $parameters['s3_path'] ?? null);
     }
 
     private function registerDocument(Report $report): void

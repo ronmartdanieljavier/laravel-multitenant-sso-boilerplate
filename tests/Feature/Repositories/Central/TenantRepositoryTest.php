@@ -67,6 +67,31 @@ class TenantRepositoryTest extends TestCase
         $this->assertTrue($dto->hasReadReplica);
     }
 
+    public function test_list_ordered_exposes_read_replica_connection_fields(): void
+    {
+        $tenant = Tenant::factory()->create([
+            'read_replica_host' => 'replica.example.com',
+            'read_replica_port' => 5433,
+            'read_replica_username' => 'replica_user',
+        ]);
+
+        $dto = $this->repository->listOrdered()->firstWhere('id', $tenant->id);
+
+        $this->assertSame('replica.example.com', $dto->readReplicaHost);
+        $this->assertSame(5433, $dto->readReplicaPort);
+        $this->assertSame('replica_user', $dto->readReplicaUsername);
+    }
+
+    public function test_list_ordered_read_replica_fields_null_when_no_replica(): void
+    {
+        $tenant = Tenant::factory()->create(['read_replica_host' => null]);
+
+        $dto = $this->repository->listOrdered()->firstWhere('id', $tenant->id);
+
+        $this->assertNull($dto->readReplicaHost);
+        $this->assertNull($dto->readReplicaUsername);
+    }
+
     public function test_all_with_migration_versions_returns_tenants_with_embedded_versions(): void
     {
         $tenant = Tenant::factory()->create();

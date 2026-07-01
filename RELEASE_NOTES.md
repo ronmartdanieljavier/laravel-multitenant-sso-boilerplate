@@ -2,6 +2,20 @@
 
 ---
 
+## [2.34.0] — 2026-07-02
+
+### Added
+
+- **Per-tenant read replica support** — each tenant can optionally configure a dedicated read replica database server. When set, all `SELECT` queries for that tenant automatically route to the replica via Laravel's `read`/`write` connection split with `sticky: true` (writes and post-write reads in the same request stay on the primary). Configure via the Edit Tenant modal or `PUT /api/v1/admin/tenants/{id}` with `read_replica_host`, `read_replica_port`, `read_replica_username`, and `read_replica_password`. Applies to both the API middleware (`ResolveTenantDatabase`) and the web middleware (`ResolveWebTenantDatabase`).
+
+### Changed
+
+- **Tenant switcher now shows maintenance tenants** — tenants under maintenance are included in the switcher dropdown but rendered as disabled (greyed out, non-clickable, with a 🔧 indicator). Previously they were hidden entirely, which caused the switcher to disappear for users assigned only to a mix of active and maintenance tenants.
+- **`GET /api/v1/tenant/tenants`** — response now includes `is_maintenance` per entry and returns maintenance tenants in the list (marked as non-switchable). Previously maintenance tenants were excluded entirely.
+- **Edit Tenant form** — read replica fields (`host`, `port`, `username`) are now pre-populated with existing values when opening the edit modal. Previously they were always reset to blank.
+
+---
+
 ## [2.33.0] — 2026-06-27
 
 ### Changed

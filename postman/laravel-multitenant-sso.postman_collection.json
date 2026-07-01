@@ -2896,7 +2896,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Acme Corp Updated\",\n  \"slug\": \"acme-corp\",\n  \"db_host\": \"10.0.0.1\",\n  \"db_port\": 5432,\n  \"db_name\": \"tenant_acme\",\n  \"db_username\": \"laravel\",\n  \"db_password\": null\n}"
+              "raw": "{\n  \"name\": \"Acme Corp Updated\",\n  \"slug\": \"acme-corp\",\n  \"db_host\": \"10.0.0.1\",\n  \"db_port\": 5432,\n  \"db_name\": \"tenant_acme\",\n  \"db_username\": \"laravel\",\n  \"db_password\": null,\n  \"read_replica_host\": \"10.0.0.2\",\n  \"read_replica_port\": 5432,\n  \"read_replica_username\": null,\n  \"read_replica_password\": null\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/tenants/{{tenant_id}}",
@@ -2911,7 +2911,7 @@
                 "{{tenant_id}}"
               ]
             },
-            "description": "Updates tenant details and database connection settings. Omit db_password (or send null) to keep the existing password."
+            "description": "Updates tenant details and database connection settings. Omit `db_password` or send `null` to keep the existing password. Supply `read_replica_host` to enable read replica routing — all SELECT queries for this tenant will go to the replica. Omit `read_replica_password` or send `null` to keep the existing replica password. Set `read_replica_host` to `null` to remove the replica."
           },
           "response": [
             {
@@ -5787,7 +5787,7 @@
                 "tenants"
               ]
             },
-            "description": "Returns all tenants assigned to the authenticated user under the Tenant app, excluding tenants in maintenance. Each entry includes `is_current` indicating the active tenant for the current session. Only returns results when the user has two or more accessible tenants."
+            "description": "Returns all active tenants assigned to the authenticated user under the Tenant app. Maintenance tenants are included but marked with `is_maintenance: true` — they cannot be switched to. Each entry includes `is_current` indicating the active tenant for the current session. Only returns results when the user has two or more assigned tenants."
           },
           "response": [
             {
@@ -5800,7 +5800,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Acme Corp\",\n      \"slug\": \"acme\",\n      \"is_current\": true\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Beta Corp\",\n      \"slug\": \"beta\",\n      \"is_current\": false\n    }\n  ]\n}"
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Acme Corp\",\n      \"slug\": \"acme\",\n      \"is_current\": true,\n      \"is_maintenance\": false\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Beta Corp\",\n      \"slug\": \"beta\",\n      \"is_current\": false,\n      \"is_maintenance\": false\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Gamma Corp\",\n      \"slug\": \"gamma\",\n      \"is_current\": false,\n      \"is_maintenance\": true\n    }\n  ]\n}"
             }
           ]
         },

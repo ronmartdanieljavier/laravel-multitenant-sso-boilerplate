@@ -189,6 +189,84 @@ class TenantManagementServiceTest extends TestCase
         $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'name' => 'New Name']);
     }
 
+    public function test_update_saves_read_replica_fields_and_returns_them_in_tenant_data(): void
+    {
+        $tenant = Tenant::factory()->create(['read_replica_host' => null]);
+
+        $data = new UpdateTenantData(
+            name: $tenant->name,
+            slug: $tenant->slug,
+            dbHost: $tenant->db_host,
+            dbPort: $tenant->db_port,
+            dbName: $tenant->db_name,
+            dbUsername: $tenant->db_username,
+            dbPassword: null,
+            readReplicaHost: 'replica.example.com',
+            readReplicaPort: 5433,
+            readReplicaUsername: 'replica_user',
+            readReplicaPassword: 'replica_pass',
+        );
+
+        $result = $this->service->update($tenant->id, $data);
+
+        $this->assertTrue($result->hasReadReplica);
+        $this->assertSame('replica.example.com', $result->readReplicaHost);
+        $this->assertSame(5433, $result->readReplicaPort);
+        $this->assertSame('replica_user', $result->readReplicaUsername);
+        $this->assertDatabaseHas('tenants', [
+            'id' => $tenant->id,
+            'read_replica_host' => 'replica.example.com',
+            'read_replica_username' => 'replica_user',
+        ]);
+    }
+
+    public function test_update_clears_read_replica_when_host_set_to_null(): void
+    {
+        $tenant = Tenant::factory()->create([
+            'read_replica_host' => 'old-replica.example.com',
+            'read_replica_username' => 'old_user',
+        ]);
+
+        $data = new UpdateTenantData(
+            name: $tenant->name,
+            slug: $tenant->slug,
+            dbHost: $tenant->db_host,
+            dbPort: $tenant->db_port,
+            dbName: $tenant->db_name,
+            dbUsername: $tenant->db_username,
+            dbPassword: null,
+            readReplicaHost: null,
+            readReplicaPort: null,
+            readReplicaUsername: null,
+            readReplicaPassword: null,
+        );
+
+        $result = $this->service->update($tenant->id, $data);
+
+        $this->assertFalse($result->hasReadReplica);
+        $this->assertNull($result->readReplicaHost);
+        $this->assertDatabaseHas('tenants', ['id' => $tenant->id, 'read_replica_host' => null]);
+    }
+
+    public function test_list_exposes_read_replica_fields_on_tenant_data(): void
+    {
+        $slug = 'replica-co-'.uniqid();
+        Tenant::factory()->create([
+            'slug' => $slug,
+            'read_replica_host' => 'replica.example.com',
+            'read_replica_port' => 5433,
+            'read_replica_username' => 'ruser',
+        ]);
+
+        $tenant = $this->service->list()->firstWhere('slug', $slug);
+
+        $this->assertNotNull($tenant);
+        $this->assertTrue($tenant->hasReadReplica);
+        $this->assertSame('replica.example.com', $tenant->readReplicaHost);
+        $this->assertSame(5433, $tenant->readReplicaPort);
+        $this->assertSame('ruser', $tenant->readReplicaUsername);
+    }
+
     public function test_set_active_false_revokes_tenant_user_tokens(): void
     {
         $tenant = Tenant::factory()->create(['is_active' => true]);

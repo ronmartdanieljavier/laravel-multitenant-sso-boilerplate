@@ -22,7 +22,7 @@ class UserManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_list_users(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         User::factory()->count(2)->create();
 
         $this->getJson('/api/v1/admin/users')
@@ -37,7 +37,7 @@ class UserManagementApiTest extends TestCase
     public function test_authenticated_user_can_invite_user(): void
     {
         Mail::fake();
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $app = App::factory()->create();
 
         $this->postJson('/api/v1/admin/users/invite', [
@@ -54,7 +54,7 @@ class UserManagementApiTest extends TestCase
 
     public function test_invite_rejects_duplicate_email(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         User::factory()->create(['email' => 'existing@example.com']);
 
         $this->postJson('/api/v1/admin/users/invite', [
@@ -65,7 +65,7 @@ class UserManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_update_user(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $target = User::factory()->create(['name' => 'Before', 'email' => 'before@example.com']);
         $app = App::factory()->create();
 
@@ -82,7 +82,7 @@ class UserManagementApiTest extends TestCase
 
     public function test_update_assigns_tenant_permissions(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $target = User::factory()->create();
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
@@ -102,7 +102,7 @@ class UserManagementApiTest extends TestCase
 
     public function test_update_rejects_missing_name(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $target = User::factory()->create();
 
         $this->putJson("/api/v1/admin/users/{$target->id}", ['email' => 'x@x.com'])
@@ -126,7 +126,7 @@ class UserManagementApiTest extends TestCase
     public function test_invite_response_contains_is_active_false(): void
     {
         Mail::fake();
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->postJson('/api/v1/admin/users/invite', [
             'name' => 'New Invitee',
@@ -139,7 +139,7 @@ class UserManagementApiTest extends TestCase
 
     public function test_list_response_includes_invitation_sent_at_and_profile_picture_url(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         User::factory()->create();
 
         $this->getJson('/api/v1/admin/users')
@@ -155,7 +155,7 @@ class UserManagementApiTest extends TestCase
     {
         Mail::fake();
 
-        $actor = User::factory()->create();
+        $actor = $this->grantAdminRole(User::factory()->create());
         $pending = User::factory()->create([
             'is_active' => false,
             'invitation_token' => 'tok',
@@ -173,7 +173,7 @@ class UserManagementApiTest extends TestCase
     {
         Mail::fake();
 
-        $actor = User::factory()->create();
+        $actor = $this->grantAdminRole(User::factory()->create());
         $pending = User::factory()->create([
             'is_active' => false,
             'invitation_token' => 'tok2',

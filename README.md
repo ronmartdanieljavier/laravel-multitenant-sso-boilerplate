@@ -580,6 +580,7 @@ What's built:
 - **Dynamic tenant database resolution** — `ResolveTenantDatabase` middleware reads `X-Tenant` header, verifies user access, and wires up a per-request `tenant` DB connection from credentials stored in the central DB
 - **Two-dimensional permissions enforcement** — `ResolveTenantDatabase` enforces both the app dimension (`X-App` header, Sanctum token ability `app:{slug}`, `user_apps` record) and the tenant dimension (`user_app_tenants` scoped to the resolved app); `RequireRole` middleware available for per-route role enforcement (`admin`, `user`, `readonly`)
 - **Laravel Horizon 5** — async report queue with dedicated `report-worker` supervisor; Horizon dashboard at `/horizon` gated via `HorizonServiceProvider`; `horizon` Docker service added
+- **Admin-only Horizon dashboard + `/admin` role gate** — the Horizon `viewHorizon` gate and a new `EnsureIsAdmin` middleware both check `UserAppRepository::userHasAdminRole()` (a user holding `role = admin` on the `admin` app in `user_apps`), replacing the previous local-environment-only bypass; `EnsureIsAdmin` is applied to every `/admin` web and `/api/v1/admin/*` route, returning 403 for authenticated users without the role; `AdminLayout.vue` sidebar gained a "Horizon" shortcut link, and the published Horizon layout override (`resources/views/vendor/horizon/layout.blade.php`) gained a "Back to Admin" button
 - **Async report engine** — `GenerateReportJob` + `GenerateReportBatchJob` dispatched to the `reports` Redis queue; status tracked through `pending → processing → success / failed`; cancelled batches mark all pending reports `Failed`; `Storage::put` failures surface as `Failed` with an error message; screen format fully working; PDF and Excel are stubs awaiting package installation
 - **Batch homogeneity enforced** — all reports in a batch must share the same `format` and `delivery`; validated at the API boundary; ZIP archive path persisted on the first report for retrieval via the download endpoint
 - **Tenant migration version tracking** — after each `tenant:migrate` run, the applied migrations are synced from the tenant's `migrations` table to the central `tenant_migration_versions` table; `tenant:migrate:status` command shows applied/total count, up-to-date status, and latest migration for each tenant
@@ -674,7 +675,7 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `POST` | `/profile/picture` | Session | Upload or replace profile picture (image, max 2 MB) |
 | `PUT` | `/profile/password` | Session | Change password (requires current password) |
 
-**System Settings (API — Bearer token auth)**
+**System Settings (API — Bearer token, admin role required)**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
@@ -688,7 +689,7 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `GET` | `/admin/settings` | Session | Show the settings page (Inertia — 7 tabs) |
 | `PUT` | `/admin/settings` | Session | Save settings, redirect with flash success |
 
-**User Management (API — Bearer token auth)**
+**User Management (API — Bearer token, admin role required)**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
@@ -703,7 +704,7 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `GET` | `/invitation/{token}` | — | Show the invitation acceptance form |
 | `POST` | `/invitation/{token}` | — | Accept the invitation — sets name, password, and activates the account |
 
-**Tenant Management (API — Bearer token auth)**
+**Tenant Management (API — Bearer token, admin role required)**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
@@ -752,7 +753,7 @@ Import via **Postman → Import → File**. The collection uses two variables �
 | `POST` | `/api/v1/documents/download-zip` | Bearer | Download multiple documents as `documents.zip` — body: `{ "ids": [1, 2, 3] }` |
 | `DELETE` | `/api/v1/documents/{id}` | Bearer | Delete a document record and its file from storage |
 
-**Admin Tenant Report Queue (API — Bearer token auth)**
+**Admin Tenant Report Queue (API — Bearer token, admin role required)**
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
@@ -813,7 +814,7 @@ Two apps are seeded on a fresh install:
 | **Admin** | `admin` | Central administration — users, apps, tenants, settings |
 | **Tenant** | `tenant` | Tenant portal — connects to a tenant database |
 
-The default admin account is granted the `admin` role on both apps and linked to the Demo Tenant database under the `tenant` app.
+The default admin account is granted the `admin` role on both apps and linked to the Demo Tenant database under the `tenant` app. Holding `role = admin` on the `admin` app is also what grants access to `/admin` and `/horizon` — see [`EnsureIsAdmin`](app/Http/Middleware/EnsureIsAdmin.php) and [`HorizonServiceProvider`](app/Providers/HorizonServiceProvider.php).
 
 **Permission model** — access is two-dimensional:
 - A user can have **Admin only** — manages tenants through the central DB, no tenant DB connection

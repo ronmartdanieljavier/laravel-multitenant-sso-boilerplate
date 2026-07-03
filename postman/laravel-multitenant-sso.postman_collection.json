@@ -2072,6 +2072,7 @@
     },
     {
       "name": "User Management (API)",
+      "description": "Requires the authenticated user to hold role=admin on the \"admin\" app (enforced by the EnsureIsAdmin middleware). A Bearer token alone is not sufficient \u2014 the underlying user must have the admin role, or these requests return 403.",
       "item": [
         {
           "name": "List Users",
@@ -2462,7 +2463,7 @@
     },
     {
       "name": "Admin Dashboard (API)",
-      "description": "Aggregated admin dashboard snapshot \u2014 same data powering the Inertia Admin/Index page, served as a single JSON response for mobile and external consumers.",
+      "description": "Requires the authenticated user to hold role=admin on the \"admin\" app (enforced by the EnsureIsAdmin middleware). A Bearer token alone is not sufficient \u2014 the underlying user must have the admin role, or these requests return 403. Aggregated admin dashboard snapshot \u2014 same data powering the Inertia Admin/Index page, served as a single JSON response for mobile and external consumers.",
       "item": [
         {
           "name": "Get Dashboard Snapshot",
@@ -2536,6 +2537,7 @@
     },
     {
       "name": "App Management (API)",
+      "description": "Requires the authenticated user to hold role=admin on the \"admin\" app (enforced by the EnsureIsAdmin middleware). A Bearer token alone is not sufficient \u2014 the underlying user must have the admin role, or these requests return 403.",
       "item": [
         {
           "name": "List Apps",
@@ -2751,6 +2753,7 @@
     },
     {
       "name": "Tenant Management (API)",
+      "description": "Requires the authenticated user to hold role=admin on the \"admin\" app (enforced by the EnsureIsAdmin middleware). A Bearer token alone is not sufficient \u2014 the underlying user must have the admin role, or these requests return 403.",
       "item": [
         {
           "name": "List Tenants",
@@ -3357,7 +3360,7 @@
     },
     {
       "name": "System Settings (API)",
-      "description": "Manage system-wide settings over the REST API using Sanctum Bearer token auth.\n\nAll settings are stored as a flat key-value store \u2014 sending only the keys you want to change is safe; omitted keys are left untouched.\n\nThe response envelope is always `{ \"data\": { ...all settings... }, \"missing_required\": [...] }`. `missing_required` lists the human-readable labels of required settings that have no value set (`email_driver`, `authentication_idle_time`, `storage_driver`).",
+      "description": "Requires the authenticated user to hold role=admin on the \"admin\" app (enforced by the EnsureIsAdmin middleware). A Bearer token alone is not sufficient \u2014 the underlying user must have the admin role, or these requests return 403. Manage system-wide settings over the REST API using Sanctum Bearer token auth.\n\nAll settings are stored as a flat key-value store \u2014 sending only the keys you want to change is safe; omitted keys are left untouched.\n\nThe response envelope is always `{ \"data\": { ...all settings... }, \"missing_required\": [...] }`. `missing_required` lists the human-readable labels of required settings that have no value set (`email_driver`, `authentication_idle_time`, `storage_driver`).",
       "item": [
         {
           "name": "Get All Settings",
@@ -4265,6 +4268,7 @@
     },
     {
       "name": "Tenant Settings (API)",
+      "description": "Requires the authenticated user to hold role=admin on the \"admin\" app (enforced by the EnsureIsAdmin middleware). A Bearer token alone is not sufficient \u2014 the underlying user must have the admin role, or these requests return 403.",
       "item": [
         {
           "name": "Get Tenant Settings",
@@ -4799,6 +4803,7 @@
     },
     {
       "name": "Tenant Users (API)",
+      "description": "Requires the authenticated user to hold role=admin on the \"admin\" app (enforced by the EnsureIsAdmin middleware). A Bearer token alone is not sufficient \u2014 the underlying user must have the admin role, or these requests return 403.",
       "item": [
         {
           "name": "List Users in Tenant",
@@ -5883,6 +5888,7 @@
     },
     {
       "name": "Tenant Error Logs (API)",
+      "description": "Requires the authenticated user to hold role=admin on the \"admin\" app (enforced by the EnsureIsAdmin middleware). A Bearer token alone is not sufficient \u2014 the underlying user must have the admin role, or these requests return 403.",
       "item": [
         {
           "name": "List Error Logs",

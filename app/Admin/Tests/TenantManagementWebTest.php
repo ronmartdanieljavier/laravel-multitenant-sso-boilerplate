@@ -20,7 +20,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_view_tenant_management(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['name' => 'Acme Corp', 'slug' => 'acme']);
 
         $this->actingAs($user)
@@ -35,7 +35,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_tenants_payload_includes_management_and_health_fields(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['slug' => 'acme']);
 
         $this->actingAs($user)
@@ -64,7 +64,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_summary_contains_all_status_counts(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin.tenants'))
@@ -81,7 +81,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_create_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->post(route('admin.tenants.store'), [
@@ -100,7 +100,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_create_rejects_duplicate_slug(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['slug' => 'taken']);
 
         $this->actingAs($user)
@@ -113,7 +113,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_update_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['name' => 'Old Name', 'slug' => 'old-slug']);
 
         $this->actingAs($user)
@@ -132,7 +132,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_update_slug_unique_excludes_self(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['slug' => 'my-slug']);
 
         $this->actingAs($user)
@@ -149,7 +149,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_deactivate_tenant_and_tokens_are_revoked(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_active' => true]);
         $tenantUser = User::factory()->create();
 
@@ -175,7 +175,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_activate_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_active' => false]);
 
         $this->actingAs($admin)
@@ -187,7 +187,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_delete_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $this->actingAs($admin)
@@ -199,7 +199,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_deleting_tenant_also_revokes_user_tokens(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
         $tenantUser->createToken('test-token', ['*']);
@@ -223,7 +223,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_logged_in_count_reflects_users_with_active_tokens(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create(['slug' => 'online-test-'.uniqid()]);
 
@@ -255,7 +255,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_tenants_payload_includes_is_maintenance_field(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['slug' => 'maint-test-'.uniqid(), 'is_maintenance' => false]);
 
         $this->actingAs($user)
@@ -270,7 +270,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_enable_maintenance_mode_and_tokens_are_revoked(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_maintenance' => false]);
         $tenantUser = User::factory()->create();
 
@@ -296,7 +296,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_disable_maintenance_mode(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_maintenance' => true]);
 
         $this->actingAs($admin)
@@ -308,7 +308,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_enable_maintenance_for_all_tenants(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $slug1 = 'maint-all-a-'.uniqid();
         $slug2 = 'maint-all-b-'.uniqid();
         Tenant::factory()->create(['slug' => $slug1, 'is_maintenance' => false]);
@@ -324,7 +324,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_disable_maintenance_for_all_tenants(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $slug1 = 'maint-off-a-'.uniqid();
         $slug2 = 'maint-off-b-'.uniqid();
         Tenant::factory()->create(['slug' => $slug1, 'is_maintenance' => true]);
@@ -340,7 +340,7 @@ class TenantManagementWebTest extends TestCase
 
     public function test_inactive_tenant_appears_as_critical_in_response(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['is_active' => false, 'slug' => 'inactive-co']);
 
         $this->actingAs($user)

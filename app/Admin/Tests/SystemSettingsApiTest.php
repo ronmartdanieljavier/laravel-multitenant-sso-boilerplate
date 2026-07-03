@@ -19,7 +19,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_retrieve_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->getJson('/api/v1/admin/settings')
             ->assertOk()
@@ -44,7 +44,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_update_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'email_driver' => 'postmark',
@@ -70,7 +70,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_push_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'push_driver' => 'fcm',
@@ -86,7 +86,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_push_driver(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['push_driver' => 'pusher'])
             ->assertUnprocessable()
@@ -95,7 +95,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_security_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'password_min_length' => 12,
@@ -114,7 +114,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_two_factor_auth_value(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['two_factor_auth' => 'mandatory'])
             ->assertUnprocessable()
@@ -123,7 +123,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_branding_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'app_name' => 'My SaaS',
@@ -140,7 +140,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_branding_support_email(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['support_email' => 'not-an-email'])
             ->assertUnprocessable()
@@ -149,7 +149,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_twilio_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'sms_driver' => 'twilio',
@@ -166,7 +166,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_vonage_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'sms_driver' => 'vonage',
@@ -181,7 +181,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_sns_sms_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'sms_driver' => 'sns',
@@ -197,7 +197,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_sms_driver(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['sms_driver' => 'messagebird'])
             ->assertUnprocessable()
@@ -206,7 +206,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_sns_sender_id_over_11_chars(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['sns_sms_sender_id' => 'TooLongName123'])
             ->assertUnprocessable()
@@ -215,7 +215,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_r2_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'storage_driver' => 'r2',
@@ -234,7 +234,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_gcs_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $keyJson = json_encode(['type' => 'service_account', 'project_id' => 'my-project']);
 
@@ -254,7 +254,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_local_storage(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['storage_driver' => 'local'])
             ->assertOk()
@@ -265,7 +265,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_ftp_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'storage_driver' => 'ftp',
@@ -285,7 +285,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_sftp_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'storage_driver' => 'sftp',
@@ -303,7 +303,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_storage_driver(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['storage_driver' => 'dropbox'])
             ->assertUnprocessable()
@@ -312,7 +312,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_mailgun_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'email_driver' => 'mailgun',
@@ -329,7 +329,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_ses_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'email_driver' => 'ses',
@@ -346,7 +346,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_email_driver(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['email_driver' => 'sendgrid'])
             ->assertUnprocessable()
@@ -355,7 +355,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_mailgun_endpoint(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'email_driver' => 'mailgun',
@@ -367,7 +367,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_authentication_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'authentication_idle_time' => 30,
@@ -382,7 +382,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_idle_timeout(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['authentication_idle_time' => 9999])
             ->assertUnprocessable()
@@ -391,7 +391,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_max_login_attempts(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', ['max_login_attempts' => 0])
             ->assertUnprocessable()
@@ -400,7 +400,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_missing_required_is_empty_when_all_required_settings_set(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         foreach ([
             'email_driver' => 'smtp',
@@ -417,7 +417,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_missing_required_lists_unset_fields(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $response = $this->getJson('/api/v1/admin/settings')->assertOk();
         $this->assertNotEmpty($response->json('missing_required'));
@@ -430,7 +430,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_email_footer_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'email_footer_signature' => '© 2025 My SaaS. All rights reserved.',
@@ -445,7 +445,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_save_html_email_footer_signature(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $html = '<p><strong>© 2025 My SaaS.</strong> <a href="https://example.com">Visit us</a></p>';
 
         $this->putJson('/api/v1/admin/settings', ['email_footer_signature' => $html])
@@ -457,7 +457,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_email_footer_signature_can_be_cleared(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         SystemSetting::set('email_footer_signature', '<p>Old footer</p>');
 
         $this->putJson('/api/v1/admin/settings', ['email_footer_signature' => null])
@@ -469,7 +469,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_email_footer_signature_over_2000_chars(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'email_footer_signature' => str_repeat('a', 2001),
@@ -480,7 +480,7 @@ class SystemSettingsApiTest extends TestCase
 
     public function test_update_rejects_invalid_email_footer_unsubscribe_url(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->putJson('/api/v1/admin/settings', [
             'email_footer_unsubscribe_url' => 'not-a-valid-url',

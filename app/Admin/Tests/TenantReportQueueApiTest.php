@@ -36,7 +36,7 @@ class TenantReportQueueApiTest extends TestCase
 
     public function test_returns_paginated_reports_for_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeReport($tenant, $user);
         $this->makeReport($tenant, $user);
@@ -49,7 +49,7 @@ class TenantReportQueueApiTest extends TestCase
 
     public function test_reports_are_scoped_to_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant1 = Tenant::factory()->create();
         $tenant2 = Tenant::factory()->create();
 
@@ -63,7 +63,7 @@ class TenantReportQueueApiTest extends TestCase
 
     public function test_response_includes_status_field(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeReport($tenant, $user, ['status' => ReportStatus::Failed]);
 

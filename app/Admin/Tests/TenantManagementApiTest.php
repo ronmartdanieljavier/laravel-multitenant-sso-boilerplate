@@ -21,7 +21,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_list_tenants(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         Tenant::factory()->count(2)->create();
 
         $this->getJson('/api/v1/admin/tenants')
@@ -36,7 +36,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_create_tenant(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->postJson('/api/v1/admin/tenants', [
             'name' => 'API Corp',
@@ -55,7 +55,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_create_rejects_duplicate_slug(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         Tenant::factory()->create(['slug' => 'taken']);
 
         $this->postJson('/api/v1/admin/tenants', [
@@ -66,7 +66,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_update_tenant(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = Tenant::factory()->create(['name' => 'Before']);
 
         $this->putJson("/api/v1/admin/tenants/{$tenant->id}", [
@@ -85,7 +85,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_deactivate_tenant(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = Tenant::factory()->create(['is_active' => true]);
 
         $this->patchJson("/api/v1/admin/tenants/{$tenant->id}/active", ['is_active' => false])
@@ -97,7 +97,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_deactivating_tenant_revokes_user_tokens(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         Sanctum::actingAs($admin);
 
         $tenant = Tenant::factory()->create(['is_active' => true]);
@@ -122,7 +122,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_delete_tenant(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = Tenant::factory()->create();
 
         $this->deleteJson("/api/v1/admin/tenants/{$tenant->id}")
@@ -134,14 +134,14 @@ class TenantManagementApiTest extends TestCase
 
     public function test_delete_returns_404_for_missing_tenant(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $this->deleteJson('/api/v1/admin/tenants/99999')->assertNotFound();
     }
 
     public function test_update_tenant_with_read_replica_persists_and_returns_has_read_replica_true(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = Tenant::factory()->create(['read_replica_host' => null]);
 
         $this->putJson("/api/v1/admin/tenants/{$tenant->id}", [
@@ -169,7 +169,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_update_tenant_clears_read_replica_when_host_is_null(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = Tenant::factory()->create(['read_replica_host' => 'old-replica.example.com']);
 
         $this->putJson("/api/v1/admin/tenants/{$tenant->id}", [
@@ -189,7 +189,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_list_tenants_response_includes_read_replica_fields(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         Tenant::factory()->create([
             'read_replica_host' => 'replica.example.com',
             'read_replica_port' => 5433,
@@ -207,7 +207,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_update_returns_422_for_duplicate_slug(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         Tenant::factory()->create(['slug' => 'other']);
         $tenant = Tenant::factory()->create(['slug' => 'mine']);
 
@@ -219,7 +219,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_enable_maintenance_mode(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = Tenant::factory()->create(['is_maintenance' => false]);
 
         $this->patchJson("/api/v1/admin/tenants/{$tenant->id}/maintenance", ['is_maintenance' => true])
@@ -231,7 +231,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_enabling_maintenance_mode_revokes_user_tokens(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = Tenant::factory()->create(['is_maintenance' => false]);
         $tenantUser = User::factory()->create();
         $tenantUser->createToken('api-token', ['*']);
@@ -254,7 +254,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_disable_maintenance_mode(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = Tenant::factory()->create(['is_maintenance' => true]);
 
         $this->patchJson("/api/v1/admin/tenants/{$tenant->id}/maintenance", ['is_maintenance' => false])
@@ -266,7 +266,7 @@ class TenantManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_enable_maintenance_for_all_tenants(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $slug1 = 'api-maint-a-'.uniqid();
         $slug2 = 'api-maint-b-'.uniqid();
         Tenant::factory()->create(['slug' => $slug1, 'is_maintenance' => false]);

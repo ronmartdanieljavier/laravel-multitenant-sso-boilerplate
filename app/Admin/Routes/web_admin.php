@@ -11,12 +11,13 @@ use App\Admin\Http\Controllers\TenantReportQueueController;
 use App\Admin\Http\Controllers\TenantSettingsController;
 use App\Admin\Http\Controllers\TenantUsersController;
 use App\Admin\Http\Controllers\UserManagementController;
+use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/invitation/{token}', [AcceptInvitationController::class, 'show'])->name('invitation.accept');
 Route::post('/invitation/{token}', [AcceptInvitationController::class, 'accept'])->name('invitation.accept.submit');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', EnsureIsAdmin::class])->group(function () {
 
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin');
 

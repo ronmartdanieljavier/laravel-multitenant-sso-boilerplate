@@ -35,7 +35,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_authenticated_user_can_view_tenant_users_page(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $this->actingAs($admin)
@@ -52,7 +52,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_tenant_prop_contains_id_name_and_slug(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['name' => 'Acme Corp', 'slug' => 'acme']);
 
         $this->actingAs($admin)
@@ -66,7 +66,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_users_prop_contains_only_users_assigned_to_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $otherTenant = Tenant::factory()->create();
@@ -87,7 +87,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_user_data_contains_expected_fields(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
@@ -107,7 +107,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_is_logged_in_is_true_when_user_has_active_token(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
@@ -123,7 +123,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_is_logged_in_is_false_when_user_has_no_token(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
@@ -138,7 +138,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_force_logout_revokes_user_tokens(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
@@ -162,7 +162,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_users_prop_is_empty_when_no_users_assigned_to_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $this->actingAs($admin)
@@ -172,7 +172,7 @@ class TenantUsersWebTest extends TestCase
 
     public function test_returns_404_for_unknown_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($admin)
             ->get('/admin/tenants/99999/users')

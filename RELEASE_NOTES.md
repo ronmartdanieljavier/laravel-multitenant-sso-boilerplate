@@ -2,6 +2,22 @@
 
 ---
 
+## [2.35.0] — 2026-07-03
+
+### Added
+
+- **Role-based access control for Horizon and the admin panel** — the Horizon `viewHorizon` gate (`app/Providers/HorizonServiceProvider.php`) and a new `EnsureIsAdmin` middleware (`app/Http/Middleware/EnsureIsAdmin.php`) both check `UserAppRepository::userHasAdminRole()`, which verifies the authenticated user holds `role = admin` on the `admin` app in `user_apps`. Previously the Horizon gate was a stub that only checked `app()->environment('local')`, and `/admin` routes had no role check at all beyond `auth` — any authenticated user could reach the admin panel.
+- **`EnsureIsAdmin` middleware** applied to every `/admin` web route and every `/api/v1/admin/*` route; returns a JSON `403` for API requests (`Accept: application/json`) and an HTML `403` for web requests when the user isn't authenticated or lacks the admin role.
+- **Horizon ↔ Admin panel navigation** — `AdminLayout.vue` sidebar gained a "Horizon" shortcut (plain `<a>` link, not an Inertia visit, since Horizon isn't an Inertia page) between Jobs and Settings; the Horizon dashboard itself gained a "Back to Admin" button via a published view override at `resources/views/vendor/horizon/layout.blade.php`.
+- **`UserAppRepository::userHasAdminRole(int $userId, string $appSlug = 'admin'): bool`** — new repository method backing both gates.
+
+### Changed
+
+- **`/admin` access is now restricted to users with the admin role** — this is a behavior change: any user who could previously log in and reach `/admin` (regardless of role) can now only do so if they hold `role = admin` on the `admin` app. Existing users invited with a non-admin role, or no `admin` app assignment at all, will now get `403 Forbidden`. Grant access via the Users page or directly: `UserApp::updateOrCreate(['user_id' => $id, 'app_id' => $adminAppId], ['role' => 'admin'])`.
+- **20 existing Admin module test files** (242 assertions) updated — none of them previously granted the acting test user an admin-app role, since no such check existed; added a `grantAdminRole()` helper to `tests/TestCase.php` used across all affected tests so they now exercise real authorization instead of an unguarded route.
+
+---
+
 ## [2.34.0] — 2026-07-02
 
 ### Added

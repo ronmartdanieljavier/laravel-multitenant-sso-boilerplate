@@ -28,7 +28,7 @@ class UserManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_view_users_page(): void
     {
-        $this->actingAs(User::factory()->create())
+        $this->actingAs($this->grantAdminRole(User::factory()->create()))
             ->get(route('admin.users'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
@@ -45,7 +45,7 @@ class UserManagementWebTest extends TestCase
         Mail::fake();
         $app = App::factory()->create();
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs($this->grantAdminRole(User::factory()->create()))
             ->post(route('admin.users.invite'), [
                 'name' => 'Jane Doe',
                 'email' => 'jane@example.com',
@@ -65,7 +65,7 @@ class UserManagementWebTest extends TestCase
     {
         $existing = User::factory()->create(['email' => 'taken@example.com']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs($this->grantAdminRole(User::factory()->create()))
             ->post(route('admin.users.invite'), [
                 'name' => 'Dup',
                 'email' => 'taken@example.com',
@@ -75,7 +75,7 @@ class UserManagementWebTest extends TestCase
 
     public function test_invite_rejects_missing_name(): void
     {
-        $this->actingAs(User::factory()->create())
+        $this->actingAs($this->grantAdminRole(User::factory()->create()))
             ->post(route('admin.users.invite'), ['email' => 'new@example.com'])
             ->assertSessionHasErrors('name');
     }
@@ -85,7 +85,7 @@ class UserManagementWebTest extends TestCase
         $target = User::factory()->create(['name' => 'Old Name', 'email' => 'old@example.com']);
         $app = App::factory()->create();
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs($this->grantAdminRole(User::factory()->create()))
             ->put(route('admin.users.update', $target->id), [
                 'name' => 'New Name',
                 'email' => 'new@example.com',
@@ -107,7 +107,7 @@ class UserManagementWebTest extends TestCase
 
         $target->userApps()->create(['app_id' => $app1->id, 'role' => 'user']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs($this->grantAdminRole(User::factory()->create()))
             ->put(route('admin.users.update', $target->id), [
                 'name' => $target->name,
                 'email' => $target->email,
@@ -220,7 +220,7 @@ class UserManagementWebTest extends TestCase
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs($this->grantAdminRole(User::factory()->create()))
             ->put(route('admin.users.update', $target->id), [
                 'name' => $target->name,
                 'email' => $target->email,
@@ -239,7 +239,7 @@ class UserManagementWebTest extends TestCase
     {
         Mail::fake();
 
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $pending = User::factory()->create([
             'is_active' => false,
             'invitation_token' => 'original-token',
@@ -257,7 +257,7 @@ class UserManagementWebTest extends TestCase
     {
         Mail::fake();
 
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $pending = User::factory()->create([
             'is_active' => false,
             'invitation_token' => 'old-token',

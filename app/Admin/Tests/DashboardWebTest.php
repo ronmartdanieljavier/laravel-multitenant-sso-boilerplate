@@ -20,7 +20,7 @@ class DashboardWebTest extends TestCase
 
     public function test_authenticated_user_can_view_dashboard(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin'))
@@ -39,7 +39,7 @@ class DashboardWebTest extends TestCase
 
     public function test_unresolved_errors_prop_contains_expected_keys(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin'))
@@ -54,7 +54,7 @@ class DashboardWebTest extends TestCase
 
     public function test_pending_users_prop_contains_only_users_with_invitation_token(): void
     {
-        $admin = User::factory()->create(['is_active' => true]);
+        $admin = $this->grantAdminRole(User::factory()->create(['is_active' => true]));
         $invited = User::factory()->create([
             'is_active' => false,
             'invitation_token' => Str::random(64),
@@ -75,7 +75,7 @@ class DashboardWebTest extends TestCase
 
     public function test_pending_users_excludes_active_users(): void
     {
-        $admin = User::factory()->create(['is_active' => true]);
+        $admin = $this->grantAdminRole(User::factory()->create(['is_active' => true]));
 
         $this->actingAs($admin)
             ->get(route('admin'))
@@ -86,7 +86,7 @@ class DashboardWebTest extends TestCase
 
     public function test_recent_users_contains_at_most_five_entries(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         User::factory()->count(10)->create();
 
         $this->actingAs($user)
@@ -98,7 +98,7 @@ class DashboardWebTest extends TestCase
 
     public function test_recent_users_are_ordered_newest_first(): void
     {
-        $oldest = User::factory()->create(['email' => 'oldest@example.com', 'created_at' => now()->subDays(10)]);
+        $oldest = $this->grantAdminRole(User::factory()->create(['email' => 'oldest@example.com', 'created_at' => now()->subDays(10)]));
         $newest = User::factory()->create(['email' => 'newest@example.com', 'created_at' => now()->addMinute()]);
 
         $this->actingAs($oldest)
@@ -110,7 +110,7 @@ class DashboardWebTest extends TestCase
 
     public function test_dashboard_stats_contains_expected_keys(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin'))
@@ -126,7 +126,7 @@ class DashboardWebTest extends TestCase
 
     public function test_dashboard_health_summary_contains_expected_keys(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin'))
@@ -141,7 +141,7 @@ class DashboardWebTest extends TestCase
 
     public function test_health_summary_total_equals_sum_of_statuses(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $response = $this->actingAs($user)->get(route('admin'));
         $summary = $response->original->getData()['page']['props']['healthSummary'];
@@ -154,7 +154,7 @@ class DashboardWebTest extends TestCase
 
     public function test_migration_compliance_prop_contains_expected_keys(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin'))
@@ -169,7 +169,7 @@ class DashboardWebTest extends TestCase
 
     public function test_migration_compliance_total_equals_up_to_date_plus_behind(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $response = $this->actingAs($user)->get(route('admin'));
         $mc = $response->original->getData()['page']['props']['migrationCompliance'];
@@ -179,7 +179,7 @@ class DashboardWebTest extends TestCase
 
     public function test_report_queue_prop_contains_expected_keys(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin'))
@@ -193,7 +193,7 @@ class DashboardWebTest extends TestCase
 
     public function test_unresolved_errors_total_reflects_real_error_log_rows(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $before = $this->actingAs($admin)->get(route('admin'))
@@ -217,7 +217,7 @@ class DashboardWebTest extends TestCase
 
     public function test_unresolved_errors_total_excludes_resolved_logs(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $before = $this->actingAs($admin)->get(route('admin'))
@@ -242,7 +242,7 @@ class DashboardWebTest extends TestCase
 
     public function test_stats_active_sso_sessions_counts_personal_access_tokens(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
 
         $before = $this->actingAs($admin)->get(route('admin'))
             ->original->getData()['page']['props']['stats']['active_sso_sessions'];
@@ -258,7 +258,7 @@ class DashboardWebTest extends TestCase
 
     public function test_dashboard_stats_are_numeric(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin'))

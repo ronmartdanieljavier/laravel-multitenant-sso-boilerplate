@@ -28,7 +28,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_view_tenant_settings_page(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -44,7 +44,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_settings_show_null_when_no_overrides_exist(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -60,7 +60,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_update_tenant_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -86,7 +86,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_clearing_a_setting_removes_the_row(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         TenantSetting::create(['tenant_id' => $tenant->id, 'key' => 'email_driver', 'value' => 'postmark']);
@@ -107,7 +107,7 @@ class TenantSettingsWebTest extends TestCase
     {
         Storage::fake('public');
 
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $file = UploadedFile::fake()->image('logo.png', 200, 50);
@@ -124,7 +124,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_logo_upload_requires_an_image(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $file = UploadedFile::fake()->create('document.pdf', 500, 'application/pdf');
@@ -138,7 +138,7 @@ class TenantSettingsWebTest extends TestCase
     {
         Storage::fake('public');
 
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $path = 'tenant-logos/1/logo.png';
@@ -157,7 +157,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_invalid_email_driver_is_rejected(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -169,7 +169,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_redis_connections_prop_contains_only_redis_driver_keys(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $response = $this->actingAs($user)
@@ -185,7 +185,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_report_server_settings_can_be_saved(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -203,7 +203,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_tenant_users_page_lists_users_in_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -218,7 +218,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_upload_settings_appear_in_tenant_settings_payload(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -241,7 +241,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_tenant_upload_settings_can_be_saved(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -267,7 +267,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_tenant_upload_max_size_above_100_is_rejected(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->actingAs($user)
@@ -279,7 +279,7 @@ class TenantSettingsWebTest extends TestCase
 
     public function test_clearing_tenant_upload_settings_removes_rows(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         TenantSetting::create(['tenant_id' => $tenant->id, 'key' => 'upload_allowed_types', 'value' => 'pdf']);

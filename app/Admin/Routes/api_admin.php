@@ -10,9 +10,10 @@ use App\Admin\Http\Controllers\TenantReportQueueApiController;
 use App\Admin\Http\Controllers\TenantSettingsApiController;
 use App\Admin\Http\Controllers\TenantUsersApiController;
 use App\Admin\Http\Controllers\UserManagementApiController;
+use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->prefix('admin')->name('admin.')->group(function (): void {
+Route::middleware(['auth:sanctum', EnsureIsAdmin::class])->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('dashboard', [DashboardApiController::class, 'index'])->name('api.dashboard');
 
     Route::get('users', [UserManagementApiController::class, 'index'])->name('api.users');

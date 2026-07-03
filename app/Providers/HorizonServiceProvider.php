@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Central\User;
+use App\Repositories\Central\UserAppRepository;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
@@ -27,9 +29,12 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewHorizon', function ($user = null) {
-            // TODO: restrict to admin users once an is_admin flag or role is added to the users table.
-            return app()->environment('local');
+        Gate::define('viewHorizon', function (?User $user): bool {
+            if (! $user) {
+                return false;
+            }
+
+            return app(UserAppRepository::class)->userHasAdminRole($user->id);
         });
     }
 }

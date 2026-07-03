@@ -18,7 +18,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_view_apps_page(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin.apps'))
@@ -31,7 +31,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_apps_page_lists_all_apps(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $existing = App::count();
         App::factory()->count(3)->create();
 
@@ -44,7 +44,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_apps_payload_includes_expected_fields(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         App::factory()->create(['name' => 'My App', 'description' => 'A test app']);
 
         $this->actingAs($user)
@@ -70,7 +70,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_update_app_name_and_description(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create(['name' => 'Old Name', 'description' => 'Old desc']);
 
         $this->actingAs($user)
@@ -87,7 +87,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_authenticated_user_can_clear_description(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create(['description' => 'Has a description']);
 
         $this->actingAs($user)
@@ -102,7 +102,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_update_rejects_missing_name(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
 
         $this->actingAs($user)
@@ -112,7 +112,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_update_rejects_name_over_255_chars(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
 
         $this->actingAs($user)
@@ -122,7 +122,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_update_rejects_description_over_1000_chars(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
 
         $this->actingAs($user)
@@ -135,7 +135,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_update_returns_404_for_nonexistent_app(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.apps.update', 999), ['name' => 'Name'])
@@ -144,7 +144,7 @@ class AppManagementWebTest extends TestCase
 
     public function test_update_does_not_change_slug_or_url(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create(['slug' => 'original-slug', 'url' => 'https://example.com']);
 
         $this->actingAs($user)

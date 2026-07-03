@@ -39,7 +39,7 @@ class TenantErrorLogWebTest extends TestCase
 
     public function test_authenticated_user_can_view_error_list(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
         $this->errorLog($tenant);
 
@@ -55,7 +55,7 @@ class TenantErrorLogWebTest extends TestCase
 
     public function test_error_list_only_shows_logs_for_the_given_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant1 = $this->tenant();
         $tenant2 = Tenant::factory()->create(['slug' => 'other']);
 
@@ -75,7 +75,7 @@ class TenantErrorLogWebTest extends TestCase
 
     public function test_error_detail_page_renders(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
         $log = $this->errorLog($tenant);
 
@@ -90,7 +90,7 @@ class TenantErrorLogWebTest extends TestCase
 
     public function test_error_detail_returns_404_for_wrong_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant1 = $this->tenant();
         $tenant2 = Tenant::factory()->create(['slug' => 'other']);
         $log = $this->errorLog($tenant2, ['error_code' => 'E-OTHER-YYYYYYYY']);
@@ -102,7 +102,7 @@ class TenantErrorLogWebTest extends TestCase
 
     public function test_error_can_be_resolved(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
         $log = $this->errorLog($tenant);
 
@@ -117,7 +117,7 @@ class TenantErrorLogWebTest extends TestCase
 
     public function test_error_can_be_unresolved(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
         $log = $this->errorLog($tenant, ['resolved_at' => now()]);
 
@@ -130,7 +130,7 @@ class TenantErrorLogWebTest extends TestCase
 
     public function test_error_can_be_deleted(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
         $log = $this->errorLog($tenant);
 
@@ -143,7 +143,7 @@ class TenantErrorLogWebTest extends TestCase
 
     public function test_unresolved_filter_excludes_resolved_errors(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = $this->tenant();
 
         $this->errorLog($tenant, ['error_code' => 'E-ACME-OPEN0001']);

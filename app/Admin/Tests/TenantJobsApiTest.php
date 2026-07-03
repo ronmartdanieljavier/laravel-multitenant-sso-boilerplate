@@ -35,7 +35,7 @@ class TenantJobsApiTest extends TestCase
 
     public function test_global_jobs_endpoint_returns_paginated_jobs(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['name' => 'Acme']);
         $this->makeJob($tenant);
 
@@ -48,7 +48,7 @@ class TenantJobsApiTest extends TestCase
 
     public function test_global_jobs_endpoint_filters_by_status(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeJob($tenant, ['status' => TenantJobStatus::Failed]);
         $this->makeJob($tenant, ['status' => TenantJobStatus::Completed]);
@@ -61,7 +61,7 @@ class TenantJobsApiTest extends TestCase
 
     public function test_global_jobs_endpoint_filters_by_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant1 = Tenant::factory()->create();
         $tenant2 = Tenant::factory()->create();
         $this->makeJob($tenant1);
@@ -84,7 +84,7 @@ class TenantJobsApiTest extends TestCase
 
     public function test_tenant_jobs_endpoint_returns_paginated_jobs(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeJob($tenant);
 
@@ -96,7 +96,7 @@ class TenantJobsApiTest extends TestCase
 
     public function test_tenant_jobs_endpoint_scopes_to_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant1 = Tenant::factory()->create();
         $tenant2 = Tenant::factory()->create();
         $this->makeJob($tenant1);
@@ -110,7 +110,7 @@ class TenantJobsApiTest extends TestCase
 
     public function test_tenant_jobs_endpoint_filters_by_status(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeJob($tenant, ['status' => TenantJobStatus::Failed]);
         $this->makeJob($tenant, ['status' => TenantJobStatus::Completed]);
@@ -123,7 +123,7 @@ class TenantJobsApiTest extends TestCase
 
     public function test_response_includes_status_field(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeJob($tenant, ['status' => TenantJobStatus::Failed]);
 

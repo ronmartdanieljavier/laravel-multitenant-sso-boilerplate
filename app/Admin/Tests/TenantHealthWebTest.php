@@ -22,7 +22,7 @@ class TenantHealthWebTest extends TestCase
 
     public function test_authenticated_user_can_view_tenant_health_dashboard(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['name' => 'Acme Corp', 'slug' => 'acme']);
 
         $this->actingAs($user)
@@ -37,7 +37,7 @@ class TenantHealthWebTest extends TestCase
 
     public function test_tenants_payload_includes_required_fields(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['slug' => 'acme']);
 
         $this->actingAs($user)
@@ -61,7 +61,7 @@ class TenantHealthWebTest extends TestCase
 
     public function test_summary_contains_all_status_counts(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin.tenants'))
@@ -78,7 +78,7 @@ class TenantHealthWebTest extends TestCase
 
     public function test_inactive_tenant_appears_as_critical_in_response(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['is_active' => false, 'slug' => 'inactive-co']);
 
         $this->actingAs($user)
@@ -92,7 +92,7 @@ class TenantHealthWebTest extends TestCase
 
     public function test_tenant_with_failed_reports_appears_as_critical(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_active' => true, 'slug' => 'failing-co']);
 
         TenantMigrationVersion::create([
@@ -123,7 +123,7 @@ class TenantHealthWebTest extends TestCase
 
     public function test_tenant_with_no_users_appears_as_warning(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_active' => true, 'slug' => 'empty-co']);
 
         TenantMigrationVersion::create([
@@ -144,7 +144,7 @@ class TenantHealthWebTest extends TestCase
 
     public function test_tenant_with_stale_migrations_appears_as_warning(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_active' => true, 'slug' => 'stale-co']);
 
         TenantMigrationVersion::create([

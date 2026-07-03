@@ -36,7 +36,7 @@ class TenantReportQueueWebTest extends TestCase
 
     public function test_authenticated_user_can_view_report_queue(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeReport($tenant, $user);
 
@@ -52,7 +52,7 @@ class TenantReportQueueWebTest extends TestCase
 
     public function test_only_shows_reports_for_the_given_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant1 = Tenant::factory()->create();
         $tenant2 = Tenant::factory()->create();
 
@@ -66,7 +66,7 @@ class TenantReportQueueWebTest extends TestCase
 
     public function test_reports_from_all_users_in_tenant_are_visible(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
         $tenant = Tenant::factory()->create();
@@ -81,7 +81,7 @@ class TenantReportQueueWebTest extends TestCase
 
     public function test_reports_ordered_latest_first(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $this->makeReport($tenant, $user, ['created_at' => now()->subDay()]);
@@ -94,7 +94,7 @@ class TenantReportQueueWebTest extends TestCase
 
     public function test_all_statuses_are_returned(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         foreach ([ReportStatus::Pending, ReportStatus::Processing, ReportStatus::Success, ReportStatus::Failed] as $status) {

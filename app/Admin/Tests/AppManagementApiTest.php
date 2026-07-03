@@ -26,7 +26,7 @@ class AppManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_list_apps(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         App::factory()->count(2)->create();
 
         $this->getJson('/api/v1/admin/apps')
@@ -40,7 +40,7 @@ class AppManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_update_app(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $app = App::factory()->create(['name' => 'Old Name', 'description' => 'Old desc']);
 
         $this->putJson("/api/v1/admin/apps/{$app->id}", [
@@ -58,7 +58,7 @@ class AppManagementApiTest extends TestCase
 
     public function test_authenticated_user_can_clear_description(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $app = App::factory()->create(['description' => 'Has one']);
 
         $this->putJson("/api/v1/admin/apps/{$app->id}", [
@@ -73,7 +73,7 @@ class AppManagementApiTest extends TestCase
 
     public function test_update_rejects_missing_name(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $app = App::factory()->create();
 
         $this->putJson("/api/v1/admin/apps/{$app->id}", ['name' => ''])
@@ -83,7 +83,7 @@ class AppManagementApiTest extends TestCase
 
     public function test_update_rejects_name_over_255_chars(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $app = App::factory()->create();
 
         $this->putJson("/api/v1/admin/apps/{$app->id}", ['name' => str_repeat('a', 256)])
@@ -93,7 +93,7 @@ class AppManagementApiTest extends TestCase
 
     public function test_update_rejects_description_over_1000_chars(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $app = App::factory()->create();
 
         $this->putJson("/api/v1/admin/apps/{$app->id}", [
@@ -113,7 +113,7 @@ class AppManagementApiTest extends TestCase
 
     public function test_update_does_not_change_slug_or_url(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $app = App::factory()->create(['slug' => 'original-slug', 'url' => 'https://example.com']);
 
         $this->putJson("/api/v1/admin/apps/{$app->id}", ['name' => 'Renamed'])->assertOk();

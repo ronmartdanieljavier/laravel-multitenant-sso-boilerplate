@@ -29,7 +29,7 @@ class TenantSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_retrieve_tenant_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = $this->tenant();
 
         $this->getJson("/api/v1/admin/tenants/{$tenant->id}/settings")
@@ -53,7 +53,7 @@ class TenantSettingsApiTest extends TestCase
 
     public function test_authenticated_user_can_update_tenant_settings(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = $this->tenant();
 
         $this->putJson("/api/v1/admin/tenants/{$tenant->id}/settings", [
@@ -77,7 +77,7 @@ class TenantSettingsApiTest extends TestCase
 
     public function test_tenant_settings_do_not_leak_between_tenants(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
 
         $tenant1 = Tenant::factory()->create(['slug' => 't1']);
         $tenant2 = Tenant::factory()->create(['slug' => 't2']);
@@ -92,7 +92,7 @@ class TenantSettingsApiTest extends TestCase
     public function test_logo_can_be_uploaded_via_api(): void
     {
         Storage::fake('public');
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = $this->tenant();
 
         $file = UploadedFile::fake()->image('logo.png', 200, 50);
@@ -105,7 +105,7 @@ class TenantSettingsApiTest extends TestCase
     public function test_logo_can_be_deleted_via_api(): void
     {
         Storage::fake('public');
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = $this->tenant();
 
         $path = "tenant-logos/{$tenant->id}/logo.png";
@@ -124,7 +124,7 @@ class TenantSettingsApiTest extends TestCase
 
     public function test_report_connection_can_be_saved_via_api(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = $this->tenant();
 
         $this->putJson("/api/v1/admin/tenants/{$tenant->id}/settings", [
@@ -144,7 +144,7 @@ class TenantSettingsApiTest extends TestCase
 
     public function test_tenant_users_can_be_listed_via_api(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($this->grantAdminRole(User::factory()->create()));
         $tenant = $this->tenant();
 
         $this->getJson("/api/v1/admin/tenants/{$tenant->id}/users")

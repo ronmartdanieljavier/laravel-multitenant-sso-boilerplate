@@ -77,6 +77,18 @@ class UserAppRepository
     }
 
     /**
+     * Determine whether a user holds the admin role on a given app (by slug).
+     */
+    public function userHasAdminRole(int $userId, string $appSlug = 'admin'): bool
+    {
+        return UserApp::query()
+            ->where('user_id', $userId)
+            ->where('role', Role::Admin)
+            ->whereHas('app', fn ($query) => $query->where('slug', $appSlug))
+            ->exists();
+    }
+
+    /**
      * Get the default tenant slug for a user+app combination.
      */
     public function getDefaultTenantSlugForUserAndApp(int $userId, string $appSlug): ?string

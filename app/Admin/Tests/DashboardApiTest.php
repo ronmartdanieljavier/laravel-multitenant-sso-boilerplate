@@ -20,7 +20,7 @@ class DashboardApiTest extends TestCase
 
     public function test_authenticated_user_can_retrieve_dashboard_stats(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user, 'sanctum')
             ->getJson(route('admin.api.dashboard'))
@@ -45,7 +45,7 @@ class DashboardApiTest extends TestCase
 
     public function test_all_stat_values_are_integers(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $data = $this->actingAs($user, 'sanctum')
             ->getJson(route('admin.api.dashboard'))
@@ -62,7 +62,7 @@ class DashboardApiTest extends TestCase
 
     public function test_health_summary_values_are_integers(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $summary = $this->actingAs($user, 'sanctum')
             ->getJson(route('admin.api.dashboard'))
@@ -78,7 +78,7 @@ class DashboardApiTest extends TestCase
 
     public function test_health_summary_total_equals_sum_of_statuses(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $summary = $this->actingAs($user, 'sanctum')
             ->getJson(route('admin.api.dashboard'))
@@ -90,7 +90,7 @@ class DashboardApiTest extends TestCase
 
     public function test_pending_users_excludes_users_without_invitation_token(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $noToken = User::factory()->create(['is_active' => false, 'invitation_token' => null]);
         $invited = User::factory()->create([
             'is_active' => false,
@@ -110,7 +110,7 @@ class DashboardApiTest extends TestCase
 
     public function test_recent_users_contains_at_most_five_entries(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         User::factory()->count(10)->create();
 
         $recent = $this->actingAs($user, 'sanctum')
@@ -123,7 +123,7 @@ class DashboardApiTest extends TestCase
 
     public function test_recent_users_are_ordered_newest_first(): void
     {
-        $oldest = User::factory()->create(['email' => 'api-oldest@example.com', 'created_at' => now()->subDays(10)]);
+        $oldest = $this->grantAdminRole(User::factory()->create(['email' => 'api-oldest@example.com', 'created_at' => now()->subDays(10)]));
         User::factory()->create(['email' => 'api-newest@example.com', 'created_at' => now()->addMinute()]);
 
         $recent = $this->actingAs($oldest, 'sanctum')
@@ -136,7 +136,7 @@ class DashboardApiTest extends TestCase
 
     public function test_unresolved_errors_values_are_integers(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $errors = $this->actingAs($user, 'sanctum')
             ->getJson(route('admin.api.dashboard'))
@@ -151,7 +151,7 @@ class DashboardApiTest extends TestCase
 
     public function test_unresolved_errors_total_reflects_real_error_log_rows(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $before = $this->actingAs($admin, 'sanctum')
@@ -179,7 +179,7 @@ class DashboardApiTest extends TestCase
 
     public function test_unresolved_errors_excludes_resolved_logs(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $before = $this->actingAs($admin, 'sanctum')
@@ -208,7 +208,7 @@ class DashboardApiTest extends TestCase
 
     public function test_report_queue_values_are_integers(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $queue = $this->actingAs($user, 'sanctum')
             ->getJson(route('admin.api.dashboard'))
@@ -222,7 +222,7 @@ class DashboardApiTest extends TestCase
 
     public function test_migration_compliance_values_are_integers(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $mc = $this->actingAs($user, 'sanctum')
             ->getJson(route('admin.api.dashboard'))
@@ -237,7 +237,7 @@ class DashboardApiTest extends TestCase
 
     public function test_migration_compliance_total_equals_up_to_date_plus_behind(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $mc = $this->actingAs($user, 'sanctum')
             ->getJson(route('admin.api.dashboard'))

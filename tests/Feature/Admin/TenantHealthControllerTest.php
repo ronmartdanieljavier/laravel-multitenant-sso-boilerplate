@@ -23,7 +23,7 @@ class TenantHealthControllerTest extends TestCase
 
     public function test_authenticated_user_can_view_tenant_health_dashboard(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['name' => 'Acme Corp', 'is_active' => true]);
 
         $this->actingAs($user)
@@ -38,7 +38,7 @@ class TenantHealthControllerTest extends TestCase
 
     public function test_summary_counts_include_all_tenants(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         Tenant::factory()->create(['slug' => 'tenant-a', 'is_active' => true]);
         Tenant::factory()->create(['slug' => 'tenant-b', 'is_active' => false]);
@@ -53,7 +53,7 @@ class TenantHealthControllerTest extends TestCase
 
     public function test_inactive_tenant_is_marked_critical(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         Tenant::factory()->create(['is_active' => false, 'slug' => 'inactive-co']);
 
         $this->actingAs($user)
@@ -67,7 +67,7 @@ class TenantHealthControllerTest extends TestCase
 
     public function test_tenant_with_failed_reports_is_marked_critical(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_active' => true, 'slug' => 'failing-co']);
 
         TenantMigrationVersion::create([
@@ -98,7 +98,7 @@ class TenantHealthControllerTest extends TestCase
 
     public function test_tenant_with_no_users_is_marked_warning(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_active' => true, 'slug' => 'empty-co']);
 
         TenantMigrationVersion::create([
@@ -119,7 +119,7 @@ class TenantHealthControllerTest extends TestCase
 
     public function test_tenant_with_stale_migrations_is_marked_warning(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create(['is_active' => true, 'slug' => 'stale-co']);
 
         TenantMigrationVersion::create([

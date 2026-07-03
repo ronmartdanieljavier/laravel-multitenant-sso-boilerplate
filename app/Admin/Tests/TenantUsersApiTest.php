@@ -35,7 +35,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_authenticated_user_can_list_tenant_users(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $this->actingAs($admin, 'sanctum')
@@ -46,7 +46,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_response_contains_users_assigned_to_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create(['name' => 'Scoped User']);
@@ -63,7 +63,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_response_excludes_users_not_assigned_to_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $otherTenant = Tenant::factory()->create();
@@ -81,7 +81,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_each_user_has_expected_fields(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
@@ -100,7 +100,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_is_logged_in_is_true_when_user_has_active_token(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
@@ -119,7 +119,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_is_logged_in_is_false_when_user_has_no_active_token(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
@@ -137,7 +137,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_force_logout_revokes_user_tokens(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $app = App::factory()->create();
         $tenant = Tenant::factory()->create();
         $tenantUser = User::factory()->create();
@@ -163,7 +163,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_returns_empty_data_when_no_users_in_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
 
         $this->actingAs($admin, 'sanctum')
@@ -174,7 +174,7 @@ class TenantUsersApiTest extends TestCase
 
     public function test_returns_404_for_unknown_tenant(): void
     {
-        $admin = User::factory()->create();
+        $admin = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($admin, 'sanctum')
             ->getJson('/api/v1/admin/tenants/99999/users')

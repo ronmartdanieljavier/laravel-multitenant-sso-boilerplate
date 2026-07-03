@@ -35,7 +35,7 @@ class TenantJobsWebTest extends TestCase
 
     public function test_global_jobs_page_renders(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeJob($tenant);
 
@@ -51,7 +51,7 @@ class TenantJobsWebTest extends TestCase
 
     public function test_global_jobs_page_filters_by_status(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeJob($tenant, ['status' => TenantJobStatus::Failed]);
         $this->makeJob($tenant, ['status' => TenantJobStatus::Completed]);
@@ -64,7 +64,7 @@ class TenantJobsWebTest extends TestCase
 
     public function test_global_jobs_page_filters_by_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant1 = Tenant::factory()->create();
         $tenant2 = Tenant::factory()->create();
         $this->makeJob($tenant1);
@@ -87,7 +87,7 @@ class TenantJobsWebTest extends TestCase
 
     public function test_tenant_jobs_page_renders(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeJob($tenant);
 
@@ -103,7 +103,7 @@ class TenantJobsWebTest extends TestCase
 
     public function test_tenant_jobs_page_scopes_to_tenant(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant1 = Tenant::factory()->create();
         $tenant2 = Tenant::factory()->create();
         $this->makeJob($tenant1);
@@ -117,7 +117,7 @@ class TenantJobsWebTest extends TestCase
 
     public function test_tenant_jobs_page_filters_by_status(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $tenant = Tenant::factory()->create();
         $this->makeJob($tenant, ['status' => TenantJobStatus::Failed]);
         $this->makeJob($tenant, ['status' => TenantJobStatus::Completed]);

@@ -18,7 +18,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_view_settings_page(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin.settings'))
@@ -31,7 +31,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_settings_payload_includes_all_expected_keys(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin.settings'))
@@ -60,7 +60,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_update_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -88,7 +88,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_fcm_push_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -104,7 +104,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_apns_push_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -123,7 +123,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_onesignal_push_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -139,7 +139,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_push_driver(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['push_driver' => 'pusher'])
@@ -148,7 +148,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_apns_environment(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['apns_environment' => 'staging'])
@@ -157,7 +157,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_security_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -179,7 +179,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_two_factor_auth_value(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['two_factor_auth' => 'mandatory'])
@@ -188,7 +188,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_password_min_length_below_6(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['password_min_length' => 4])
@@ -197,7 +197,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_branding_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -216,7 +216,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_support_email(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['support_email' => 'not-an-email'])
@@ -225,7 +225,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_twilio_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -242,7 +242,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_vonage_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -259,7 +259,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_sns_sms_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -278,7 +278,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_sms_driver(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['sms_driver' => 'messagebird'])
@@ -287,7 +287,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_sns_sender_id_over_11_chars(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['sns_sms_sender_id' => 'TooLongName123'])
@@ -296,7 +296,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_r2_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -315,7 +315,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_gcs_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $keyJson = json_encode(['type' => 'service_account', 'project_id' => 'my-project']);
 
@@ -335,7 +335,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_local_storage(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['storage_driver' => 'local'])
@@ -346,7 +346,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_ftp_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -367,7 +367,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_sftp_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -387,7 +387,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_storage_driver(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['storage_driver' => 'dropbox'])
@@ -396,7 +396,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_mailgun_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -416,7 +416,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_ses_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -435,7 +435,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_email_driver(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['email_driver' => 'sendgrid'])
@@ -444,7 +444,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_mailgun_endpoint(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -456,7 +456,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_authentication_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -471,7 +471,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_out_of_range_idle_timeout(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['authentication_idle_time' => 0])
@@ -480,7 +480,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_out_of_range_max_login_attempts(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['max_login_attempts' => 0])
@@ -489,7 +489,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_missing_required_settings_shared_as_inertia_prop(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin.settings'))
@@ -500,7 +500,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_missing_required_settings_is_empty_when_all_set(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         foreach ([
             'email_driver' => 'smtp',
@@ -519,7 +519,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_missing_required_settings_lists_unset_fields(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin.settings'))
@@ -530,7 +530,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_email_footer_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -545,7 +545,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_html_email_footer_signature(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         $html = '<p><strong>© 2025 My SaaS.</strong> <a href="https://example.com">Visit us</a></p>';
 
         $this->actingAs($user)
@@ -559,7 +559,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_email_footer_signature_can_be_cleared(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
         SystemSetting::set('email_footer_signature', '<p>Old footer</p>');
 
         $this->actingAs($user)
@@ -573,7 +573,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_email_footer_signature_over_2000_chars(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -584,7 +584,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_invalid_email_footer_unsubscribe_url(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -595,7 +595,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_upload_settings_appear_in_settings_payload(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->get(route('admin.settings'))
@@ -615,7 +615,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_authenticated_user_can_save_upload_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), [
@@ -632,7 +632,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_upload_max_size_above_100(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['upload_max_size_pdf' => 101])
@@ -641,7 +641,7 @@ class SystemSettingsWebTest extends TestCase
 
     public function test_update_rejects_upload_max_size_below_1(): void
     {
-        $user = User::factory()->create();
+        $user = $this->grantAdminRole(User::factory()->create());
 
         $this->actingAs($user)
             ->put(route('admin.settings.update'), ['upload_max_size_doc' => 0])

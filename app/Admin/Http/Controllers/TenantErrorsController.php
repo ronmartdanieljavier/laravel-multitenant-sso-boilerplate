@@ -19,6 +19,9 @@ class TenantErrorsController extends Controller
 
     /**
      * List all error logs for a tenant.
+     *
+     * @param  Request  $request  the incoming request
+     * @param  Tenant  $tenant  the tenant for which to list error logs
      */
     public function index(Request $request, Tenant $tenant): Response
     {
@@ -34,6 +37,9 @@ class TenantErrorsController extends Controller
 
     /**
      * Show a single error log entry.
+     *
+     * @param  Tenant  $tenant  the tenant for which to show the error log
+     * @param  TenantErrorLog  $error  the error log entry to show
      */
     public function show(Tenant $tenant, TenantErrorLog $error): Response
     {
@@ -47,6 +53,9 @@ class TenantErrorsController extends Controller
 
     /**
      * Mark an error as resolved.
+     *
+     * @param  Tenant  $tenant  the tenant for which to resolve the error
+     * @param  TenantErrorLog  $error  the error log entry to resolve
      */
     public function resolve(Tenant $tenant, TenantErrorLog $error): RedirectResponse
     {
@@ -59,6 +68,9 @@ class TenantErrorsController extends Controller
 
     /**
      * Mark an error as unresolved.
+     *
+     * @param  Tenant  $tenant  the tenant for which to unresolve the error
+     * @param  TenantErrorLog  $error  the error log entry to unresolve
      */
     public function unresolve(Tenant $tenant, TenantErrorLog $error): RedirectResponse
     {
@@ -71,6 +83,9 @@ class TenantErrorsController extends Controller
 
     /**
      * Delete an error log entry.
+     *
+     * @param  Tenant  $tenant  the tenant for which to delete the error log
+     * @param  TenantErrorLog  $error  the error log entry to delete
      */
     public function destroy(Tenant $tenant, TenantErrorLog $error): RedirectResponse
     {

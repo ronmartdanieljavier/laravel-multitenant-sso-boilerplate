@@ -4,6 +4,7 @@ namespace App\Admin\Http\Controllers;
 
 use App\Admin\Http\Requests\AcceptInvitationRequest;
 use App\Admin\Services\UserManagementService;
+use App\Enums\AuthenticationMessageEnum;
 use App\Http\Controllers\Controller;
 use App\Repositories\Central\UserRepository;
 use Illuminate\Http\RedirectResponse;
@@ -19,13 +20,15 @@ class AcceptInvitationController extends Controller
 
     /**
      * Display the invitation acceptance form.
+     *
+     * @param  string  $token  token from the invitation link
      */
     public function show(string $token): Response|RedirectResponse
     {
         $user = $this->userRepository->findByInvitationToken($token);
 
         if (! $user) {
-            return redirect()->route('login')->withErrors(['token' => 'This invitation link is invalid or has already been used.']);
+            return redirect()->route('login')->withErrors(['token' => AuthenticationMessageEnum::INVALID_INVITATION->value]);
         }
 
         return Inertia::render('Admin/Users/Accept', [
@@ -37,17 +40,20 @@ class AcceptInvitationController extends Controller
 
     /**
      * Accept the invitation and create a new user account.
+     *
+     * @param  AcceptInvitationRequest  $request  credentials for the new user account
+     * @param  string  $token  token from the invitation link
      */
     public function accept(AcceptInvitationRequest $request, string $token): RedirectResponse
     {
         $user = $this->userRepository->findByInvitationToken($token);
 
         if (! $user) {
-            return redirect()->route('login')->withErrors(['token' => 'This invitation link is invalid or has already been used.']);
+            return redirect()->route('login')->withErrors(['token' => AuthenticationMessageEnum::INVALID_INVITATION->value]);
         }
 
         $this->service->acceptInvitation($user->id, $request->input('name'), $request->input('password'));
 
-        return redirect()->route('login')->with('success', 'Your account is active. Please sign in.');
+        return redirect()->route('login')->with('success', AuthenticationMessageEnum::ACCOUNT_ACTIVE->value);
     }
 }

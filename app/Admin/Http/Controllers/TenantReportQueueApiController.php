@@ -15,6 +15,8 @@ class TenantReportQueueApiController extends Controller
 
     /**
      * Return paginated report jobs for the given tenant.
+     *
+     * @param  Tenant  $tenant  the tenant for which to list report jobs
      */
     public function index(Tenant $tenant): JsonResponse
     {

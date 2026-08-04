@@ -18,6 +18,11 @@ class TenantJobsController extends Controller
         private readonly TenantRepository $tenantRepository,
     ) {}
 
+    /**
+     * Display a list of tenant jobs, optionally filtered by tenant ID and status.
+     *
+     * @param  Request  $request  the incoming request
+     */
     public function index(Request $request): Response
     {
         $tenantId = $request->query('tenant_id') ? (int) $request->query('tenant_id') : null;
@@ -32,6 +37,12 @@ class TenantJobsController extends Controller
         ]);
     }
 
+    /**
+     * Display a list of tenant jobs for a specific tenant, optionally filtered by status.
+     *
+     * @param  Request  $request  the incoming request
+     * @param  Tenant  $tenant  the tenant for which to list jobs
+     */
     public function indexForTenant(Request $request, Tenant $tenant): Response
     {
         $status = $request->query('status');

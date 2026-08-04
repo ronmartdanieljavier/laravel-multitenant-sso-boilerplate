@@ -27,6 +27,9 @@ class AppManagementApiController extends Controller
 
     /**
      * Update an existing app.
+     *
+     * @param  UpdateAppRequest  $request  validated request data
+     * @param  App  $app  the app to be updated
      */
     public function update(UpdateAppRequest $request, App $app): JsonResponse
     {

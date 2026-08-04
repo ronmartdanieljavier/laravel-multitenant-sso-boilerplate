@@ -36,6 +36,8 @@ class TenantManagementController extends Controller
 
     /**
      * Create a new tenant.
+     *
+     * @param  CreateTenantRequest  $request  validated request data
      */
     public function store(CreateTenantRequest $request): RedirectResponse
     {
@@ -46,6 +48,9 @@ class TenantManagementController extends Controller
 
     /**
      * Update a tenant's information.
+     *
+     * @param  UpdateTenantRequest  $request  validated request data
+     * @param  Tenant  $tenant  the tenant to be updated
      */
     public function update(UpdateTenantRequest $request, Tenant $tenant): RedirectResponse
     {
@@ -56,6 +61,9 @@ class TenantManagementController extends Controller
 
     /**
      * Set a tenant's active status.
+     *
+     * @param  Request  $request  the incoming request
+     * @param  Tenant  $tenant  the tenant for which to set the active status
      */
     public function setActive(Request $request, Tenant $tenant): RedirectResponse
     {
@@ -69,6 +77,8 @@ class TenantManagementController extends Controller
 
     /**
      * Delete a tenant.
+     *
+     * @param  Tenant  $tenant  the tenant to be deleted
      */
     public function destroy(Tenant $tenant): RedirectResponse
     {
@@ -79,6 +89,9 @@ class TenantManagementController extends Controller
 
     /**
      * Set a tenant's maintenance mode.
+     *
+     * @param  SetTenantMaintenanceRequest  $request  validated request data
+     * @param  Tenant  $tenant  the tenant for which to set maintenance mode
      */
     public function setMaintenance(SetTenantMaintenanceRequest $request, Tenant $tenant): RedirectResponse
     {
@@ -94,6 +107,8 @@ class TenantManagementController extends Controller
 
     /**
      * Set maintenance mode for all tenants.
+     *
+     * @param  SetTenantMaintenanceRequest  $request  validated request data
      */
     public function setMaintenanceAll(SetTenantMaintenanceRequest $request): RedirectResponse
     {
@@ -109,6 +124,8 @@ class TenantManagementController extends Controller
 
     /**
      * Run migrations for a specific tenant.
+     *
+     * @param  Tenant  $tenant  the tenant for which to run migrations
      */
     public function migrate(Tenant $tenant): RedirectResponse
     {

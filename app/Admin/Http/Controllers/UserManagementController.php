@@ -36,6 +36,8 @@ class UserManagementController extends Controller
 
     /**
      * Invite a new user.
+     *
+     * @param  InviteUserRequest  $request  validated request data
      */
     public function invite(InviteUserRequest $request): RedirectResponse
     {
@@ -46,6 +48,9 @@ class UserManagementController extends Controller
 
     /**
      * Update a user's information.
+     *
+     * @param  UpdateUserRequest  $request  validated request data
+     * @param  User  $user  the user to be updated
      */
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
@@ -56,6 +61,8 @@ class UserManagementController extends Controller
 
     /**
      * Resend the invitation email to a pending user.
+     *
+     * @param  User  $user  the user to whom the invitation will be resent
      */
     public function resendInvitation(User $user): RedirectResponse
     {

@@ -15,6 +15,11 @@ class TenantJobsApiController extends Controller
         private readonly TenantJobsAdminService $service,
     ) {}
 
+    /**
+     * List all tenant jobs, optionally filtered by tenant ID and status.
+     *
+     * @param  Request  $request  the incoming request
+     */
     public function index(Request $request): JsonResponse
     {
         $tenantId = $request->query('tenant_id') ? (int) $request->query('tenant_id') : null;
@@ -27,6 +32,12 @@ class TenantJobsApiController extends Controller
         ]);
     }
 
+    /**
+     * List tenant jobs for a specific tenant, optionally filtered by status.
+     *
+     * @param  Request  $request  the incoming request
+     * @param  Tenant  $tenant  the tenant for which to list jobs
+     */
     public function indexForTenant(Request $request, Tenant $tenant): JsonResponse
     {
         $status = $request->query('status');

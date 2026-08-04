@@ -26,6 +26,8 @@ class SystemSettingsApiController extends Controller
 
     /**
      * Update the system settings.
+     *
+     * @param  UpdateSystemSettingsRequest  $request  validated request data
      */
     public function update(UpdateSystemSettingsRequest $request): JsonResponse
     {

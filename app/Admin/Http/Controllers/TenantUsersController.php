@@ -26,6 +26,8 @@ class TenantUsersController extends Controller
 
     /**
      * List all users that belong to the given tenant.
+     *
+     * @param  Tenant  $tenant  the tenant for which to list users
      */
     public function index(Tenant $tenant): Response
     {
@@ -41,6 +43,9 @@ class TenantUsersController extends Controller
 
     /**
      * Force logout a specific user from this tenant by revoking their tokens.
+     *
+     * @param  Tenant  $tenant  the tenant for which to force logout the user
+     * @param  User  $user  the user to be logged out
      */
     public function forceLogout(Tenant $tenant, User $user): RedirectResponse
     {
@@ -51,7 +56,10 @@ class TenantUsersController extends Controller
     }
 
     /**
-     * @param  Collection<int, int>  $loggedInIds
+     * List all users for a specific tenant, including their logged-in status.
+     *
+     * @param  int  $tenantId  the ID of the tenant for which to list
+     * @param  Collection<int, int>  $loggedInIds  a collection of user IDs that are currently logged in for the tenant
      * @return Collection<int, UserData>
      */
     private function listUsersForTenant(int $tenantId, Collection $loggedInIds): Collection

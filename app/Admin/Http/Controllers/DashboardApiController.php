@@ -16,6 +16,9 @@ class DashboardApiController extends Controller
         private TenantErrorLogService $errorLogService,
     ) {}
 
+    /**
+     * Display the dashboard statistics.
+     */
     public function index(): JsonResponse
     {
         return response()->json([

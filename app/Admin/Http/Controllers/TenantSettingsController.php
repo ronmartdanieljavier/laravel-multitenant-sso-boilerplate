@@ -19,6 +19,8 @@ class TenantSettingsController extends Controller
 
     /**
      * Display the tenant's settings page.
+     *
+     * @param  Tenant  $tenant  the tenant for which to display settings
      */
     public function index(Tenant $tenant): Response
     {
@@ -36,6 +38,9 @@ class TenantSettingsController extends Controller
 
     /**
      * Update the tenant's settings.
+     *
+     * @param  UpdateTenantSettingsRequest  $request  validated request data
+     * @param  Tenant  $tenant  the tenant for which to update settings
      */
     public function update(UpdateTenantSettingsRequest $request, Tenant $tenant): RedirectResponse
     {
@@ -46,6 +51,9 @@ class TenantSettingsController extends Controller
 
     /**
      * Upload the tenant's report logo.
+     *
+     * @param  UploadTenantLogoRequest  $request  validated request data
+     * @param  Tenant  $tenant  the tenant for which to upload the logo
      */
     public function uploadLogo(UploadTenantLogoRequest $request, Tenant $tenant): RedirectResponse
     {
@@ -56,6 +64,8 @@ class TenantSettingsController extends Controller
 
     /**
      * Delete the tenant's report logo.
+     *
+     * @param  Tenant  $tenant  the tenant for which to delete the logo
      */
     public function deleteLogo(Tenant $tenant): RedirectResponse
     {

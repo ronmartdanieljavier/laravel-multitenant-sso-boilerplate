@@ -15,6 +15,7 @@ use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use PDO;
 
 class TenantRepository
 {
@@ -267,6 +268,9 @@ class TenantRepository
             'prefix' => '',
             'schema' => 'public',
             'sslmode' => 'prefer',
+            'options' => [
+                PDO::ATTR_TIMEOUT => 2,
+            ],
         ];
 
         Config::set('database.connections.tenant_drop_admin', $config);

@@ -17,6 +17,9 @@ class DashboardController extends Controller
         private TenantErrorLogService $errorLogService,
     ) {}
 
+    /**
+     * Display the dashboard statistics.
+     */
     public function index(): Response
     {
         return Inertia::render('Admin/Index', [

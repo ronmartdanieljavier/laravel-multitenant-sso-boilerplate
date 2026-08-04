@@ -17,6 +17,8 @@ class TenantSettingsApiController extends Controller
 
     /**
      * Get the tenant's settings (tenant overrides merged with system defaults).
+     *
+     * @param  Tenant  $tenant  the tenant for which to get settings
      */
     public function index(Tenant $tenant): JsonResponse
     {
@@ -33,6 +35,8 @@ class TenantSettingsApiController extends Controller
 
     /**
      * Update the tenant's settings.
+     *
+     * @param  UpdateTenantSettingsRequest  $request  validated request data
      */
     public function update(UpdateTenantSettingsRequest $request, Tenant $tenant): JsonResponse
     {
@@ -43,6 +47,9 @@ class TenantSettingsApiController extends Controller
 
     /**
      * Upload the tenant's report logo.
+     *
+     * @param  UploadTenantLogoRequest  $request  validated request data
+     * @param  Tenant  $tenant  the tenant for which to upload the logo
      */
     public function uploadLogo(UploadTenantLogoRequest $request, Tenant $tenant): JsonResponse
     {
@@ -53,6 +60,8 @@ class TenantSettingsApiController extends Controller
 
     /**
      * Delete the tenant's report logo.
+     *
+     * @param  Tenant  $tenant  the tenant for which to delete the logo
      */
     public function deleteLogo(Tenant $tenant): JsonResponse
     {

@@ -17,6 +17,9 @@ class TenantErrorsApiController extends Controller
 
     /**
      * List all error logs for a tenant.
+     *
+     * @param  Request  $request  the incoming request
+     * @param  Tenant  $tenant  the tenant for which to list error logs
      */
     public function index(Request $request, Tenant $tenant): JsonResponse
     {
@@ -30,6 +33,9 @@ class TenantErrorsApiController extends Controller
 
     /**
      * Get a single error log entry by ID.
+     *
+     * @param  Tenant  $tenant  the tenant for which to get the error log
+     * @param  TenantErrorLog  $error  the error log entry to retrieve
      */
     public function show(Tenant $tenant, TenantErrorLog $error): JsonResponse
     {
@@ -40,6 +46,8 @@ class TenantErrorsApiController extends Controller
 
     /**
      * Look up an error log by its public error code.
+     *
+     * @param  string  $errorCode  the error code to look up
      */
     public function findByCode(string $errorCode): JsonResponse
     {
@@ -54,6 +62,9 @@ class TenantErrorsApiController extends Controller
 
     /**
      * Mark an error as resolved.
+     *
+     * @param  Tenant  $tenant  the tenant for which to resolve the error
+     * @param  TenantErrorLog  $error  the error log entry to resolve
      */
     public function resolve(Tenant $tenant, TenantErrorLog $error): JsonResponse
     {
@@ -66,6 +77,9 @@ class TenantErrorsApiController extends Controller
 
     /**
      * Mark an error as unresolved.
+     *
+     * @param  Tenant  $tenant  the tenant for which to unresolve the error
+     * @param  TenantErrorLog  $error  the error log entry to unresolve
      */
     public function unresolve(Tenant $tenant, TenantErrorLog $error): JsonResponse
     {
@@ -78,6 +92,9 @@ class TenantErrorsApiController extends Controller
 
     /**
      * Delete an error log entry.
+     *
+     * @param  Tenant  $tenant  the tenant for which to delete the error log
+     * @param  TenantErrorLog  $error  the error log entry to delete
      */
     public function destroy(Tenant $tenant, TenantErrorLog $error): JsonResponse
     {

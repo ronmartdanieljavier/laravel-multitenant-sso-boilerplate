@@ -34,6 +34,8 @@ class TenantManagementApiController extends Controller
 
     /**
      * Create a new tenant.
+     *
+     * @param  CreateTenantRequest  $request  validated request data
      */
     public function store(CreateTenantRequest $request): JsonResponse
     {
@@ -44,6 +46,8 @@ class TenantManagementApiController extends Controller
 
     /**
      * Update a tenant's information.
+     *
+     * @param  UpdateTenantRequest  $request  validated request data
      */
     public function update(UpdateTenantRequest $request, Tenant $tenant): JsonResponse
     {
@@ -54,6 +58,9 @@ class TenantManagementApiController extends Controller
 
     /**
      * Set a tenant's active status.
+     *
+     * @param  Request  $request  the incoming request
+     * @param  Tenant  $tenant  the tenant for which to set the active status
      */
     public function setActive(Request $request, Tenant $tenant): JsonResponse
     {
@@ -67,6 +74,8 @@ class TenantManagementApiController extends Controller
 
     /**
      * Delete a tenant.
+     *
+     * @param  Tenant  $tenant  the tenant to be deleted
      */
     public function destroy(Tenant $tenant): JsonResponse
     {
@@ -77,6 +86,9 @@ class TenantManagementApiController extends Controller
 
     /**
      * Set a tenant's maintenance mode.
+     *
+     * @param  SetTenantMaintenanceRequest  $request  validated request data
+     * @param  Tenant  $tenant  the tenant for which to set maintenance mode
      */
     public function setMaintenance(SetTenantMaintenanceRequest $request, Tenant $tenant): JsonResponse
     {
@@ -92,6 +104,8 @@ class TenantManagementApiController extends Controller
 
     /**
      * Set maintenance mode for all tenants.
+     *
+     * @param  SetTenantMaintenanceRequest  $request  validated request data
      */
     public function setMaintenanceAll(SetTenantMaintenanceRequest $request): JsonResponse
     {
@@ -107,6 +121,8 @@ class TenantManagementApiController extends Controller
 
     /**
      * Run migrations for a specific tenant.
+     *
+     * @param  Tenant  $tenant  the tenant for which to run migrations
      */
     public function migrate(Tenant $tenant): JsonResponse
     {

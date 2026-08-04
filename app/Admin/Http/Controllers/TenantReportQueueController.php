@@ -16,6 +16,8 @@ class TenantReportQueueController extends Controller
 
     /**
      * List all report jobs for the given tenant.
+     *
+     * @param  Tenant  $tenant  the tenant for which to list report jobs
      */
     public function index(Tenant $tenant): Response
     {
